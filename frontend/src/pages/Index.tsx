@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useParallax } from "@/hooks/useParallax";
 import { motion } from "framer-motion";
-import { Navbar } from "@/components/layout/Navbar";
 import { FeaturedProductsSection } from "@/components/home/featured-products";
 import { ProblemStatementSection } from "@/components/home/problem-statement";
 import { FeaturesSection } from "@/components/home/features-section";
@@ -49,13 +48,11 @@ const Index = () => {
   };
   
   return (
-    <>
-      <Navbar />
-      <div style={{
-        background: 'linear-gradient(-45deg, rgba(255,255,255,1), rgba(245,245,245,0.9), rgba(230,230,230,0.8), rgba(255,255,255,1))',
-        backgroundSize: '400% 400%',
-        animation: 'gradient-shift 12s ease infinite'
-      }}>
+    <div style={{
+      background: 'linear-gradient(-45deg, rgba(255,255,255,1), rgba(245,245,245,0.9), rgba(230,230,230,0.8), rgba(255,255,255,1))',
+      backgroundSize: '400% 400%',
+      animation: 'gradient-shift 12s ease infinite'
+    }}>
       {/* Main content */}
       <div className="relative">
 
@@ -64,8 +61,8 @@ const Index = () => {
         
         {/* Mobile App Sections - Card-based Layout */}
         <div className="md:hidden space-y-4 px-4 pb-8">
-          <ProblemStatementSection />
           <FeaturedProductsSection />
+          <ProblemStatementSection />
           <FeaturesSection />
           <PricingSection />
           <TestimonialSection />
@@ -79,16 +76,16 @@ const Index = () => {
             <Separator className="opacity-30" />
           </div>
           
-          {/* Problem Statement Section */}
-          <ProblemStatementSection />
+          {/* Featured Products */}
+          <FeaturedProductsSection />
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <Separator className="opacity-30" />
           </div>
 
-          {/* Featured Products */}
-          <FeaturedProductsSection />
+          {/* Problem Statement Section */}
+          <ProblemStatementSection />
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -149,14 +146,13 @@ const Index = () => {
         {/* FAQ Section */}
         <FaqSection />
       </div>
-      </div>
       
       <OnboardingFlow
         open={showOnboarding}
         onClose={() => setShowOnboarding(false)}
         onComplete={handleOnboardingComplete}
       />
-    </>
+    </div>
   );
 };
 

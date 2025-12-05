@@ -18,28 +18,31 @@ import PaymentCanceled from '@/pages/PaymentCanceled'
 import Checkout from '@/pages/Checkout'
 
 // Layout
+import { Layout } from '@/components/layout/Layout'
 import './App.css'
 
 export default function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/likes" element={<Likes />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/pricing" element={<Pricing />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/faq" element={<Faq />} />
-        <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/payment-canceled" element={<PaymentCanceled />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/likes" element={<Likes />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<Faq />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-canceled" element={<PaymentCanceled />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Layout>
     </Router>
   )
 }
