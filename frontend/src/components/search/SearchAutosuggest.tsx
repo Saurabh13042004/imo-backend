@@ -36,15 +36,7 @@ export const SearchAutosuggest = ({
 
   return (
     <Popover open={isOpen} onOpenChange={onOpenChange}>
-      <PopoverTrigger 
-        asChild
-        onKeyDown={(e) => {
-          // Prevent spacebar from closing the popover when typing in input
-          if (e.code === "Space") {
-            e.preventDefault();
-          }
-        }}
-      >
+      <PopoverTrigger asChild>
         {children}
       </PopoverTrigger>
       <PopoverContent 
