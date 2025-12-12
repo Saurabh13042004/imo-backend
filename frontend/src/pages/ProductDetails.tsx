@@ -1,38 +1,210 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useAnalytics } from "@/hooks/useAnalytics";
 import { useParallax } from "@/hooks/useParallax";
-import type { Product } from "@/types/search";
+// import { useProductBasic, useProductReviews, useProductVideos } from "@/hooks/useProductDetails";
 
-const MOCK_PRODUCT = {
-  id: "1",
-  title: "Sample Product",
-  description: "This is a sample product for demonstration",
-  price: 49.99,
-  image_url: "https://via.placeholder.com/500",
-  product_url: "#",
-  source: "Amazon" as const,
-  source_id: null,
-  imo_score: 8.5,
-  pros: ["Good quality", "Fast delivery", "Great price"],
-  cons: ["Limited colors"],
-  created_at: new Date().toISOString(),
-  site_rating: 4.5,
-  reviews_count: 150,
-} satisfies Product;
+import { ProductLikeButton } from "@/components/product/ProductLikeButton";
+import { ProductImages } from "@/components/product/ProductImages";
+import { ProductInfo } from "@/components/product/ProductInfo";
+import { ProductInfoSkeleton } from "@/components/product/ProductInfoSkeleton";
+import { ProductProsAndCons } from "@/components/product/ProductProsAndCons";
+import { ProductReviews } from "@/components/product/ProductReviews";
+// import { ProductReviewsSkeleton } from "@/components/product/ProductReviewsSkeleton";
+import { VideoReviews } from "@/components/product/VideoReviews";
+// import { YouTubeVideosSkeleton } from "@/components/product/YouTubeVideosSkeleton";
+import { SearchAccessGate } from "@/components/product/SearchAccessGate";
+import { Product } from "@/types/search";
+import { useSearchAccess } from "@/hooks/useSearchAccess";
+// import { useProductPriceComparison } from "@/hooks/useProductPriceComparison";
 
 const ProductDetails = () => {
   useParallax();
-  const { productId } = useParams<{ productId: string }>();
+  const { id: productId } = useParams<{ id: string }>();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [enrichedData, setEnrichedData] = useState<any>(null);
+  const [enrichmentLoading, setEnrichmentLoading] = useState(false);
+  const [refreshReviews, setRefreshReviews] = useState(0);
+  const { toast } = useToast();
+  const { trackProductView } = useAnalytics();
 
-  if (!productId) {
+  // Validate productId early
+  const isValidProductId = productId && 
+    typeof productId === 'string' && 
+    productId !== 'undefined' && 
+    productId !== 'null' &&
+    productId.length > 0;
+
+  // Load product from localStorage
+  useEffect(() => {
+    if (!isValidProductId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Try currentProduct first
+      let foundProduct = null;
+      const currentProductStr = localStorage.getItem("currentProduct");
+      
+      if (currentProductStr) {
+        const parsedProduct = JSON.parse(currentProductStr);
+        if (parsedProduct.id === productId) {
+          foundProduct = parsedProduct;
+        }
+      }
+      
+      // If not found, search in lastSearchResults
+      if (!foundProduct) {
+        const searchResults = localStorage.getItem("lastSearchResults");
+        if (searchResults) {
+          const results = JSON.parse(searchResults);
+          foundProduct = results.find((p: any) => p.id === productId);
+        }
+      }
+      
+      if (foundProduct) {
+        setProduct(foundProduct);
+        // Track product view
+        if (trackProductView && productId) {
+          trackProductView(productId, foundProduct.query);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading product from localStorage:", error);
+      toast({
+        title: "Error",
+        description: "Could not load product data",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [isValidProductId, productId, toast, trackProductView]);
+
+  // Fetch enriched data for all products
+  useEffect(() => {
+    if (!product || !productId) return;
+    
+    const isAmazon = product.source?.toLowerCase() === "amazon" || 
+                     product.source?.toLowerCase() === "amazon.com";
+    
+    // For Amazon products - use INTELLIGENT endpoint with Gemini analysis
+    if (isAmazon) {
+      const asin = (product as any).asin || (product as any).source_id;
+      
+      if (!asin) {
+        console.log("Amazon product detected but no ASIN found");
+        setEnrichmentLoading(false);
+        return;
+      }
+
+      const fetchIntelligentProductData = async () => {
+        try {
+          setEnrichmentLoading(true);
+          console.log(`Fetching intelligent product analysis for Amazon product: ${asin}`);
+          
+          const response = await fetch(
+            `/api/v1/product/intelligent/${asin}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }
+          );
+
+          if (!response.ok) {
+            console.warn(`Failed to fetch intelligent product data: ${response.status}`);
+            return;
+          }
+
+          const data = await response.json();
+          console.log("Intelligent product data received (AmazonProductAnalysis):", data);
+          
+          if (data) {
+            // The response is now AmazonProductAnalysis with unified schema
+            // All data is at the root level for clean access
+            setEnrichedData(data);
+          }
+        } catch (error) {
+          console.error("Error fetching intelligent product data:", error);
+        } finally {
+          setEnrichmentLoading(false);
+        }
+      };
+
+      fetchIntelligentProductData();
+    } else {
+      // For non-Amazon products with immersive link
+      const immersiveApiLink = (product as any).immersive_product_api_link;
+      
+      if (!immersiveApiLink) {
+        console.log("No immersive_product_api_link found, using base product data");
+        setEnrichmentLoading(false);
+        return;
+      }
+
+      const fetchEnrichedData = async () => {
+        try {
+          setEnrichmentLoading(true);
+          console.log(`Fetching enriched data for ${product.source} product: ${productId}`);
+          
+          const response = await fetch(
+            `/api/v1/product/enriched/${productId}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                immersive_api_link: immersiveApiLink
+              })
+            }
+          );
+
+          if (!response.ok) {
+            console.warn(`Failed to fetch enriched data: ${response.status}`);
+            return;
+          }
+
+          const data = await response.json();
+          console.log("Enriched product data:", data);
+          
+          // Store entire enriched response (with immersive_data nested)
+          if (data) {
+            setEnrichedData(data);
+            console.log("User reviews available:", data.immersive_data?.product_results?.user_reviews?.length || 0);
+            console.log("User reviews data:", data.immersive_data?.product_results?.user_reviews);
+          }
+        } catch (error) {
+          console.error("Error fetching enriched product data:", error);
+        } finally {
+          setEnrichmentLoading(false);
+        }
+      };
+
+      fetchEnrichedData();
+    }
+  }, [product, productId]);
+
+  // Handle invalid product ID
+  if (!isValidProductId) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
           <h3 className="text-lg font-medium mb-2">Invalid Product ID</h3>
-          <p className="text-muted-foreground mb-4">The product link appears to be broken.</p>
+          <p className="text-muted-foreground mb-4">
+            The product link appears to be broken or invalid.
+          </p>
           <Button asChild>
             <Link to="/search">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -44,75 +216,427 @@ const ProductDetails = () => {
     );
   }
 
-  const product = MOCK_PRODUCT;
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative overflow-clip">
-        <div className="absolute inset-0 bg-gradient-background opacity-35"></div>
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-primary rounded-full mix-blend-multiply filter blur-3xl opacity-[0.35]"></div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="space-y-8"
-          >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-              <div className="space-y-6">
-                <img
-                  src={product.image_url}
-                  alt={product.title}
-                  className="w-full h-auto rounded-lg"
-                />
-              </div>
-
-              <div className="space-y-4">
-                <h1 className="text-3xl font-bold">{product.title}</h1>
-                <p className="text-xl font-semibold text-primary">${product.price}</p>
-                <div className="flex items-center space-x-2">
-                  <span className="text-yellow-500">★</span>
-                  <span className="font-semibold">{product.site_rating}/5</span>
-                  <span className="text-muted-foreground">({product.reviews_count} reviews)</span>
-                </div>
-                <p className="text-muted-foreground">{product.description}</p>
-                <Button size="lg" asChild>
-                  <a href={product.product_url} target="_blank" rel="noopener noreferrer">
-                    View on {product.source}
-                  </a>
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6 mt-12">
-              <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg">
-                <h3 className="font-semibold mb-4 text-green-900 dark:text-green-100">Pros</h3>
-                <ul className="space-y-2">
-                  {product.pros.map((pro, i) => (
-                    <li key={i} className="text-sm flex items-start">
-                      <span className="text-green-600 mr-2">✓</span>
-                      {pro}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-red-50 dark:bg-red-900/20 p-6 rounded-lg">
-                <h3 className="font-semibold mb-4 text-red-900 dark:text-red-100">Cons</h3>
-                <ul className="space-y-2">
-                  {product.cons.map((con, i) => (
-                    <li key={i} className="text-sm flex items-start">
-                      <span className="text-red-600 mr-2">✗</span>
-                      {con}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </motion.div>
+      {!product && !loading ? (
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+            <h3 className="text-lg font-medium mb-2">Product not found</h3>
+            <p className="text-muted-foreground mb-4">
+              The product you're looking for doesn't exist.
+            </p>
+            <Button asChild>
+              <Link to="/search">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Search
+              </Link>
+            </Button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="relative overflow-clip">
+          <div className="absolute inset-0 bg-gradient-background opacity-35 parallax-background"></div>
+          
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-primary rounded-full mix-blend-multiply filter blur-3xl opacity-[0.35] dark:opacity-[0.15] dark:mix-blend-normal parallax-slow"></div>
+          <div className="absolute top-1/3 -right-32 w-80 h-80 bg-gradient-secondary rounded-full mix-blend-multiply filter blur-3xl opacity-[0.4] dark:opacity-[0.18] dark:mix-blend-normal parallax-medium"></div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              className="space-y-8"
+            >
+              {/* Product Header */}
+              {loading ? (
+                <ProductInfoSkeleton />
+              ) : product ? (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    <div className="space-y-6">
+                      <ProductImages 
+                        title={product.title}
+                        imageUrl={product.image_url}
+                        imageUrls={(product as any).image_urls}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <ProductInfo 
+                        title={product.title}
+                        price={product.price}
+                        imoScore={product.imo_score}
+                        description={enrichedData?.bullet_points ? enrichedData.bullet_points.split('\n')[0] : (enrichedData?.description || product.description)}
+                        productUrl={product.product_url}
+                        source={product.source as any}
+                      />
+                      <div className="flex justify-start">
+                        <ProductLikeButton productId={product.id} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pros and Cons */}
+                  <ProductProsAndCons 
+                    pros={enrichedData?.analysis?.pros || product.pros}
+                    cons={enrichedData?.analysis?.cons || product.cons}
+                  />
+                </>
+              ) : null}
+
+              {/* Reviews and Videos Sections - Ready for API integration */}
+              {product && (
+                <div className="space-y-8 border-t border-border/50 pt-8">
+                  {/* AI Verdict Section (Amazon products only) */}
+                  {enrichedData?.analysis && !enrichmentLoading && (
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg border border-primary/20 p-6 space-y-4"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h2 className="text-2xl font-bold text-foreground mb-2">
+                            AI Verdict
+                          </h2>
+                          <p className="text-muted-foreground">
+                            {enrichedData.analysis.summary}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-4xl font-bold text-primary">
+                            {enrichedData.analysis.verdict_score?.toFixed(1) || "N/A"}
+                          </div>
+                          <p className="text-xs text-muted-foreground">out of 10</p>
+                        </div>
+                      </div>
+
+                      {enrichedData.analysis.who_should_buy && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/30">
+                          <div>
+                            <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">✓ Who should buy</p>
+                            <p className="text-sm text-muted-foreground">{enrichedData.analysis.who_should_buy}</p>
+                          </div>
+                          {enrichedData.analysis.who_should_avoid && (
+                            <div>
+                              <p className="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1">✗ Who should avoid</p>
+                              <p className="text-sm text-muted-foreground">{enrichedData.analysis.who_should_avoid}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {enrichedData.analysis.deal_breakers && enrichedData.analysis.deal_breakers.length > 0 && (
+                        <div className="pt-4 border-t border-border/30">
+                          <p className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2">⚠ Deal Breakers</p>
+                          <ul className="text-sm text-muted-foreground space-y-1">
+                            {enrichedData.analysis.deal_breakers.map((issue: string, idx: number) => (
+                              <li key={idx}>• {issue}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                  
+                  {/* Detailed Product Information - For Amazon Products */}
+                  {enrichedData && !enrichmentLoading && (
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-6"
+                    >
+                      <div className="border-b border-border/50 pb-4">
+                        <h2 className="text-2xl font-bold text-foreground">
+                          Product Details
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Complete specifications from Amazon
+                        </p>
+                      </div>
+
+                      {/* Price Comparison - Amazon buybox */}
+                      {enrichedData.buybox && enrichedData.buybox.length > 0 && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">Where to Buy</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {enrichedData.buybox.map((offer: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="p-4 bg-background rounded-lg border border-border/30"
+                              >
+                                <p className="font-medium text-sm mb-2">Amazon.com</p>
+                                <p className="text-lg font-bold text-primary">${offer.price}</p>
+                                <p className="text-xs text-muted-foreground mt-2">{offer.stock}</p>
+                                {offer.delivery_details && (
+                                  <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                                    {offer.delivery_details.slice(0, 2).map((delivery: any, i: number) => (
+                                      <li key={i}>• {delivery.type}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* External Stores from SerpAPI */}
+                      {enrichedData.external_stores && enrichedData.external_stores.length > 0 && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">Other Retailers</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {enrichedData.external_stores.slice(0, 4).map((store: any, idx: number) => (
+                              <a
+                                key={idx}
+                                href={store.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-4 bg-background rounded-lg border border-border/30 hover:border-primary/50 transition-colors"
+                              >
+                                <p className="font-medium text-sm mb-2">{store.name}</p>
+                                <p className="text-lg font-bold text-primary">${store.extracted_price || store.price}</p>
+                                {store.details_and_offers && (
+                                  <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                                    {store.details_and_offers.slice(0, 2).map((offer: string, i: number) => (
+                                      <li key={i}>• {offer}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Product Description/Features */}
+                      {enrichedData.bullet_points && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">About This Product</h3>
+                          <ul className="text-sm text-muted-foreground leading-relaxed space-y-2">
+                            {(typeof enrichedData.bullet_points === 'string' 
+                              ? enrichedData.bullet_points.split('\n') 
+                              : enrichedData.bullet_points
+                            ).filter((p: string) => p?.trim()).map((point: string, idx: number) => (
+                              <li key={idx} className="flex gap-2">
+                                <span className="text-primary">•</span>
+                                <span>{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Rating Distribution */}
+                      {enrichedData.rating_distribution && enrichedData.rating_distribution.length > 0 && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">Rating Distribution</h3>
+                          <div className="space-y-3">
+                            {enrichedData.rating_distribution.map((rating: any) => (
+                              <div key={rating.rating} className="flex items-center gap-3">
+                                <span className="text-sm font-medium w-12">{rating.rating} ★</span>
+                                <div className="flex-1 bg-background rounded-full h-2">
+                                  <div 
+                                    className="bg-primary rounded-full h-2"
+                                    style={{ width: `${rating.percentage}%` }}
+                                  />
+                                </div>
+                                <span className="text-xs text-muted-foreground w-8">{rating.percentage}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                  {/* Enriched Product Data Section - for non-Amazon products */}
+                  {enrichedData?.immersive_data && !enrichmentLoading && (
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      className="space-y-6"
+                    >
+                      <div className="border-b border-border/50 pb-4">
+                        <h2 className="text-2xl font-bold text-foreground">
+                          Detailed Product Information
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Aggregated from multiple retailers
+                        </p>
+                      </div>
+
+                      {/* Price Comparison - SerpAPI stores */}
+                      {enrichedData.immersive_data.product_results?.stores && enrichedData.immersive_data.product_results.stores.length > 0 && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">Where to Buy</h3>
+                          
+                          {/* SerpAPI stores */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {enrichedData.immersive_data.product_results.stores.slice(0, 4).map((store: any, idx: number) => (
+                              <a
+                                key={idx}
+                                href={store.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-4 bg-background rounded-lg border border-border/30 hover:border-primary/50 transition-colors"
+                              >
+                                <p className="font-medium text-sm mb-2">{store.name}</p>
+                                <p className="text-lg font-bold text-primary">${store.extracted_price || store.price}</p>
+                                {store.details_and_offers && (
+                                  <ul className="text-xs text-muted-foreground mt-2 space-y-1">
+                                    {store.details_and_offers.slice(0, 2).map((offer: string, i: number) => (
+                                      <li key={i}>• {offer}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Product Description/Features */}
+                      {enrichedData.immersive_data?.product_results?.about_the_product?.description && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">About This Product</h3>
+                          
+                          {/* SerpAPI description */}
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {enrichedData.immersive_data.product_results.about_the_product.description.substring(0, 500)}
+                            {enrichedData.immersive_data.product_results.about_the_product.description.length > 500 && "..."}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Product Features */}
+                      {enrichedData.immersive_data.product_results?.about_the_product?.features && enrichedData.immersive_data.product_results.about_the_product.features.length > 0 && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">Key Specifications</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {enrichedData.immersive_data.product_results.about_the_product.features.slice(0, 8).map((feature: any, idx: number) => (
+                              <div key={idx} className="py-2 border-b border-border/30 last:border-0">
+                                <p className="text-xs font-medium text-muted-foreground">{feature.title}</p>
+                                <p className="text-sm font-semibold text-foreground mt-1">{feature.value}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Rating Distribution */}
+                      {enrichedData.immersive_data.product_results?.ratings && enrichedData.immersive_data.product_results.ratings.length > 0 && (
+                        <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4">
+                          <h3 className="font-semibold text-lg">Rating Distribution</h3>
+                          <div className="space-y-3">
+                            {/* SerpAPI ratings */}
+                            {enrichedData.immersive_data.product_results.ratings.map((rating: any) => (
+                              <div key={rating.stars} className="flex items-center gap-3">
+                                <span className="text-sm font-medium w-12">{rating.stars} ★</span>
+                                <div className="flex-1 bg-background rounded-full h-2">
+                                  <div 
+                                    className="bg-primary rounded-full h-2"
+                                    style={{ 
+                                      width: enrichedData.immersive_data.product_results.ratings.length > 0 
+                                        ? `${(rating.amount / Math.max(...enrichedData.immersive_data.product_results.ratings.map((r: any) => r.amount))) * 100}%`
+                                        : '0%'
+                                    }}
+                                  />
+                                </div>
+                                <span className="text-xs text-muted-foreground w-8">{rating.amount}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* Enrichment Loading State */}
+                  {enrichmentLoading && !enrichedData && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-center justify-center py-12 gap-3"
+                    >
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Loading detailed product information...</p>
+                    </motion.div>
+                  )}
+
+                  {/* YouTube Videos Section */}
+                  {/* Coming soon when API is ready */}
+                  {/* {isLoadingVideos ? (
+                    <YouTubeVideosSkeleton />
+                  ) : (
+                    <VideoReviews
+                      productId={productId || ""} 
+                      videos={(videosData as any)?.videos || []}
+                    />
+                  )} */}
+
+                  {/* User Reviews Section - Combined Amazon + External */}
+                  <ProductReviews 
+                    productId={productId || ""}
+                    reviews={[
+                      // Amazon reviews from unified response (canonical source)
+                      ...(enrichedData?.amazon_reviews?.map((review: any) => ({
+                        id: review.id,
+                        external_review_id: review.id,
+                        reviewer_name: review.author,
+                        rating: review.rating,
+                        title: review.title,
+                        review_text: review.content,
+                        verified_purchase: review.is_verified,
+                        review_date: review.timestamp,
+                        positive_feedback: review.helpful_count || 0,
+                        negative_feedback: 0,
+                        source: "Amazon"
+                      })) || []),
+                      // External reviews from enrichment layer (SerpAPI intelligent endpoint)
+                      ...(enrichedData?.external_reviews?.map((review: any) => ({
+                        id: `${review.source}-${review.author}-${review.title}`,
+                        external_review_id: `${review.source}-${review.author}`,
+                        reviewer_name: review.author,
+                        rating: review.rating || 0,
+                        title: review.title,
+                        review_text: review.content,
+                        verified_purchase: false,
+                        review_date: new Date().toISOString(),
+                        positive_feedback: 0,
+                        negative_feedback: 0,
+                        source: review.source
+                      })) || []),
+                      // User reviews from immersive product endpoint (non-Amazon products)
+                      ...(enrichedData?.immersive_data?.product_results?.user_reviews?.map((review: any) => ({
+                        id: `${review.source}-${review.user_name}-${review.title}`,
+                        external_review_id: `${review.source}-${review.user_name}`,
+                        reviewer_name: review.user_name || "Anonymous",
+                        rating: review.rating || 0,
+                        title: review.title,
+                        review_text: review.text,
+                        verified_purchase: false,
+                        review_date: review.date || new Date().toISOString(),
+                        positive_feedback: 0,
+                        negative_feedback: 0,
+                        source: review.source || "SerpAPI"
+                      })) || [])
+                    ]}
+                    reviewsSummary={undefined}
+                    refreshReviews={refreshReviews}
+                    onRefreshReviews={() => setRefreshReviews(prev => prev + 1)}
+                    isLoadingReviews={enrichmentLoading}
+                  />
+                </div>
+              )}
+            </motion.div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

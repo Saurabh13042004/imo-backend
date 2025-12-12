@@ -14,6 +14,9 @@ interface ProductReviewsProps {
 }
 
 export const ProductReviews = ({ productId, reviews = [], reviewsSummary, refreshReviews, onRefreshReviews, isLoadingReviews }: ProductReviewsProps) => {
+  console.log("ProductReviews received reviews count:", reviews.length);
+  console.log("ProductReviews reviews data:", reviews);
+  
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}

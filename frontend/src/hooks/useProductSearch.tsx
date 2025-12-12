@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { searchProducts } from "@/integrations/fastapi";
 import type { Product } from "@/types/search";
 
 interface SearchProductsParams {
@@ -11,14 +12,6 @@ interface SearchProductsParams {
 	minImoScore?: number;
 	minRating?: number;
 	zipcode?: string;
-}
-
-interface ApiSearchResponse {
-	success: boolean;
-	keyword: string;
-	zipcode: string;
-	total_results: number;
-	results: any[];
 }
 
 interface SearchResponse {
@@ -64,23 +57,10 @@ export function useProductSearch({
 			setError(null);
 
 			try {
-				const response = await fetch("http://localhost:8000/api/v1/search", {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						"Accept": "application/json",
-					},
-					body: JSON.stringify({
-						keyword: query.trim(),
-						zipcode: zipcode,
-					}),
+				const data = await searchProducts({
+					keyword: query.trim(),
+					zipcode: zipcode,
 				});
-
-				if (!response.ok) {
-					throw new Error(`API error: ${response.status}`);
-				}
-
-				const data: ApiSearchResponse = await response.json();
 
 				if (!data.success || !data.results) {
 					throw new Error("Invalid API response");
@@ -88,27 +68,48 @@ export function useProductSearch({
 
 				// Transform API results to Product type
 				const transformedProducts: Product[] = data.results.map((item: any) => ({
+					// Core fields
 					id: item.id || item.source_id,
 					title: item.title,
 					description: item.description || item.title,
-					price: parseFloat(item.price) || 0,
+					price: parseFloat(item.price as any) || 0,
 					image_url: item.image_url || "https://via.placeholder.com/300",
 					product_url: item.url || "#",
 					source: item.source || "amazon",
 					source_id: item.source_id,
-					imo_score: 0, // API doesn't provide this
-					pros: [],
-					cons: [],
-					created_at: item.created_at || new Date().toISOString(),
-					site_rating: parseFloat(item.rating) || 0,
-					reviews_count: parseInt(item.review_count) || 0,
+					
+					// Metadata
+					imo_score: item.imo_score || 0,
+					pros: item.pros || [],
+					cons: item.cons || [],
 					brand: item.brand || "",
 					category: item.category || "",
 					availability: item.availability || "In Stock",
+					asin: item.asin || "",
+					
+					// Ratings
+					site_rating: parseFloat(item.rating) || 0,
+					reviews_count: parseInt(item.review_count) || 0,
 					review_count: parseInt(item.review_count) || 0,
 					rating: parseFloat(item.rating) || 0,
+					
+					// URLs
 					url: item.url || "#",
-					asin: item.asin,
+					
+					// Timestamps
+					created_at: item.created_at || new Date().toISOString(),
+					updated_at: item.updated_at,
+					
+					// IMPORTANT: Immersive product fields from API
+					immersive_product_api_link: item.immersive_product_api_link || "",
+					immersive_product_page_token: item.immersive_product_page_token || "",
+					
+					// Additional fields
+					is_detailed_fetched: item.is_detailed_fetched || false,
+					reviews_summary: item.reviews_summary,
+					
+					// Preserve any other fields from the API response
+					...item
 				}));
 
 				// Apply client-side filters if needed

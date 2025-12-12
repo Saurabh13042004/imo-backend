@@ -37,6 +37,9 @@ class Product(Base):
     availability = Column(String(50), nullable=True)
     is_detailed_fetched = Column(Boolean, default=False)
     reviews_summary = Column(Text, nullable=True)
+    # Google Shopping specific fields for immersive product details
+    immersive_product_page_token = Column(Text, nullable=True)
+    immersive_product_api_link = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
