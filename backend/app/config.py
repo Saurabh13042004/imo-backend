@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     # API Keys
     RAPIDAPI_KEY: str = os.getenv("RAPIDAPI_KEY", "")
+    SERPAPI_KEY: str = os.getenv("SERPAPI_KEY", "")
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     YOUTUBE_API_KEY: str = os.getenv("YOUTUBE_API_KEY", "")
     REDDIT_CLIENT_ID: str = os.getenv("REDDIT_CLIENT_ID", "")
@@ -41,6 +42,8 @@ class Settings(BaseSettings):
     # API Timeouts (in seconds)
     HTTP_TIMEOUT: int = int(os.getenv("HTTP_TIMEOUT", 30))
     API_TIMEOUT: int = int(os.getenv("API_TIMEOUT", 60))
+    SEARCH_TIMEOUT: int = int(os.getenv("SEARCH_TIMEOUT", 5))  # Per-API timeout for parallel searches
+    SEARCH_TOTAL_TIMEOUT: int = int(os.getenv("SEARCH_TOTAL_TIMEOUT", 8))  # Total timeout for all searches
 
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

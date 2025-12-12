@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { SearchForm } from "@/components/search/SearchForm";
 import { SearchResults } from "@/components/search/SearchResults";
+import { SearchLoading } from "@/components/search/SearchLoading";
 import { Navbar } from "@/components/layout/Navbar";
 import { useToast } from "@/hooks/use-toast";
 import { useParallax } from "@/hooks/useParallax";
@@ -42,7 +43,7 @@ const Search = () => {
 		window.scrollTo({ top: 0, behavior: "smooth" });
 		setHasSubmitted(true);
 		setPage(1);
-		setTimeout(() => setIsLoading(false), 500);
+		// Loading state will continue until results arrive via useProductSearch
 	};
 
 	const handlePageChange = (newPage: number) => {
@@ -57,7 +58,7 @@ const Search = () => {
 		setIsLoading(true);
 		window.scrollTo({ top: 0, behavior: "smooth" });
 		setPage(newPage);
-		setTimeout(() => setIsLoading(false), 500);
+		// Loading state will continue until results arrive via useProductSearch
 	};
 
 	useEffect(() => {
@@ -67,6 +68,17 @@ const Search = () => {
 			setHasSubmitted(false);
 		}
 	}, [query]);
+
+	// Clear loading when results arrive
+	useEffect(() => {
+		if (isLoading && (products.length > 0 || (!isLoading && hasSubmitted))) {
+			// Give a small delay to show results smoothly
+			const timer = setTimeout(() => {
+				setIsLoading(false);
+			}, 300);
+			return () => clearTimeout(timer);
+		}
+	}, [products, isLoading, hasSubmitted]);
 
 	return (
 		<>
@@ -85,12 +97,10 @@ const Search = () => {
 						</div>
 
 						{/* Loading state */}
-						{isLoading && (
-							<div className="py-12 flex flex-col items-center justify-center">
-								<div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-								<p className="text-sm text-muted-foreground mt-4">Loading results...</p>
-							</div>
-						)}
+						<SearchLoading
+							isVisible={isLoading}
+							isPagination={hasSubmitted && page > 1}
+						/>
 
 						{/* Search results */}
 						<div data-search-results>

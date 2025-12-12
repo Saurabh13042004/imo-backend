@@ -40,18 +40,21 @@ services:
       LOG_LEVEL: INFO
       # Add your API keys here
       RAPIDAPI_KEY: ${RAPIDAPI_KEY}
+      SERPAPI_KEY: ${SERPAPI_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY}
       REDDIT_CLIENT_ID: ${REDDIT_CLIENT_ID}
       REDDIT_CLIENT_SECRET: ${REDDIT_CLIENT_SECRET}
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 volumes:
   postgres_data:

@@ -45,53 +45,44 @@ async function apiCall<T>(
  * Search Products
  */
 export interface SearchRequest {
-  query: string;
-  sources?: string[];
-  max_products?: number;
-  deduplicate?: boolean;
-  use_cache?: boolean;
+  keyword: string;
+  zipcode?: string;
 }
 
 export interface SearchResponse {
   success: boolean;
-  query: string;
-  total_products: number;
-  products: Array<{
+  keyword: string;
+  zipcode: string;
+  total_results: number;
+  results: Array<{
     id?: string;
     title: string;
-    price: string | number;
-    image?: string;
-    url: string;
+    price?: string | number;
+    image_url?: string;
+    url?: string;
     source: string;
+    source_id?: string;
     rating?: string | number;
-    reviews?: string;
-    reviews_count?: number;
-    pros?: string[];
-    cons?: string[];
-    imo_score?: number;
-    is_prime?: boolean;
-    analysis?: {
-      title?: string;
-      price?: string | number;
-      rating?: string | number;
-      reviews?: string;
-      url?: string;
-      source?: string;
-      imo_score?: number;
-      pros?: string[];
-      cons?: string[];
-    };
+    review_count?: number;
+    description?: string;
+    brand?: string;
+    category?: string;
+    availability?: string;
+    asin?: string;
+    created_at?: string;
+    updated_at?: string;
   }>;
-  took_seconds: number;
-  from_cache: boolean;
 }
 
 export async function searchProducts(
   request: SearchRequest
 ): Promise<SearchResponse> {
-  return apiCall<SearchResponse>("/api/search", {
+  return apiCall<SearchResponse>("/api/v1/search", {
     method: "POST",
-    body: JSON.stringify(request),
+    body: JSON.stringify({
+      keyword: request.keyword,
+      zipcode: request.zipcode || "60607",
+    }),
   });
 }
 

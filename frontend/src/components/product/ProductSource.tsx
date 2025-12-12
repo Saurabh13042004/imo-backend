@@ -2,11 +2,11 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Package, Home, Search } from "lucide-react";
 
 interface ProductSourceProps {
-  source: 'Amazon' | 'Walmart' | 'Home Depot' | 'HomeDepot' | 'Google';
+  source: string;
   className?: string;
 }
 
-const sourceConfig = {
+const sourceConfig: Record<string, any> = {
   Amazon: {
     icon: ShoppingBag,
     label: "Amazon",
@@ -40,7 +40,9 @@ const sourceConfig = {
 };
 
 export const ProductSource = ({ source, className }: ProductSourceProps) => {
-  const config = sourceConfig[source];
+  // Normalize source name (capitalize first letter, lowercase rest)
+  const normalizedSource = source ? source.charAt(0).toUpperCase() + source.slice(1).toLowerCase() : '';
+  const config = sourceConfig[normalizedSource];
 
   // Fallback if source is not recognized
   if (!config) {
