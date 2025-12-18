@@ -15,9 +15,11 @@ from app.schemas import (
     EnrichedProductRequest,
     AmazonProductAnalysis,
     AmazonReview,
-    AIVerdictRequest
+    AIVerdictRequest,
+    ShortVideoReviewsResponse
 )
 from app.services import SearchService, ReviewService, VideoService, AIService, ProductService
+from app.services.short_video_service import short_video_service
 from app.api.dependencies import get_db
 from app.config import Settings
 
@@ -680,6 +682,74 @@ async def generate_ai_verdict(
             detail=f"Failed to generate AI verdict: {str(e)}"
         )
 
+
+@router.get(
+    "/product/{product_id}/short-video-reviews",
+    response_model=ShortVideoReviewsResponse,
+    responses={404: {"model": ErrorResponse}, 500: {"model": ErrorResponse}}
+)
+async def get_short_video_reviews(
+    product_id: UUID,
+    title: str = Query(..., description="Product title for video search"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get short-form video reviews for a product.
+    
+    Fetches YouTube Shorts, TikTok videos, and Instagram Reels related to the product.
+    Results are cached for 24 hours.
+    
+    Non-blocking: returns immediately, videos load in background if not cached.
+    
+    - **product_id**: UUID of the product
+    - **title**: Product title (required for video search)
+    """
+    try:
+        if not title or not title.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Product title is required"
+            )
+        
+        # Fetch short video reviews (cached) - title parameter enables search without DB lookup
+        videos = await short_video_service.fetch_short_video_reviews(
+            product_id,
+            title.strip()
+        )
+        
+        # Transform to response schema
+        video_responses = [
+            {
+                "id": video.get("id"),
+                "platform": video.get("platform"),
+                "video_url": video.get("video_url"),
+                "thumbnail_url": video.get("thumbnail_url"),
+                "creator": video.get("creator"),
+                "caption": video.get("caption"),
+                "likes": video.get("likes", 0),
+                "views": video.get("views", 0),
+                "duration": video.get("duration")
+            }
+            for video in videos
+        ]
+        
+        logger.info(f"[ShortVideoReviews] Returned {len(video_responses)} videos for {product_id}")
+        
+        return ShortVideoReviewsResponse(
+            success=True,
+            product_id=product_id,
+            total=len(video_responses),
+            videos=video_responses
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[ShortVideoReviews] Error fetching videos for {product_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch short video reviews: {str(e)}"
+        )
 
 
 @router.get("/debug/cache")

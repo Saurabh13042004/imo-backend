@@ -17,6 +17,7 @@ import { ProductInfo } from "@/components/product/ProductInfo";
 import { ProductInfoSkeleton } from "@/components/product/ProductInfoSkeleton";
 import { ProductProsAndCons } from "@/components/product/ProductProsAndCons";
 import { ProductReviews } from "@/components/product/ProductReviews";
+import { ShortVideoReviews } from "@/components/product/ShortVideoReviews";
 // import { ProductReviewsSkeleton } from "@/components/product/ProductReviewsSkeleton";
 import { VideoReviews } from "@/components/product/VideoReviews";
 // import { YouTubeVideosSkeleton } from "@/components/product/YouTubeVideosSkeleton";
@@ -557,6 +558,14 @@ const ProductDetails = () => {
                         likes: 0,
                         platform: 'YouTube'
                       }))}
+                    />
+                  )}
+
+                  {/* Short Video Reviews (YouTube Shorts / TikTok / Instagram Reels) */}
+                  {productId && enrichedData && (
+                    <ShortVideoReviews 
+                      productId={productId} 
+                      productTitle={enrichedData.immersive_data.product_results.title}
                     />
                   )}
 

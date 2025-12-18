@@ -392,6 +392,29 @@ class AIVerdictStatusResponse(BaseModel):
     message: Optional[str] = Field(None, description="Status message or error details")
 
 
+class ShortVideoReviewResponse(BaseModel):
+    """Short-form video review response schema."""
+
+    id: str = Field(..., description="Unique video ID")
+    platform: str = Field(..., description="Platform: 'YouTube Shorts', 'TikTok', or 'Instagram Reels'")
+    video_url: str
+    thumbnail_url: Optional[str] = None
+    creator: str
+    caption: Optional[str] = None
+    likes: int
+    views: int
+    duration: Optional[int] = None  # in seconds
+
+
+class ShortVideoReviewsResponse(BaseModel):
+    """Short video reviews collection response."""
+
+    success: bool = True
+    product_id: UUID
+    total: int
+    videos: List[ShortVideoReviewResponse] = []
+
+
 class ErrorResponse(BaseModel):
     """Error response schema."""
 
