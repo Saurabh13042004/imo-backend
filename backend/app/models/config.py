@@ -1,7 +1,7 @@
 """Application configuration model."""
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, JSONB
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
 from sqlalchemy.sql import func
 
 from app.models import Base

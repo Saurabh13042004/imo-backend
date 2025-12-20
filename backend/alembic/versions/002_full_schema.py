@@ -249,7 +249,7 @@ def upgrade() -> None:
         sa.Column('interaction_type', sa.String(), nullable=False),
         sa.Column('content_type', sa.String(), nullable=True),
         sa.Column('content_id', sa.String(), nullable=True),
-        sa.Column('metadata', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column('interaction_data', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column('session_id', sa.String(), nullable=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('id')

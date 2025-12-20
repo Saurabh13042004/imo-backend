@@ -1,7 +1,7 @@
 """Analytics and logging related models."""
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, JSONB, INET
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB, INET
 from sqlalchemy.sql import func
 
 from app.models import Base
@@ -56,7 +56,7 @@ class UserInteraction(Base):
     interaction_type = Column(String, nullable=False)
     content_type = Column(String)
     content_id = Column(String)
-    metadata = Column(JSONB)
+    interaction_data = Column(JSONB)
     session_id = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
