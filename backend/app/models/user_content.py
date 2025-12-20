@@ -1,6 +1,6 @@
 """User-generated content models."""
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, DateTime, CheckConstraint, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, CheckConstraint, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -69,7 +69,7 @@ class ProductReview(Base):
     rating = Column(Integer, nullable=False)
     title = Column(String)
     review_text = Column(String)
-    verified_purchase = Column(String, default=False)
+    verified_purchase = Column(Boolean, default=False)
     review_date = Column(DateTime(timezone=True))
     positive_feedback = Column(Integer, default=0)
     negative_feedback = Column(Integer, default=0)
