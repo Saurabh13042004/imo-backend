@@ -5,7 +5,7 @@
 
 const API_URL =
   process.env.NODE_ENV === "production"
-    ? "https://api.yourdomain.com"
+    ? "https://imo-6g57.onrender.com"
     : "http://localhost:8000";
 
 /**
