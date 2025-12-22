@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/config/api";
 
 interface AIVerdict {
   imo_score: number;
@@ -60,7 +61,7 @@ export const useAIVerdict = (
 
         // CRITICAL: Pass FULL enriched_data and scrape_stores flag
         const response = await fetch(
-          `/api/v1/product/${productId}/ai-verdict`,
+          `${API_BASE_URL}/api/v1/product/${productId}/ai-verdict`,
           {
             method: "POST",
             headers: {

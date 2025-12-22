@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { API_BASE_URL } from '@/config/api';
 
 export interface StoreReview {
   store: string;
@@ -57,7 +58,7 @@ export function useStoreReviews(productName: string | null, storeUrls?: string[]
 
     try {
       const response = await fetch(
-        '/api/v1/reviews/store',
+        `${API_BASE_URL}/api/v1/reviews/store`,
         {
           method: 'POST',
           headers: {

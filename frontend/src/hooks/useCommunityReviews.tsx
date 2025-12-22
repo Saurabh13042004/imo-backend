@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { API_BASE_URL } from '@/config/api';
 
 export interface CommunityReview {
   source: 'reddit' | 'forum';
@@ -50,7 +51,7 @@ export function useCommunityReviews(productName: string | null, brand?: string) 
 
     try {
       const response = await fetch(
-        '/api/v1/reviews/community',
+        `${API_BASE_URL}/api/v1/reviews/community`,
         {
           method: 'POST',
           headers: {

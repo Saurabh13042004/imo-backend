@@ -11,6 +11,7 @@ import { useAIVerdict } from "@/hooks/useAIVerdict";
 import { useCommunityReviews } from "@/hooks/useCommunityReviews";
 import { useStoreReviews } from "@/hooks/useStoreReviews";
 import { formatPriceWithCurrency } from "@/utils/currencyUtils";
+import { API_BASE_URL } from "@/config/api";
 // import { useProductBasic, useProductReviews, useProductVideos } from "@/hooks/useProductDetails";
 
 import { ProductLikeButton } from "@/components/product/ProductLikeButton";
@@ -74,7 +75,7 @@ const ProductDetails = () => {
     const fetchGoogleReviews = async () => {
       try {
         // Don't set loading - just fetch in background
-        const response = await fetch('/api/v1/reviews/google', {
+        const response = await fetch(`${API_BASE_URL}/api/v1/reviews/google`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -205,7 +206,7 @@ const ProductDetails = () => {
         }
 
         const response = await fetch(
-          `/api/v1/product/enriched/${productId}`,
+          `${API_BASE_URL}/api/v1/product/enriched/${productId}`,
           {
             method: "POST",
             headers: {

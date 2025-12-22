@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE_URL } from "@/config/api";
 
 interface ShortVideo {
   id: string;
@@ -49,7 +50,7 @@ export const useShortVideoReviews = (
         setError(null);
 
         // Pass product title as query parameter
-        const url = new URL(`/api/v1/product/${productId}/short-video-reviews`, window.location.origin);
+        const url = new URL(`${API_BASE_URL}/api/v1/product/${productId}/short-video-reviews`);
         url.searchParams.append("title", productTitle);
 
         const response = await fetch(url.toString());
