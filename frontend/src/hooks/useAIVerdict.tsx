@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
 import { API_BASE_URL } from "@/config/api";
+import toast from "react-hot-toast";
 
 interface AIVerdict {
   imo_score: number;
@@ -50,9 +50,9 @@ export const useAIVerdict = (
         setError(null);
 
         // Show toast when processing starts
-        toast.info("🤖 IMO AI is crafting the best verdict for you…", {
+        toast.loading("🤖 IMO AI is crafting the best verdict for you…", {
           position: "bottom-left",
-          autoClose: 2000,
+          duration: 2000,
         });
 
         console.log(`[useAIVerdict] Requesting verdict for product: ${productId}`);
@@ -89,7 +89,7 @@ export const useAIVerdict = (
           // Show success toast
           toast.success("✨ IMO AI verdict is ready", {
             position: "bottom-left",
-            autoClose: 2000,
+            duration: 2000,
           });
         } else if (result.status === "processing") {
           // Verdict is being generated
@@ -106,10 +106,8 @@ export const useAIVerdict = (
         setStatus("error");
         setIsLoading(false);
 
-        toast({
-          title: "Could not generate AI verdict",
-          description: errorMessage,
-          variant: "destructive",
+        toast.error(`Could not generate AI verdict: ${errorMessage}`, {
+          position: "bottom-left",
           duration: 3000,
         });
       }

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
+import { Toaster } from 'react-hot-toast'
 
 // Pages
 import Index from '@/pages/Index'
@@ -41,6 +42,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <Router>
+      <Toaster position="bottom-left" />
       <ScrollToTop />
       <Layout>
         <Routes>

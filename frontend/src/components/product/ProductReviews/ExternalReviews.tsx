@@ -221,8 +221,11 @@ export const ExternalReviews = ({ productId, reviews = [], reviewsSummary, isLoa
                           Verified Purchase
                         </Badge>
                       )}
-                      {/* Verified badges for enriched API, Google, and store reviews */}
+                      {/* Verified badges for enriched API, Google, and store reviews - NOT for forums/community */}
                       {review.source && (
+                        !review.source?.toLowerCase().includes('forum') &&
+                        !review.source?.toLowerCase().includes('reddit') &&
+                        !review.source?.toLowerCase().includes('community') &&
                         <Badge 
                           variant="outline" 
                           className={`text-xs ${

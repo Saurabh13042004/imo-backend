@@ -4,7 +4,7 @@ import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useParallax } from "@/hooks/useParallax";
 import { useSearchUrl } from "@/hooks/useSearchUrl";
@@ -102,7 +102,7 @@ const ProductDetails = () => {
               `IMO AI Just added ${data.reviews.length} Google Shopping reviews! Happy Shopping!`,
               {
                 position: "bottom-left",
-                autoClose: 3000,
+                duration: 3000,
               }
             );
           }
@@ -118,13 +118,13 @@ const ProductDetails = () => {
 
   // Show notification when community reviews arrive
   useEffect(() => {
-    if (communityReviews.reviews && communityReviews.reviews.length > 0 && communityReviews.status === 'loaded') {
+    if (communityReviews.reviews && communityReviews.reviews.length > 0 && communityReviews.status === 'ready') {
       console.log('[ProductDetails] Showing community reviews toast:', communityReviews.reviews.length);
       toast.success(
         `IMO AI Just added ${communityReviews.reviews.length} community reviews! Happy Shopping!`,
         {
           position: "bottom-left",
-          autoClose: 3000,
+          duration: 3000,
         }
       );
     }
@@ -132,13 +132,13 @@ const ProductDetails = () => {
 
   // Show notification when store reviews arrive
   useEffect(() => {
-    if (storeReviews.reviews && storeReviews.reviews.length > 0 && storeReviews.status === 'loaded') {
+    if (storeReviews.reviews && storeReviews.reviews.length > 0 && storeReviews.status === 'ready') {
       console.log('[ProductDetails] Showing store reviews toast:', storeReviews.reviews.length);
       toast.success(
         `IMO AI Just added ${storeReviews.reviews.length} store reviews! Happy Shopping!`,
         {
           position: "bottom-left",
-          autoClose: 3000,
+          duration: 3000,
         }
       );
     }
