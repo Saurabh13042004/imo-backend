@@ -123,10 +123,14 @@ export const SearchResults = ({
 				>
 					<div className="text-center space-y-2">
 						<h2 className="text-xl font-semibold">
-							Found {totalCount} {totalCount === 1 ? "Product" : "Products"}
+							Found {isGuest ? validProducts.length : totalCount} {(isGuest ? validProducts.length : totalCount) === 1 ? "Product" : "Products"}
 						</h2>
 						<p className="text-muted-foreground text-sm">
-							Showing products over $250 with AI-powered analysis
+							{isGuest && totalCount && totalCount > validProducts.length ? (
+								<>Showing {validProducts.length} of {totalCount} products (sign in to see all)</>
+							) : (
+								<>Showing products over $250 with AI-powered analysis</>
+							)}
 						</p>
 					</div>
 

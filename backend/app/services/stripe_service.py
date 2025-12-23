@@ -196,8 +196,14 @@ class StripeService:
             if not subscription:
                 # Use Stripe subscription dates if available
                 if stripe_subscription:
-                    subscription_start = datetime.fromtimestamp(stripe_subscription.current_period_start, tz=timezone.utc)
-                    subscription_end = datetime.fromtimestamp(stripe_subscription.current_period_end, tz=timezone.utc)
+                    # For subscriptions, use start_date and billing_cycle_anchor
+                    subscription_start = datetime.fromtimestamp(stripe_subscription.start_date, tz=timezone.utc)
+                    
+                    # If trial exists, subscription_end is trial_end, otherwise billing_cycle_anchor
+                    if stripe_subscription.trial_end:
+                        subscription_end = datetime.fromtimestamp(stripe_subscription.trial_end, tz=timezone.utc)
+                    else:
+                        subscription_end = datetime.fromtimestamp(stripe_subscription.billing_cycle_anchor, tz=timezone.utc)
                     
                     subscription = Subscription(
                         user_id=user_id,
@@ -238,8 +244,13 @@ class StripeService:
                 
                 # Use Stripe subscription dates if available
                 if stripe_subscription:
-                    subscription.subscription_start = datetime.fromtimestamp(stripe_subscription.current_period_start, tz=timezone.utc)
-                    subscription.subscription_end = datetime.fromtimestamp(stripe_subscription.current_period_end, tz=timezone.utc)
+                    subscription.subscription_start = datetime.fromtimestamp(stripe_subscription.start_date, tz=timezone.utc)
+                    
+                    # If trial exists, subscription_end is trial_end, otherwise billing_cycle_anchor
+                    if stripe_subscription.trial_end:
+                        subscription.subscription_end = datetime.fromtimestamp(stripe_subscription.trial_end, tz=timezone.utc)
+                    else:
+                        subscription.subscription_end = datetime.fromtimestamp(stripe_subscription.billing_cycle_anchor, tz=timezone.utc)
                     
                     # Set trial dates if trial exists
                     if stripe_subscription.trial_end:
