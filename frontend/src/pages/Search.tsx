@@ -32,6 +32,8 @@ const Search = () => {
 	const [showGuestBanner, setShowGuestBanner] = useState(!user);
 	const [searchesExhausted, setSearchesExhausted] = useState(false);
 	const [productDisplayLimit, setProductDisplayLimit] = useState(5);
+	const [clearedProducts, setClearedProducts] = useState<any[]>([]);
+	const [lastQuery, setLastQuery] = useState<string>("");
 	const { toast } = useToast();
 
 	const {
@@ -50,10 +52,22 @@ const Search = () => {
 		page: page,
 	});
 
+	// Clear products when query changes (new search)
+	useEffect(() => {
+		if (query && query !== lastQuery) {
+			setClearedProducts([]);
+			setLastQuery(query);
+			setPage(1);
+		}
+	}, [query, lastQuery]);
+
+	// Use cleared products for new searches, but use actual products once they arrive
+	const displayedProducts = products.length > 0 ? products : clearedProducts;
+
 	// Apply display limit based on user tier
 	const displayProducts = user
-		? products
-		: products.slice(0, productDisplayLimit);
+		? displayedProducts
+		: displayedProducts.slice(0, productDisplayLimit);
 
 	const handleSearch = (searchQuery?: string) => {
 		const effectiveQuery = searchQuery || query;
@@ -135,13 +149,13 @@ const Search = () => {
 
 	// Clear loading when results arrive
 	useEffect(() => {
-		if (isLoading && (products.length > 0 || (!isLoading && hasSubmitted))) {
+		if (isLoading && products.length > 0) {
 			const timer = setTimeout(() => {
 				setIsLoading(false);
 			}, 300);
 			return () => clearTimeout(timer);
 		}
-	}, [products, isLoading, hasSubmitted]);
+	}, [products, isLoading]);
 
 	// Load guest search count on mount and set product display limit
 	useEffect(() => {

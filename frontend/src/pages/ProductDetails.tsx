@@ -799,7 +799,7 @@ const ProductDetails = () => {
                         review_date: review.date || new Date().toISOString(),
                         positive_feedback: 0,
                         negative_feedback: 0,
-                        source: "Google Shopping"
+                        source: review.source || "Google Shopping"
                       })) || []),
                       // 5. Store reviews
                       ...(storeReviews.reviews?.map((review: any) => ({

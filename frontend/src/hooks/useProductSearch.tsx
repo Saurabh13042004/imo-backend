@@ -49,6 +49,7 @@ export function useProductSearch({
 	const [error, setError] = useState<string | null>(null);
 	const [totalCount, setTotalCount] = useState(0);
 	const [totalPages, setTotalPages] = useState(0);
+	const [lastQuery, setLastQuery] = useState<string>("");
 
 	useEffect(() => {
 		if (!enabled || !query?.trim()) {
@@ -57,6 +58,13 @@ export function useProductSearch({
 			setTotalPages(0);
 			return;
 		}
+
+		// Clear products when query changes (new search)
+		if (query !== lastQuery && page === 1) {
+			setProducts([]);
+		}
+
+		setLastQuery(query);
 
 		const fetchProducts = async () => {
 			setIsLoading(true);

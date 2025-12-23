@@ -249,3 +249,394 @@ All colors MUST be HSL.
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-primary/40;
 }
+
+/* Loader 3 Animation Styles */
+:root {
+  --clr: #fff;
+}
+
+.dark {
+  --clr: #000;
+}
+
+@keyframes box-move0 {
+  12% {
+    transform: translate(var(--x), var(--y));
+  }
+  25%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale0 {
+  6% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  14%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes box-move1 {
+  16% {
+    transform: translate(var(--x), var(--y));
+  }
+  29%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale1 {
+  10% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  18%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes box-move2 {
+  20% {
+    transform: translate(var(--x), var(--y));
+  }
+  33%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale2 {
+  14% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  22%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes box-move3 {
+  24% {
+    transform: translate(var(--x), var(--y));
+  }
+  37%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale3 {
+  18% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  26%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes box-move4 {
+  28% {
+    transform: translate(var(--x), var(--y));
+  }
+  41%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale4 {
+  22% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  30%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes box-move5 {
+  32% {
+    transform: translate(var(--x), var(--y));
+  }
+  45%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale5 {
+  26% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  34%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes box-move6 {
+  36% {
+    transform: translate(var(--x), var(--y));
+  }
+  49%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale6 {
+  30% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  38%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes box-move7 {
+  40% {
+    transform: translate(var(--x), var(--y));
+  }
+  53%, 52% {
+    transform: translate(0, 0);
+  }
+  80% {
+    transform: translate(0, -32px);
+  }
+  90%, 100% {
+    transform: translate(0, 188px);
+  }
+}
+
+@keyframes box-scale7 {
+  34% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(0);
+  }
+  42%, 100% {
+    transform: rotateY(-47deg) rotateX(-15deg) rotateZ(15deg) scale(1);
+  }
+}
+
+@keyframes ground {
+  0%, 65% {
+    transform: rotateX(90deg) rotateY(0deg) translate(-48px, -120px) translateZ(100px) scale(0);
+  }
+  75%, 90% {
+    transform: rotateX(90deg) rotateY(0deg) translate(-48px, -120px) translateZ(100px) scale(1);
+  }
+  100% {
+    transform: rotateX(90deg) rotateY(0deg) translate(-48px, -120px) translateZ(100px) scale(0);
+  }
+}
+
+@keyframes ground-shine {
+  0%, 70% {
+    opacity: 0;
+  }
+  75%, 87% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes mask {
+  0%, 65% {
+    opacity: 0;
+  }
+  66%, 100% {
+    opacity: 1;
+  }
+}
+
+.loader {
+  perspective: 1000px;
+  position: relative;
+  width: 200px;
+  height: 200px;
+}
+
+.box {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  animation-duration: 6s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.box0 {
+  --x: -48px;
+  --y: -48px;
+  animation-name: box-move0, box-scale0;
+}
+
+.box0 div {
+  background: #ff6b35;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.box1 {
+  --x: 0;
+  --y: -48px;
+  animation-name: box-move1, box-scale1;
+}
+
+.box1 div {
+  background: #f7931e;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.box2 {
+  --x: 48px;
+  --y: -48px;
+  animation-name: box-move2, box-scale2;
+}
+
+.box2 div {
+  background: #fdb913;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.box3 {
+  --x: -48px;
+  --y: 0;
+  animation-name: box-move3, box-scale3;
+}
+
+.box3 div {
+  background: #1a73e8;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.box4 {
+  --x: 0;
+  --y: 0;
+  animation-name: box-move4, box-scale4;
+}
+
+.box4 div {
+  background: #34a853;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.box5 {
+  --x: 48px;
+  --y: 0;
+  animation-name: box-move5, box-scale5;
+}
+
+.box5 div {
+  background: #ea4335;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.box6 {
+  --x: -48px;
+  --y: 48px;
+  animation-name: box-move6, box-scale6;
+}
+
+.box6 div {
+  background: #4285f4;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.box7 {
+  --x: 0;
+  --y: 48px;
+  animation-name: box-move7, box-scale7;
+}
+
+.box7 div {
+  background: #fbbc04;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation: inherit;
+}
+
+.ground {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  bottom: 0;
+  left: 52px;
+  transform-style: preserve-3d;
+  animation: ground 6s ease-in-out infinite;
+}
+
+.ground div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(255, 107, 53, 0.5), rgba(251, 188, 4, 0.5));
+  animation: ground-shine 6s ease-in-out infinite;
+}
