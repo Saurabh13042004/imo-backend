@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useState } from 'react';
 
 export function HighConversionPricing() {
-  const { hasActiveSubscription } = useUserAccess();
+  const { hasActiveSubscription, refetchAccess } = useUserAccess();
   const { createCheckoutSession, loading } = useSubscriptionFlow();
   const { user, isAuthenticated } = useAuth();
   const [loadingType, setLoadingType] = useState<'trial' | 'subscription' | null>(null);
@@ -21,7 +21,11 @@ export function HighConversionPricing() {
   const handleStartTrial = async () => {
     setLoadingType('trial');
     try {
-      await createCheckoutSession('trial');
+      const result = await createCheckoutSession('trial');
+      if (result?.success && result?.type === 'trial') {
+        // Immediately refresh subscription status
+        await refetchAccess();
+      }
     } finally {
       setLoadingType(null);
     }

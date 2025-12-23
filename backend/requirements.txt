@@ -14,7 +14,7 @@ google-search-results==2.4.2
 beautifulsoup4==4.12.2
 
 # Payment processing
-stripe==7.8.0
+stripe==14.1.0
 
 # Authentication dependencies
 PyJWT==2.8.0

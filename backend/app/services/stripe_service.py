@@ -1,6 +1,6 @@
 """Stripe payment service for handling subscriptions and payments."""
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Optional, Dict, Any
 import stripe
@@ -38,6 +38,21 @@ class StripeService:
     ) -> Dict[str, Any]:
         """Create a Stripe checkout session for trial or premium subscription."""
         try:
+            # Check if user already has an active subscription
+            result = await session.execute(
+                select(Subscription).where(
+                    Subscription.user_id == user_id,
+                    Subscription.is_active == True
+                ).order_by(Subscription.created_at.desc())
+            )
+            existing = result.scalar_one_or_none()
+            
+            if existing:
+                now = datetime.now(timezone.utc)
+                if existing.subscription_end and existing.subscription_end > now:
+                    logger.warning(f"User {user_id} already has active {existing.plan_type} subscription until {existing.subscription_end}")
+                    raise Exception(f"You already have an active {existing.plan_type} subscription. Please cancel it first or wait for it to expire.")
+            
             # Check if Stripe is configured
             if not stripe.api_key:
                 raise Exception(
@@ -165,7 +180,7 @@ class StripeService:
             )
             subscription = result.scalar_one_or_none()
 
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
 
             if not subscription:
                 subscription = Subscription(
@@ -255,20 +270,29 @@ class StripeService:
                 logger.error(f"User {user_id} not found")
                 return False
 
-            # Check if already has active subscription
+            # Check if already has active subscription that hasn't expired
             result = await session.execute(
                 select(Subscription).where(
                     Subscription.user_id == user_id,
                     Subscription.is_active == True
-                )
+                ).order_by(Subscription.created_at.desc())
             )
             existing = result.scalar_one_or_none()
 
             if existing:
-                logger.warning(f"User {user_id} already has active subscription")
-                return False
+                # Check if subscription has actually expired
+                now = datetime.now(timezone.utc)
+                logger.info(f"Found existing subscription for user {user_id}: plan_type={existing.plan_type}, is_active={existing.is_active}, end={existing.subscription_end}, now={now}")
+                if existing.subscription_end and existing.subscription_end > now:
+                    logger.warning(f"User {user_id} already has active subscription until {existing.subscription_end}")
+                    raise Exception("You already have an active subscription. Cancel it before starting a trial.")
+                else:
+                    # Subscription has expired, mark it as inactive
+                    existing.is_active = False
+                    await session.flush()
+                    logger.info(f"Marked expired subscription for user {user_id} as inactive")
 
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             trial_end = now + timedelta(days=settings.TRIAL_PERIOD_DAYS)
 
             subscription = Subscription(
@@ -359,7 +383,7 @@ class StripeService:
 
             # Deactivate subscription
             subscription.is_active = False
-            subscription.subscription_end = datetime.utcnow()
+            subscription.subscription_end = datetime.now(timezone.utc)
 
             # Update user tier to free
             user = subscription.user
@@ -389,7 +413,7 @@ class StripeService:
             if not subscription:
                 return None
 
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             is_active = (
                 subscription.is_active
                 and subscription.subscription_end

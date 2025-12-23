@@ -116,9 +116,12 @@ async def start_trial(
             'success': True,
             'message': 'Trial subscription started. You have 7 days of premium access!',
         }
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error starting trial: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e) if str(e) else "Could not start trial. You may already have an active subscription."
+        logger.error(f"Error starting trial: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
 
 @router.get("/subscription")

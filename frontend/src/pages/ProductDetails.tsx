@@ -24,6 +24,7 @@ import { ProductProsAndCons } from "@/components/product/ProductProsAndCons";
 import { ProductReviews } from "@/components/product/ProductReviews";
 import { ShortVideoReviews } from "@/components/product/ShortVideoReviews";
 import { PriceAlertModal } from "@/components/product/PriceAlertModal";
+import { IMOAIChat } from "@/components/product/IMOAIChat";
 // import { ProductReviewsSkeleton } from "@/components/product/ProductReviewsSkeleton";
 import { VideoReviews } from "@/components/product/VideoReviews";
 
@@ -865,6 +866,14 @@ const ProductDetails = () => {
             product_url: product.product_url,
             price: product.price,
           }}
+        />
+      )}
+
+      {/* IMO AI Chat Assistant */}
+      {product && (
+        <IMOAIChat 
+          productTitle={product?.title || "Product"}
+          productDescription={enrichedData?.description || product?.description || ""}
         />
       )}
     </div>

@@ -85,6 +85,39 @@ async def init_db():
             logger.info("oauth_provider_id column added or already exists")
         except Exception as e:
             logger.debug(f"oauth_provider_id column: {e}")
+        
+        # Add missing subscription columns for payment gateway
+        try:
+            await conn.execute(text("""
+                ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS billing_cycle VARCHAR;
+            """))
+            logger.info("billing_cycle column added or already exists")
+        except Exception as e:
+            logger.debug(f"billing_cycle column: {e}")
+        
+        try:
+            await conn.execute(text("""
+                ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS subscription_start TIMESTAMP WITH TIME ZONE;
+            """))
+            logger.info("subscription_start column added or already exists")
+        except Exception as e:
+            logger.debug(f"subscription_start column: {e}")
+        
+        try:
+            await conn.execute(text("""
+                ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS trial_start TIMESTAMP WITH TIME ZONE;
+            """))
+            logger.info("trial_start column added or already exists")
+        except Exception as e:
+            logger.debug(f"trial_start column: {e}")
+        
+        try:
+            await conn.execute(text("""
+                ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS stripe_product_id VARCHAR;
+            """))
+            logger.info("stripe_product_id column added or already exists")
+        except Exception as e:
+            logger.debug(f"stripe_product_id column: {e}")
 
 
 async def close_db():

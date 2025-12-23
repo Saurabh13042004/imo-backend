@@ -63,9 +63,8 @@ export function useSubscriptionFlow() {
           title: "🎉 Trial Started!",
           description: data.message || "Your 7-day free trial is now active",
         });
-        // Refresh user data to update subscription status
-        window.location.reload();
-        return null;
+        // Return success to trigger refetch in parent component
+        return { success: true, type: 'trial' };
       } else {
         // Redirect to Stripe checkout
         if (data.url) {
