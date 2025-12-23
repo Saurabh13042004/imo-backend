@@ -7,28 +7,40 @@ interface LocationPermissionBannerProps {
   onDismiss: () => void;
 }
 
+const LOCATION_BANNER_DISMISSED_KEY = 'location-banner-dismissed';
+const LOCATION_PERMISSION_GRANTED_KEY = 'location-permission-granted';
+
 /**
  * Component to request location permission and show detected location
  * Appears at the top of search page when location detection is in progress
+ * Only shows once per user (stored in localStorage)
  */
 export const LocationPermissionBanner: React.FC<LocationPermissionBannerProps> = ({
   detectedCountry,
   onDismiss,
 }) => {
-  const [showBanner, setShowBanner] = useState(true);
+  const [showBanner, setShowBanner] = useState(() => {
+    // Check localStorage on mount - don't show if already dismissed
+    const dismissed = localStorage.getItem(LOCATION_BANNER_DISMISSED_KEY);
+    const permissionGranted = localStorage.getItem(LOCATION_PERMISSION_GRANTED_KEY);
+    return !dismissed && !permissionGranted;
+  });
   const [locationDetected, setLocationDetected] = useState(false);
 
   useEffect(() => {
     // Check if location was already detected
     if (detectedCountry && detectedCountry !== 'India') {
       setLocationDetected(true);
+      // Store that location was detected
+      localStorage.setItem(LOCATION_PERMISSION_GRANTED_KEY, 'true');
       // Auto-hide banner after 4 seconds if location was detected
       const timer = setTimeout(() => {
         setShowBanner(false);
+        onDismiss();
       }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [detectedCountry]);
+  }, [detectedCountry, onDismiss]);
 
   const handleRequestLocation = async () => {
     try {
@@ -41,14 +53,21 @@ export const LocationPermissionBanner: React.FC<LocationPermissionBannerProps> =
         (position) => {
           console.log('Location permission granted:', position.coords);
           setLocationDetected(true);
+          // Store permission granted in localStorage
+          localStorage.setItem(LOCATION_PERMISSION_GRANTED_KEY, 'true');
           // Auto-hide after getting permission
           setTimeout(() => {
             setShowBanner(false);
+            onDismiss();
           }, 2000);
         },
         (error) => {
           console.warn('Location permission denied:', error);
+          // Store dismissal even if denied
+          localStorage.setItem(LOCATION_BANNER_DISMISSED_KEY, 'true');
           alert('Location permission was denied. We\'ll use IP-based detection instead.');
+          setShowBanner(false);
+          onDismiss();
         }
       );
     } catch (error) {
@@ -109,6 +128,8 @@ export const LocationPermissionBanner: React.FC<LocationPermissionBannerProps> =
             size="sm"
             variant="outline"
             onClick={() => {
+              // Store dismissal in localStorage
+              localStorage.setItem(LOCATION_BANNER_DISMISSED_KEY, 'true');
               setShowBanner(false);
               onDismiss();
             }}

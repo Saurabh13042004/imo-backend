@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { XCircle, Home, Search, RefreshCw, Crown, Shield, Clock, Check } from 'lucide-react';
 import { useSubscriptionFlow } from '@/hooks/useSubscriptionFlow';
-import { SearchHeader } from '@/components/search/SearchHeader';
 import { SubscriptionPlans } from '@/components/subscription/SubscriptionPlans';
 
 export default function PaymentCanceled() {
@@ -40,7 +39,6 @@ export default function PaymentCanceled() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <SearchHeader />
       <div className="container mx-auto px-6 py-16 max-w-6xl">
         {/* Hero Section */}
         <div className="text-center mb-12">

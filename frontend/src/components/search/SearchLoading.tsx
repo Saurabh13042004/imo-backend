@@ -7,9 +7,11 @@ interface SearchLoadingProps {
 }
 
 const LOADING_MESSAGES = [
-	"🔍 IMO is fetching products from Internet...",
-	"✨ IMO AI Crafting best shopping experience for you...",
-	"🎁 IMO AI fetching all offers for you...",
+	"🔍 Searching across thousands of products...",
+	"✨ Analyzing reviews and ratings...",
+	"🎁 Finding the best deals for you...",
+	"🤖 IMO AI is comparing prices...",
+	"📊 Gathering product insights...",
 ];
 
 export const SearchLoading = ({
@@ -23,7 +25,7 @@ export const SearchLoading = ({
 
 		const interval = setInterval(() => {
 			setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-		}, 3000);
+		}, 2500);
 
 		return () => clearInterval(interval);
 	}, [isVisible]);
@@ -42,12 +44,19 @@ export const SearchLoading = ({
 				isPagination ? "py-8" : "py-16"
 			}`}
 		>
-			{/* Simple Animated Spinner */}
-			<motion.div
-				animate={{ rotate: 360 }}
-				transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-				className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full"
-			/>
+			{/* Improved Animated Spinner */}
+			<div className="relative">
+				<motion.div
+					animate={{ rotate: 360 }}
+					transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+					className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full"
+				/>
+				<motion.div
+					animate={{ rotate: -360 }}
+					transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
+					className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-secondary/40 rounded-full"
+				/>
+			</div>
 
 			{/* Changing messages */}
 			<motion.div
@@ -63,13 +72,13 @@ export const SearchLoading = ({
 				</div>
 
 				{/* Progress indicator dots */}
-				<div className="flex gap-1 justify-center">
-					{[0, 1, 2].map((i) => (
+				<div className="flex gap-1.5 justify-center">
+					{[0, 1, 2, 3, 4].map((i) => (
 						<motion.div
 							key={i}
 							animate={{
-								scale: i === messageIndex ? 1.2 : 0.8,
-								opacity: i === messageIndex ? 1 : 0.4,
+								scale: i === messageIndex ? 1.3 : 0.7,
+								opacity: i === messageIndex ? 1 : 0.3,
 							}}
 							transition={{ duration: 0.3 }}
 							className="w-2 h-2 rounded-full bg-primary"

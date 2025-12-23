@@ -35,7 +35,11 @@ const Search = () => {
 	const [productDisplayLimit, setProductDisplayLimit] = useState(5);
 	const [clearedProducts, setClearedProducts] = useState<any[]>([]);
 	const [lastQuery, setLastQuery] = useState<string>("");
-	const [dismissLocationBanner, setDismissLocationBanner] = useState(false);
+	const [dismissLocationBanner, setDismissLocationBanner] = useState(() => {
+		// Check localStorage on mount
+		return localStorage.getItem('location-banner-dismissed') === 'true' || 
+		       localStorage.getItem('location-permission-granted') === 'true';
+	});
 	const { toast } = useToast();
 
 	const {

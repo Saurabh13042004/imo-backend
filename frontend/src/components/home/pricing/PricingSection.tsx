@@ -21,7 +21,8 @@ export function PricingSection() {
   const handleStartTrial = async () => {
     setLoadingType('trial');
     try {
-      await createCheckoutSession('trial');
+      // Trial now goes through Stripe checkout, so it will redirect
+      await createCheckoutSession('trial', 'monthly');
     } finally {
       setLoadingType(null);
     }
@@ -49,7 +50,7 @@ export function PricingSection() {
             Get Unlimited Product Rankings
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Starting at $6.99/mo • 7-day free trial • Cancel anytime • No card needed
+            Starting at $6.99/mo • {billingPeriod === 'monthly' ? '7-day free trial • ' : ''}Cancel anytime • No card needed
           </p>
         </div>
 
@@ -156,17 +157,27 @@ export function PricingSection() {
               {billingPeriod === 'yearly' ? (
                 <p className="text-sm text-muted-foreground">Billed annually at $83.88/year</p>
               ) : (
-                <p className="text-sm text-muted-foreground">Billed monthly</p>
+                <p className="text-sm text-muted-foreground">Billed monthly at $9.99/month</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">7-day free trial included</p>
+              {billingPeriod === 'monthly' && (
+                <p className="text-xs text-green-600 font-medium mt-1">✨ 7-day free trial included</p>
+              )}
             </CardHeader>
             
             <CardContent className="space-y-6">
               <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="font-medium">7-day free trial included</span>
-                </li>
+                {billingPeriod === 'monthly' && (
+                  <li className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="font-medium">7-day free trial included</span>
+                  </li>
+                )}
+                {billingPeriod === 'yearly' && (
+                  <li className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="font-medium">Save 30% with annual billing</span>
+                  </li>
+                )}
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>Unlimited access to all categories</span>
@@ -194,15 +205,36 @@ export function PricingSection() {
                   <Crown className="mr-2 h-4 w-4" />
                   Current Plan
                 </Button>
+              ) : billingPeriod === 'monthly' ? (
+                // Monthly: Show trial button only
+                <div className="space-y-3">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+                    onClick={handleStartTrial}
+                    disabled={loadingType !== null || loading}
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    {loadingType === 'trial' ? 'Starting Trial...' : 'Start 7-Day Free Trial'}
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Then $9.99/month after trial ends
+                  </p>
+                </div>
               ) : (
-                <Button 
-                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
-                  onClick={handleSubscribe}
-                  disabled={loadingType !== null || loading}
-                >
-                  <Crown className="mr-2 h-4 w-4" />
-                  {loadingType === 'subscription' ? 'Starting Trial...' : 'Start 7-Day Free Trial Now'}
-                </Button>
+                // Yearly: Show subscribe button only (no trial)
+                <div className="space-y-3">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
+                    onClick={handleSubscribe}
+                    disabled={loadingType !== null || loading}
+                  >
+                    <Crown className="mr-2 h-4 w-4" />
+                    {loadingType === 'subscription' ? 'Processing...' : 'Subscribe Now'}
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Billed $83.88 annually • Save 30%
+                  </p>
+                </div>
               )}
               
               <p className="text-sm text-center text-muted-foreground">

@@ -27,6 +27,7 @@ import PaymentSuccess from '@/pages/PaymentSuccess'
 import PaymentCanceled from '@/pages/PaymentCanceled'
 import Checkout from '@/pages/Checkout'
 import { GoogleOAuthCallback } from '@/pages/GoogleOAuthCallback'
+import { Navigate } from 'react-router-dom'
 
 // Layout
 import { Layout } from '@/components/layout/Layout'
@@ -65,6 +66,8 @@ function AppRoutes() {
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-canceled" element={<PaymentCanceled />} />
+      {/* Dashboard redirect for backward compatibility */}
+      <Route path="/dashboard" element={<Navigate to="/payment-success" replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

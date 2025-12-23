@@ -31,18 +31,15 @@ export function useSubscriptionFlow() {
     setError(null);
 
     try {
-      const endpoint = type === 'trial' ? '/payments/start-trial' : '/payments/create-checkout-session';
-      
-      const payload = type === 'trial' 
-        ? {}
-        : {
-            plan_type: 'premium',
-            billing_cycle: billingCycle,
-            success_url: `${window.location.origin}/dashboard?payment=success`,
-            cancel_url: `${window.location.origin}/pricing?payment=cancelled`,
-          };
+      // Both trial and paid subscriptions now use create-checkout-session
+      const payload = {
+        plan_type: type === 'trial' ? 'trial' : 'premium',
+        billing_cycle: billingCycle,
+        success_url: `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${window.location.origin}/payment-canceled`,
+      };
 
-      const response = await fetch(`${API_BASE_URL}/api/v1${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/payments/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,21 +55,12 @@ export function useSubscriptionFlow() {
 
       const data = await response.json();
 
-      if (type === 'trial') {
-        toast({
-          title: "🎉 Trial Started!",
-          description: data.message || "Your 7-day free trial is now active",
-        });
-        // Return success to trigger refetch in parent component
-        return { success: true, type: 'trial' };
+      // Redirect to Stripe checkout for both trial and paid
+      if (data.url) {
+        window.location.href = data.url;
+        return data;
       } else {
-        // Redirect to Stripe checkout
-        if (data.url) {
-          window.location.href = data.url;
-          return data;
-        } else {
-          throw new Error('No checkout URL provided');
-        }
+        throw new Error('No checkout URL provided');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create checkout session';
@@ -88,13 +76,20 @@ export function useSubscriptionFlow() {
     }
   }, [isAuthenticated, toast, navigate]);
 
-  const handlePaymentSuccess = useCallback(async () => {
+  const handlePaymentSuccess = useCallback(async (
+    paymentType?: 'subscription' | 'unlock',
+    category?: string,
+    sessionId?: string
+  ) => {
     toast({
       title: "✅ Payment Successful!",
-      description: "Your subscription is now active. Enjoy unlimited access!",
+      description: paymentType === 'subscription' 
+        ? "Your subscription is now active. Enjoy unlimited access!"
+        : "Payment processed successfully!",
     });
-    // Refresh user subscription status
-    setTimeout(() => window.location.href = '/dashboard', 2000);
+    
+    // Log for debugging
+    console.log('Payment success:', { paymentType, category, sessionId });
   }, [toast]);
 
   const handlePaymentCancelled = useCallback(async () => {

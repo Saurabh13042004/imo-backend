@@ -21,11 +21,8 @@ export function HighConversionPricing() {
   const handleStartTrial = async () => {
     setLoadingType('trial');
     try {
-      const result = await createCheckoutSession('trial');
-      if (result?.success && result?.type === 'trial') {
-        // Immediately refresh subscription status
-        await refetchAccess();
-      }
+      // Trial now goes through Stripe checkout, so it will redirect
+      await createCheckoutSession('trial', 'monthly');
     } finally {
       setLoadingType(null);
     }
@@ -160,17 +157,27 @@ export function HighConversionPricing() {
               {billingPeriod === 'yearly' ? (
                 <p className="text-sm text-muted-foreground">Billed annually at $83.88/year</p>
               ) : (
-                <p className="text-sm text-muted-foreground">Billed monthly</p>
+                <p className="text-sm text-muted-foreground">Billed monthly at $9.99/month</p>
               )}
-              <p className="text-xs text-muted-foreground mt-1">7-day free trial included</p>
+              {billingPeriod === 'monthly' && (
+                <p className="text-xs text-green-600 font-medium mt-1">✨ 7-day free trial included</p>
+              )}
             </CardHeader>
             
             <CardContent className="space-y-6">
               <ul className="space-y-4">
-                <li className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="font-medium">7-day free trial included</span>
-                </li>
+                {billingPeriod === 'monthly' && (
+                  <li className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="font-medium">7-day free trial included</span>
+                  </li>
+                )}
+                {billingPeriod === 'yearly' && (
+                  <li className="flex items-start gap-3">
+                    <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                    <span className="font-medium">Save 30% with annual billing</span>
+                  </li>
+                )}
                 <li className="flex items-start gap-3">
                   <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>Unlimited access to all categories</span>
@@ -198,7 +205,8 @@ export function HighConversionPricing() {
                   <Crown className="mr-2 h-4 w-4" />
                   Current Plan
                 </Button>
-              ) : (
+              ) : billingPeriod === 'monthly' ? (
+                // Monthly: Show trial button only
                 <div className="space-y-3">
                   <Button 
                     className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
@@ -206,19 +214,26 @@ export function HighConversionPricing() {
                     disabled={loadingType !== null || loading}
                   >
                     <Crown className="mr-2 h-4 w-4" />
-                    {loadingType === 'trial' || loading ? 'Starting Trial...' : 'Start 7-Day Free Trial'}
+                    {loadingType === 'trial' ? 'Starting Trial...' : 'Start 7-Day Free Trial'}
                   </Button>
                   <p className="text-xs text-center text-muted-foreground">
-                    Or upgrade to paid plan:
+                    Then $9.99/month after trial ends
                   </p>
+                </div>
+              ) : (
+                // Yearly: Show subscribe button only (no trial)
+                <div className="space-y-3">
                   <Button 
-                    variant="outline"
-                    className="w-full"
+                    className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
                     onClick={handleSubscribe}
                     disabled={loadingType !== null || loading}
                   >
+                    <Crown className="mr-2 h-4 w-4" />
                     {loadingType === 'subscription' ? 'Processing...' : 'Subscribe Now'}
                   </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    Billed $83.88 annually • Save 30%
+                  </p>
                 </div>
               )}
               

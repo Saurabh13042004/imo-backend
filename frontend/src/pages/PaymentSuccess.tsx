@@ -5,18 +5,42 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Crown, Home, Search, Loader2 } from 'lucide-react';
 import { useUserAccess } from '@/hooks/useUserAccess';
 import { useSubscriptionFlow } from '@/hooks/useSubscriptionFlow';
-import { SearchHeader } from '@/components/search/SearchHeader';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { refreshAccess, loading } = useUserAccess();
+  const { refreshAccess, loading, subscription } = useUserAccess();
   const { handlePaymentSuccess } = useSubscriptionFlow();
   const [isRefreshing, setIsRefreshing] = useState(true);
+  const [pollingCount, setPollingCount] = useState(0);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('free');
 
   const sessionId = searchParams.get('session_id');
+
+  // Poll subscription status until webhook processes
+  useEffect(() => {
+    const pollSubscription = async () => {
+      if (!isRefreshing || pollingCount >= 20) return; // Stop after 20 attempts (40 seconds)
+
+      await refreshAccess();
+      setPollingCount(prev => prev + 1);
+    };
+
+    if (isRefreshing) {
+      const interval = setInterval(pollSubscription, 2000); // Poll every 2 seconds
+      return () => clearInterval(interval);
+    }
+  }, [isRefreshing, pollingCount, refreshAccess]);
+
+  // Update subscription status when data changes
+  useEffect(() => {
+    if (subscription?.is_active && (subscription.plan_type === 'trial' || subscription.plan_type === 'premium')) {
+      setSubscriptionStatus(subscription.plan_type);
+      setIsRefreshing(false);
+    }
+  }, [subscription]);
 
   useEffect(() => {
     const handleSuccess = async () => {
@@ -26,15 +50,15 @@ export default function PaymentSuccess() {
       const paymentType = searchParams.get('type') as 'subscription' | 'unlock' | null;
       const category = searchParams.get('category');
 
-      // Wait a moment for Stripe to process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Initial wait for Stripe webhook to process
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
       if (paymentType) {
         await handlePaymentSuccess(paymentType, category || undefined, sessionId || undefined);
-      } else {
-        // Fallback refresh if no type specified
-        await refreshAccess();
       }
+
+      // Start polling for subscription updates
+      await refreshAccess();
 
       // Invalidate all product search queries to ensure fresh access permissions
       queryClient.invalidateQueries({
@@ -45,17 +69,14 @@ export default function PaymentSuccess() {
       queryClient.invalidateQueries({
         queryKey: ['search-access']
       });
-
-      setIsRefreshing(false);
     };
 
     handleSuccess();
-  }, [searchParams, refreshAccess, handlePaymentSuccess, queryClient]);
+  }, [searchParams, refreshAccess, handlePaymentSuccess, queryClient, sessionId]);
 
   if (isRefreshing || loading) {
     return (
       <div className="min-h-screen bg-background">
-        <SearchHeader />
         <div className="container mx-auto px-6 py-16 max-w-2xl">
           <Card className="text-center">
             <CardContent className="pt-8 pb-8">
@@ -63,9 +84,23 @@ export default function PaymentSuccess() {
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
               <h1 className="text-2xl font-bold mb-4">Processing Payment...</h1>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground mb-4">
                 We're updating your account with the new subscription. This may take a moment.
               </p>
+              {pollingCount > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm text-muted-foreground">Waiting for confirmation from Stripe...</p>
+                  <div className="flex justify-center gap-1">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                        style={{ animationDelay: `${i * 0.15}s` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -75,7 +110,6 @@ export default function PaymentSuccess() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SearchHeader />
       <div className="container mx-auto px-6 py-16 max-w-2xl">
         <Card className="text-center border-green-200 bg-green-50">
           <CardHeader>
@@ -89,11 +123,28 @@ export default function PaymentSuccess() {
           <CardContent className="space-y-6">
             <div className="text-green-800">
               <p className="text-lg mb-2">
-                🎉 Welcome to your upgraded experience!
+                🎉 Welcome to {subscriptionStatus === 'trial' ? 'your 7-day free trial' : 'IMO Premium'}!
               </p>
               <p className="text-sm opacity-90">
-                Your payment has been processed successfully. You now have access to premium features.
+                Your payment has been processed successfully. You now have {subscriptionStatus === 'trial' ? 'trial' : 'premium'} access to all features.
               </p>
+              {subscription && (
+                <div className="mt-4 p-3 bg-green-100 rounded-lg">
+                  <p className="text-sm font-semibold text-green-700">
+                    Status: {subscription.plan_type.toUpperCase()}
+                  </p>
+                  {subscription.trial_end && (
+                    <p className="text-xs text-green-600 mt-1">
+                      Trial ends: {new Date(subscription.trial_end).toLocaleDateString()}
+                    </p>
+                  )}
+                  {subscription.days_remaining && (
+                    <p className="text-xs text-green-600 mt-1">
+                      {subscription.days_remaining} days remaining
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {sessionId && (

@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
-import { Crown, Sparkles, CheckCircle } from 'lucide-react';
+import { Crown, Sparkles, CheckCircle, Clock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserAccess } from '@/hooks/useUserAccess';
 
 interface SubscriptionStatusIndicatorProps {
   variant?: 'badge' | 'text' | 'icon';
@@ -16,9 +17,11 @@ export function SubscriptionStatusIndicator({
   className = ''
 }: SubscriptionStatusIndicatorProps) {
   const { user } = useAuth();
+  const { subscription, hasActiveSubscription } = useUserAccess();
   
-  // Check if user is logged in and has a premium subscription
-  const hasActiveSubscription = user && user.subscription_tier === 'premium';
+  // Check subscription status from real-time data
+  const isTrial = subscription?.plan_type === 'trial' && subscription?.is_active;
+  const isPremium = subscription?.plan_type === 'premium' && subscription?.is_active;
 
   const sizeClasses = {
     sm: 'text-xs',
@@ -35,8 +38,10 @@ export function SubscriptionStatusIndicator({
   if (variant === 'icon') {
     return (
       <div className={`flex items-center ${className}`}>
-        {hasActiveSubscription ? (
+        {isPremium ? (
           <Crown className={`${iconSizes[size]} text-yellow-500`} />
+        ) : isTrial ? (
+          <Clock className={`${iconSizes[size]} text-blue-500`} />
         ) : (
           <Sparkles className={`${iconSizes[size]} text-muted-foreground`} />
         )}
@@ -47,10 +52,15 @@ export function SubscriptionStatusIndicator({
   if (variant === 'text') {
     return (
       <div className={`flex items-center space-x-1 ${sizeClasses[size]} ${className}`}>
-        {hasActiveSubscription ? (
+        {isPremium ? (
           <>
             <Crown className={iconSizes[size]} />
             <span className="font-medium text-yellow-600">Premium</span>
+          </>
+        ) : isTrial ? (
+          <>
+            <Clock className={iconSizes[size]} />
+            <span className="font-medium text-blue-600">Trial</span>
           </>
         ) : (
           <>
@@ -67,15 +77,22 @@ export function SubscriptionStatusIndicator({
     <Badge 
       variant={hasActiveSubscription ? "default" : "secondary"}
       className={`${className} ${
-        hasActiveSubscription 
+        isPremium 
           ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0' 
+          : isTrial
+          ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white border-0'
           : ''
       }`}
     >
-      {hasActiveSubscription ? (
+      {isPremium ? (
         <>
           <Crown className={`mr-1 ${iconSizes[size]}`} />
           Premium
+        </>
+      ) : isTrial ? (
+        <>
+          <Clock className={`mr-1 ${iconSizes[size]}`} />
+          Trial
         </>
       ) : (
         <>

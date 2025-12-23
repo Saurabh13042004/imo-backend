@@ -60,63 +60,65 @@ class StripeService:
                     "Get your key from https://dashboard.stripe.com/apikeys"
                 )
             # Determine pricing
+            # For trial: Create subscription with trial period, then charge monthly after trial
             if plan_type == 'trial':
-                # Trial: Free for 7 days
-                price_data = {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': 'IMO Premium - 7 Day Free Trial',
-                        'description': 'Premium access for 7 days (Free)',
-                    },
-                    'unit_amount': 0,  # $0
-                }
-                line_items = [{
-                    'price_data': price_data,
-                    'quantity': 1,
-                }]
-            else:  # premium
-                # Premium: Recurring subscription
-                if billing_cycle == 'yearly':
-                    price = settings.PREMIUM_YEARLY_PRICE
-                    lookup_key = 'premium_yearly'
-                else:  # monthly
-                    price = settings.PREMIUM_MONTHLY_PRICE
-                    lookup_key = 'premium_monthly'
+                billing_cycle = 'monthly'  # After trial, convert to monthly
+            
+            # Set price based on billing cycle
+            if billing_cycle == 'yearly':
+                price = settings.PREMIUM_YEARLY_PRICE
+                interval = 'year'
+            else:  # monthly
+                price = settings.PREMIUM_MONTHLY_PRICE
+                interval = 'month'
 
-                price_data = {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': f'IMO Premium - {billing_cycle.capitalize()}',
-                        'description': 'Unlimited product searches and AI analysis',
-                    },
-                    'unit_amount': price,
-                    'recurring': {
-                        'interval': 'month' if billing_cycle == 'monthly' else 'year',
-                        'interval_count': 1,
-                    },
-                }
-                line_items = [{
-                    'price_data': price_data,
-                    'quantity': 1,
-                }]
+            price_data = {
+                'currency': 'usd',
+                'product_data': {
+                    'name': f'IMO Premium - {"Free Trial + " if plan_type == "trial" else ""}{billing_cycle.capitalize()}',
+                    'description': f'{"7-day free trial, then " if plan_type == "trial" else ""}Unlimited product searches and AI analysis',
+                },
+                'unit_amount': price,
+                'recurring': {
+                    'interval': interval,
+                    'interval_count': 1,
+                },
+            }
+            line_items = [{
+                'price_data': price_data,
+                'quantity': 1,
+            }]
 
             # Create checkout session
             logger.info(f"Creating checkout session with stripe.api_key set: {bool(stripe.api_key)}")
             logger.info(f"stripe.checkout exists: {hasattr(stripe, 'checkout')}")
-            checkout_session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                customer_email=email,
-                line_items=line_items,
-                mode='subscription' if plan_type == 'premium' else 'payment',
-                success_url=success_url,
-                cancel_url=cancel_url,
-                metadata={
+            
+            checkout_params = {
+                'payment_method_types': ['card'],
+                'customer_email': email,
+                'line_items': line_items,
+                'mode': 'subscription',
+                'success_url': success_url,
+                'cancel_url': cancel_url,
+                'metadata': {
                     'user_id': str(user_id),
                     'plan_type': plan_type,
                     'billing_cycle': billing_cycle,
                 },
-                allow_promotion_codes=True,
-            )
+                'allow_promotion_codes': True,
+            }
+            
+            # Add trial period if this is a trial signup
+            if plan_type == 'trial':
+                checkout_params['subscription_data'] = {
+                    'trial_period_days': settings.TRIAL_PERIOD_DAYS,
+                    'metadata': {
+                        'is_trial': 'true',
+                        'user_id': str(user_id),
+                    }
+                }
+            
+            checkout_session = stripe.checkout.Session.create(**checkout_params)
 
             logger.info(f"Created Stripe checkout session {checkout_session.id} for user {user_id}")
             return {
@@ -148,8 +150,17 @@ class StripeService:
 
             # Get metadata
             metadata = checkout_session.metadata
-            plan_type = metadata.get('plan_type', 'trial')
+            plan_type = metadata.get('plan_type', 'premium')
             billing_cycle = metadata.get('billing_cycle', 'monthly')
+            
+            # Check if subscription has trial from Stripe subscription object
+            stripe_subscription = None
+            if checkout_session.subscription:
+                stripe_subscription = stripe.Subscription.retrieve(checkout_session.subscription)
+                # If subscription has trial, update plan_type
+                if stripe_subscription.trial_end:
+                    plan_type = 'trial'
+                    logger.info(f"Subscription has trial period until {stripe_subscription.trial_end}")
 
             # Get or create Stripe customer
             customer_id = checkout_session.customer
@@ -183,23 +194,37 @@ class StripeService:
             now = datetime.now(timezone.utc)
 
             if not subscription:
-                subscription = Subscription(
-                    user_id=user_id,
-                    plan_type=plan_type,
-                    billing_cycle=billing_cycle,
-                    stripe_customer_id=customer_id,
-                    stripe_subscription_id=checkout_session.subscription,
-                    is_active=True,
-                    subscription_start=now,
-                )
-
-                if plan_type == 'trial':
-                    subscription.trial_start = now
-                    subscription.trial_end = now + timedelta(days=settings.TRIAL_PERIOD_DAYS)
-                    subscription.subscription_end = subscription.trial_end
+                # Use Stripe subscription dates if available
+                if stripe_subscription:
+                    subscription_start = datetime.fromtimestamp(stripe_subscription.current_period_start, tz=timezone.utc)
+                    subscription_end = datetime.fromtimestamp(stripe_subscription.current_period_end, tz=timezone.utc)
+                    
+                    subscription = Subscription(
+                        user_id=user_id,
+                        plan_type=plan_type,
+                        billing_cycle=billing_cycle,
+                        stripe_customer_id=customer_id,
+                        stripe_subscription_id=checkout_session.subscription,
+                        is_active=True,
+                        subscription_start=subscription_start,
+                        subscription_end=subscription_end,
+                    )
+                    
+                    # Set trial dates if trial exists
+                    if stripe_subscription.trial_end:
+                        subscription.trial_start = subscription_start
+                        subscription.trial_end = datetime.fromtimestamp(stripe_subscription.trial_end, tz=timezone.utc)
                 else:
-                    subscription.subscription_end = now + timedelta(
-                        days=365 if billing_cycle == 'yearly' else 30
+                    # Fallback if no Stripe subscription data
+                    subscription = Subscription(
+                        user_id=user_id,
+                        plan_type=plan_type,
+                        billing_cycle=billing_cycle,
+                        stripe_customer_id=customer_id,
+                        stripe_subscription_id=checkout_session.subscription,
+                        is_active=True,
+                        subscription_start=now,
+                        subscription_end=now + timedelta(days=365 if billing_cycle == 'yearly' else 30),
                     )
 
                 session.add(subscription)
@@ -210,16 +235,19 @@ class StripeService:
                 subscription.plan_type = plan_type
                 subscription.billing_cycle = billing_cycle
                 subscription.is_active = True
-                subscription.subscription_start = now
-
-                if plan_type == 'trial':
-                    subscription.trial_start = now
-                    subscription.trial_end = now + timedelta(days=settings.TRIAL_PERIOD_DAYS)
-                    subscription.subscription_end = subscription.trial_end
+                
+                # Use Stripe subscription dates if available
+                if stripe_subscription:
+                    subscription.subscription_start = datetime.fromtimestamp(stripe_subscription.current_period_start, tz=timezone.utc)
+                    subscription.subscription_end = datetime.fromtimestamp(stripe_subscription.current_period_end, tz=timezone.utc)
+                    
+                    # Set trial dates if trial exists
+                    if stripe_subscription.trial_end:
+                        subscription.trial_start = subscription.subscription_start
+                        subscription.trial_end = datetime.fromtimestamp(stripe_subscription.trial_end, tz=timezone.utc)
                 else:
-                    subscription.subscription_end = now + timedelta(
-                        days=365 if billing_cycle == 'yearly' else 30
-                    )
+                    subscription.subscription_start = now
+                    subscription.subscription_end = now + timedelta(days=365 if billing_cycle == 'yearly' else 30)
 
             # Update user tier
             if plan_type == 'trial':

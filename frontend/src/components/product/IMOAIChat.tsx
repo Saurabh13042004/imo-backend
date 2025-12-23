@@ -170,13 +170,13 @@ export const IMOAIChat: React.FC<IMOAIChatProps> = ({
         {isChatOpen && (
           <motion.div
             ref={chatRef}
-            className="absolute bottom-20 right-0 w-max max-w-[500px]"
+            className="absolute bottom-20 right-0 w-[420px] sm:w-[480px] h-[65vh] max-h-[700px] min-h-[500px]"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >
-            <div className="relative flex flex-col rounded-3xl bg-gradient-to-br from-zinc-800/80 to-zinc-900/90 border border-zinc-500/50 shadow-2xl backdrop-blur-3xl overflow-hidden">
+            <div className="relative flex flex-col h-full rounded-3xl bg-gradient-to-br from-zinc-800/80 to-zinc-900/90 border border-zinc-500/50 shadow-2xl backdrop-blur-3xl overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-4 pb-2 bg-gradient-to-r from-zinc-800/50 to-zinc-900/50">
                 <div className="flex items-center gap-1.5">
@@ -203,7 +203,7 @@ export const IMOAIChat: React.FC<IMOAIChatProps> = ({
               </div>
 
               {/* Messages Container */}
-              <div className="flex-1 overflow-y-auto max-h-[400px] px-4 py-4 space-y-3">
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
                 <AnimatePresence>
                   {messages.map((msg, index) => (
                     <motion.div
