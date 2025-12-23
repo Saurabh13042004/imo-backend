@@ -60,6 +60,16 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
     GOOGLE_REDIRECT_URI: str = os.getenv("GOOGLE_REDIRECT_URI", os.getenv("GOOGLE_REDIRECT_URL", ""))
 
+    # Stripe Payment Gateway
+    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
+    STRIPE_PUBLISHABLE_KEY: str = os.getenv("STRIPE_PUBLISHABLE_KEY", "")
+    STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
+    # Subscription settings
+    TRIAL_PERIOD_DAYS: int = int(os.getenv("TRIAL_PERIOD_DAYS", 7))
+    PREMIUM_MONTHLY_PRICE: int = int(os.getenv("PREMIUM_MONTHLY_PRICE", 999))  # $9.99 in cents
+    PREMIUM_YEARLY_PRICE: int = int(os.getenv("PREMIUM_YEARLY_PRICE", 6999))  # $69.99 in cents
+
     # Password hashing
     PASSWORD_MIN_LENGTH: int = 8
 

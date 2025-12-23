@@ -14,17 +14,22 @@ class Subscription(Base):
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id'), nullable=False, index=True)
-    plan_type = Column(String, nullable=False)
+    plan_type = Column(String, nullable=False, default='free')  # free, trial, premium
+    billing_cycle = Column(String, nullable=True)  # monthly, yearly
     is_active = Column(Boolean, default=False, nullable=False)
-    subscription_end = Column(DateTime(timezone=True))
-    stripe_customer_id = Column(String)
-    stripe_subscription_id = Column(String, unique=True)
+    subscription_start = Column(DateTime(timezone=True), server_default=func.now())
+    subscription_end = Column(DateTime(timezone=True), nullable=True)
+    trial_start = Column(DateTime(timezone=True), nullable=True)
+    trial_end = Column(DateTime(timezone=True), nullable=True)
+    stripe_customer_id = Column(String, unique=True, nullable=True)
+    stripe_subscription_id = Column(String, unique=True, nullable=True)
+    stripe_product_id = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
-    trial_end = Column(DateTime(timezone=True))
 
     # Relationships
     user = relationship('Profile', back_populates='subscriptions')
+    payment_transactions = relationship('PaymentTransaction', back_populates='subscription')
 
 
 class PaymentTransaction(Base):
@@ -33,16 +38,21 @@ class PaymentTransaction(Base):
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id'), nullable=False, index=True)
+    subscription_id = Column(PG_UUID(as_uuid=True), ForeignKey('subscriptions.id'), nullable=True)
     transaction_id = Column(String, unique=True, nullable=False)
     amount = Column(Numeric, nullable=False)
-    type = Column(String, nullable=False)
-    status = Column(String, default='pending', nullable=False)
-    stripe_session_id = Column(String)
+    currency = Column(String, default='usd')
+    type = Column(String, nullable=False)  # subscription, one_time, refund
+    status = Column(String, default='pending', nullable=False)  # pending, success, failed, refunded
+    stripe_payment_intent_id = Column(String, unique=True, nullable=True)
+    stripe_session_id = Column(String, nullable=True)
+    metadata_json = Column(String, nullable=True)  # JSON string for additional data
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Relationships
     user = relationship('Profile', back_populates='payment_transactions')
+    subscription = relationship('Subscription', back_populates='payment_transactions')
 
 
 class SearchUnlock(Base):
@@ -58,3 +68,4 @@ class SearchUnlock(Base):
 
     # Relationships
     user = relationship('Profile', back_populates='search_unlocks')
+

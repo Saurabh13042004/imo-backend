@@ -30,6 +30,13 @@ export interface UserResponse {
   access_level: string;
   roles: string[];
   created_at: string;
+  subscription?: {
+    plan_type: string;
+    is_active: boolean;
+    billing_cycle?: string;
+    subscription_end?: string;
+    trial_end?: string;
+  };
 }
 
 export interface TokenResponse {

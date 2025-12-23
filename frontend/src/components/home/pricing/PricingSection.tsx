@@ -10,18 +10,27 @@ import { useState } from 'react';
 export function PricingSection() {
   const { hasActiveSubscription } = useUserAccess();
   const { createCheckoutSession, loading } = useSubscriptionFlow();
-  const { user } = useAuth();
-  const [loadingType, setLoadingType] = useState<'subscription' | null>(null);
+  const { user, isAuthenticated } = useAuth();
+  const [loadingType, setLoadingType] = useState<'trial' | 'subscription' | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'yearly' | 'monthly'>('yearly');
 
   const monthlyPrice = 9.99;
   const yearlyPrice = 6.99;
   const displayPrice = billingPeriod === 'yearly' ? yearlyPrice : monthlyPrice;
 
+  const handleStartTrial = async () => {
+    setLoadingType('trial');
+    try {
+      await createCheckoutSession('trial');
+    } finally {
+      setLoadingType(null);
+    }
+  };
+
   const handleSubscribe = async () => {
     setLoadingType('subscription');
     try {
-      await createCheckoutSession('subscription');
+      await createCheckoutSession('subscription', billingPeriod);
     } finally {
       setLoadingType(null);
     }
@@ -189,7 +198,7 @@ export function PricingSection() {
                 <Button 
                   className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg hover:shadow-xl transition-all"
                   onClick={handleSubscribe}
-                  disabled={loadingType !== null}
+                  disabled={loadingType !== null || loading}
                 >
                   <Crown className="mr-2 h-4 w-4" />
                   {loadingType === 'subscription' ? 'Starting Trial...' : 'Start 7-Day Free Trial Now'}

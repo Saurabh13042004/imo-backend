@@ -26,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const TOKEN_STORAGE_KEY = 'auth_tokens';
 const USER_STORAGE_KEY = 'auth_user';
+const SUBSCRIPTION_STORAGE_KEY = 'user_subscription';
 
 // Use sessionStorage for security - tokens cleared when browser is closed
 const storage = sessionStorage;
@@ -96,12 +97,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const storeUser = (userData: UserResponse) => {
     storage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+    // Also store subscription data if available
+    if (userData.subscription) {
+      storage.setItem(SUBSCRIPTION_STORAGE_KEY, JSON.stringify(userData.subscription));
+    }
     setUser(userData);
   };
 
   const clearAuth = () => {
     storage.removeItem(TOKEN_STORAGE_KEY);
     storage.removeItem(USER_STORAGE_KEY);
+    storage.removeItem(SUBSCRIPTION_STORAGE_KEY);
     setUser(null);
     setAccessToken(null);
     setRefreshToken(null);
