@@ -24,6 +24,7 @@ export default function PaymentSuccess() {
   const sessionId = searchParams.get('session_id');
 
   // Call manual checkout completion endpoint (for localhost where webhooks don't work)
+  // Only call ONCE when component mounts
   useEffect(() => {
     const completeCheckout = async () => {
       if (sessionId && accessToken && !checkoutCompleted) {
@@ -46,15 +47,20 @@ export default function PaymentSuccess() {
           } else {
             const errorData = await response.json();
             console.error('Manual checkout completion failed:', errorData);
+            // Even if it fails (e.g., duplicate), mark as completed to avoid retry
+            setCheckoutCompleted(true);
           }
         } catch (error) {
           console.error('Error calling manual checkout completion:', error);
+          // Mark as completed to avoid infinite retries
+          setCheckoutCompleted(true);
         }
       }
     };
     
     completeCheckout();
-  }, [sessionId, accessToken, checkoutCompleted, refreshAccess]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - only run once on mount
 
   // Poll subscription status until webhook processes
   useEffect(() => {
@@ -78,6 +84,22 @@ export default function PaymentSuccess() {
       setIsRefreshing(false);
     }
   }, [subscription]);
+
+  // Timeout fallback: Stop loading after 30 seconds even if subscription not updated
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isRefreshing) {
+        console.warn('Payment success page timeout - stopping refresh');
+        setIsRefreshing(false);
+        // If we have any subscription data, use it
+        if (subscription?.plan_type) {
+          setSubscriptionStatus(subscription.plan_type);
+        }
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearTimeout(timeout);
+  }, [isRefreshing, subscription]);
 
   useEffect(() => {
     const handleSuccess = async () => {

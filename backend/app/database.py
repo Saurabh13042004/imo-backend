@@ -118,6 +118,89 @@ async def init_db():
             logger.info("stripe_product_id column added or already exists")
         except Exception as e:
             logger.debug(f"stripe_product_id column: {e}")
+        
+        # Add missing payment_transactions columns
+        try:
+            await conn.execute(text("""
+                ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS currency VARCHAR DEFAULT 'usd';
+            """))
+            logger.info("currency column added or already exists")
+        except Exception as e:
+            logger.debug(f"currency column: {e}")
+        
+        try:
+            await conn.execute(text("""
+                ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS stripe_payment_intent_id VARCHAR UNIQUE;
+            """))
+            logger.info("stripe_payment_intent_id column added or already exists")
+        except Exception as e:
+            logger.debug(f"stripe_payment_intent_id column: {e}")
+        
+        try:
+            await conn.execute(text("""
+                ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS stripe_session_id VARCHAR;
+            """))
+            logger.info("stripe_session_id column added or already exists")
+        except Exception as e:
+            logger.debug(f"stripe_session_id column: {e}")
+        
+        try:
+            await conn.execute(text("""
+                ALTER TABLE payment_transactions ADD COLUMN IF NOT EXISTS metadata_json VARCHAR;
+            """))
+            logger.info("metadata_json column added or already exists")
+        except Exception as e:
+            logger.debug(f"metadata_json column: {e}")
+        
+        # Fix subscription_id column type in payment_transactions (UUID instead of String)
+        try:
+            # Check if column exists and what type it is
+            result = await conn.execute(text("""
+                SELECT data_type 
+                FROM information_schema.columns 
+                WHERE table_name = 'payment_transactions' 
+                AND column_name = 'subscription_id'
+            """))
+            existing_type = result.scalar_one_or_none()
+            
+            if existing_type and existing_type != 'uuid':
+                logger.info("Fixing subscription_id column type from String to UUID...")
+                # Drop the column and recreate as UUID
+                await conn.execute(text("""
+                    ALTER TABLE payment_transactions DROP COLUMN IF EXISTS subscription_id CASCADE;
+                """))
+                await conn.execute(text("""
+                    ALTER TABLE payment_transactions ADD COLUMN subscription_id UUID;
+                """))
+                await conn.execute(text("""
+                    ALTER TABLE payment_transactions
+                    ADD CONSTRAINT fk_payment_transactions_subscription_id
+                    FOREIGN KEY (subscription_id) REFERENCES subscriptions(id);
+                """))
+                await conn.execute(text("""
+                    CREATE INDEX IF NOT EXISTS idx_payment_transactions_subscription_id 
+                    ON payment_transactions(subscription_id);
+                """))
+                logger.info("subscription_id column fixed as UUID with foreign key")
+            elif not existing_type:
+                # Column doesn't exist, add it
+                await conn.execute(text("""
+                    ALTER TABLE payment_transactions ADD COLUMN subscription_id UUID;
+                """))
+                await conn.execute(text("""
+                    ALTER TABLE payment_transactions
+                    ADD CONSTRAINT fk_payment_transactions_subscription_id
+                    FOREIGN KEY (subscription_id) REFERENCES subscriptions(id);
+                """))
+                await conn.execute(text("""
+                    CREATE INDEX IF NOT EXISTS idx_payment_transactions_subscription_id 
+                    ON payment_transactions(subscription_id);
+                """))
+                logger.info("subscription_id column added as UUID")
+            else:
+                logger.info("subscription_id column already exists as UUID")
+        except Exception as e:
+            logger.debug(f"subscription_id column fix: {e}")
 
 
 async def close_db():

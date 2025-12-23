@@ -266,20 +266,32 @@ class StripeService:
             else:
                 user.subscription_tier = 'premium'
 
-            # Record payment transaction
-            amount = Decimal(checkout_session.amount_total or 0) / 100  # Convert from cents
-            transaction = PaymentTransaction(
-                user_id=user_id,
-                subscription_id=subscription.id,
-                transaction_id=checkout_session.payment_intent or checkout_session.id,
-                amount=amount,
-                currency=checkout_session.currency or 'usd',
-                type='subscription',
-                status='success',
-                stripe_payment_intent_id=checkout_session.payment_intent,
-                stripe_session_id=session_id,
+            # Record payment transaction (idempotent - check if already exists)
+            transaction_id = checkout_session.payment_intent or checkout_session.id
+            result = await session.execute(
+                select(PaymentTransaction).where(
+                    PaymentTransaction.transaction_id == transaction_id
+                )
             )
-            session.add(transaction)
+            existing_transaction = result.scalar_one_or_none()
+            
+            if not existing_transaction:
+                amount = Decimal(checkout_session.amount_total or 0) / 100  # Convert from cents
+                transaction = PaymentTransaction(
+                    user_id=user_id,
+                    subscription_id=subscription.id,
+                    transaction_id=transaction_id,
+                    amount=amount,
+                    currency=checkout_session.currency or 'usd',
+                    type='subscription',
+                    status='success',
+                    stripe_payment_intent_id=checkout_session.payment_intent,
+                    stripe_session_id=session_id,
+                )
+                session.add(transaction)
+                logger.info(f"Created new payment transaction {transaction_id}")
+            else:
+                logger.info(f"Payment transaction {transaction_id} already exists, skipping")
 
             await session.commit()
             logger.info(f"Successfully processed checkout for user {user_id}, plan: {plan_type}")
