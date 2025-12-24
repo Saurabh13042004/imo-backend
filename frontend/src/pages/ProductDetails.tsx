@@ -11,6 +11,7 @@ import { useSearchUrl } from "@/hooks/useSearchUrl";
 import { useAIVerdict } from "@/hooks/useAIVerdict";
 import { useCommunityReviews } from "@/hooks/useCommunityReviews";
 import { useStoreReviews } from "@/hooks/useStoreReviews";
+import { useDemoProduct } from "@/hooks/useDemoProduct";
 import { formatPriceWithCurrency } from "@/utils/currencyUtils";
 import { API_BASE_URL } from "@/config/api";
 import { extractIdFromSlug } from "@/utils/slugUtils";
@@ -48,6 +49,9 @@ const ProductDetails = () => {
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [isPriceAlertModalOpen, setIsPriceAlertModalOpen] = useState(false);
   const { trackProductView } = useAnalytics();
+
+  // Check if this is a demo product
+  const { isDemoProduct, demoProduct } = useDemoProduct(productId);
 
   // Use AI Verdict hook for all products (not Amazon-specific)
   const { verdict: aiVerdict, status: verdictStatus } = useAIVerdict(
@@ -154,10 +158,22 @@ const ProductDetails = () => {
     productId !== 'null' &&
     productId.length > 0;
 
-  // Load product from localStorage
+  // Load demo product if available
   useEffect(() => {
-    if (!isValidProductId) {
+    if (isDemoProduct && demoProduct) {
+      console.log('[ProductDetails] Loading demo product:', demoProduct.title);
+      setProduct(demoProduct);
+      setEnrichedData(demoProduct.enrichedData);
       setLoading(false);
+    }
+  }, [isDemoProduct, demoProduct]);
+
+  // Load product from localStorage (only for non-demo products)
+  useEffect(() => {
+    if (!isValidProductId || isDemoProduct) {
+      if (!isDemoProduct) {
+        setLoading(false);
+      }
       return;
     }
 
@@ -197,11 +213,12 @@ const ProductDetails = () => {
     } finally {
       setLoading(false);
     }
-  }, [isValidProductId, productId, trackProductView]);
+  }, [isValidProductId, productId, trackProductView, isDemoProduct]);
 
   // Fetch enriched data for all products (product-agnostic)
+  // Skip for demo products since they already have enriched data
   useEffect(() => {
-    if (!product || !productId) return;
+    if (!product || !productId || isDemoProduct) return;
     
     const fetchEnrichedData = async () => {
       try {
@@ -250,7 +267,7 @@ const ProductDetails = () => {
     };
 
     fetchEnrichedData();
-  }, [product, productId]);
+  }, [product, productId, isDemoProduct]);
 
   // Handle invalid product ID
   if (!isValidProductId) {
