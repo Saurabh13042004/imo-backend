@@ -455,6 +455,7 @@ class StripeService:
     ) -> Optional[Dict[str, Any]]:
         """Get user's current subscription details."""
         try:
+            logger.info(f"Fetching subscription for user_id: {user_id}")
             result = await session.execute(
                 select(Subscription).where(Subscription.user_id == user_id)
                 .order_by(Subscription.created_at.desc())
@@ -462,7 +463,10 @@ class StripeService:
             subscription = result.scalar_one_or_none()
 
             if not subscription:
+                logger.warning(f"No subscription found for user_id: {user_id}")
                 return None
+
+            logger.info(f"Found subscription: plan_type={subscription.plan_type}, is_active={subscription.is_active}, stripe_subscription_id={subscription.stripe_subscription_id}")
 
             now = datetime.now(timezone.utc)
             is_active = (
@@ -471,7 +475,7 @@ class StripeService:
                 and subscription.subscription_end > now
             )
 
-            return {
+            subscription_data = {
                 'id': str(subscription.id),
                 'plan_type': subscription.plan_type,
                 'billing_cycle': subscription.billing_cycle,
@@ -486,10 +490,85 @@ class StripeService:
                     if subscription.subscription_end and is_active
                     else 0
                 ),
+                'cancel_at_period_end': False,
+                'status': 'active' if is_active else 'inactive',
+                'current_period_end': subscription.subscription_end.isoformat() if subscription.subscription_end else None,
+                'payment_method': None,
             }
+
+            # Fetch payment method from Stripe if subscription has a Stripe subscription ID
+            if subscription.stripe_subscription_id and stripe.api_key:
+                try:
+                    stripe_sub = stripe.Subscription.retrieve(subscription.stripe_subscription_id)
+                    subscription_data['cancel_at_period_end'] = stripe_sub.cancel_at_period_end
+                    subscription_data['status'] = stripe_sub.status
+                    
+                    # Get trial dates from Stripe if missing in database
+                    if stripe_sub.trial_start and not subscription.trial_start:
+                        subscription_data['trial_start'] = datetime.fromtimestamp(stripe_sub.trial_start, tz=timezone.utc).isoformat()
+                    
+                    if stripe_sub.trial_end and not subscription.trial_end:
+                        subscription_data['trial_end'] = datetime.fromtimestamp(stripe_sub.trial_end, tz=timezone.utc).isoformat()
+                    
+                    # Update current_period_end from Stripe
+                    if stripe_sub.current_period_end:
+                        subscription_data['current_period_end'] = datetime.fromtimestamp(stripe_sub.current_period_end, tz=timezone.utc).isoformat()
+                    
+                    # Get payment method details
+                    if stripe_sub.default_payment_method:
+                        payment_method = stripe.PaymentMethod.retrieve(stripe_sub.default_payment_method)
+                        if payment_method.card:
+                            subscription_data['payment_method'] = {
+                                'brand': payment_method.card.brand,
+                                'last4': payment_method.card.last4,
+                                'exp_month': payment_method.card.exp_month,
+                                'exp_year': payment_method.card.exp_year,
+                            }
+                except Exception as e:
+                    logger.warning(f"Could not fetch Stripe subscription details: {e}")
+
+            logger.info(f"Returning subscription_data: {subscription_data}")
+            return subscription_data
         except Exception as e:
             logger.error(f"Error getting user subscription: {e}")
             return None
+
+    @staticmethod
+    async def create_billing_portal_session(
+        user_id: str,
+        session: AsyncSession,
+        return_url: str,
+    ) -> Dict[str, Any]:
+        """Create a Stripe billing portal session for managing subscription."""
+        try:
+            # Get user's subscription to find Stripe customer ID
+            result = await session.execute(
+                select(Subscription).where(
+                    Subscription.user_id == user_id
+                ).order_by(Subscription.created_at.desc())
+            )
+            subscription = result.scalar_one_or_none()
+
+            if not subscription or not subscription.stripe_customer_id:
+                raise Exception("No active subscription found. Please subscribe first.")
+
+            # Check if Stripe is configured
+            if not stripe.api_key:
+                raise Exception("Stripe is not configured properly.")
+
+            # Create billing portal session
+            portal_session = stripe.billing_portal.Session.create(
+                customer=subscription.stripe_customer_id,
+                return_url=return_url,
+            )
+
+            return {
+                'url': portal_session.url,
+                'session_id': portal_session.id,
+            }
+        except Exception as e:
+            logger.error(f"Error creating billing portal session: {e}")
+            raise
 
     @staticmethod
     def verify_webhook_signature(

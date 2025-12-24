@@ -124,11 +124,53 @@ export function useSubscriptionFlow() {
   }, [isAuthenticated]);
 
   const manageSubscription = useCallback(async () => {
-    toast({
-      title: "Coming Soon",
-      description: "Subscription management portal is coming soon",
-    });
-  }, [toast]);
+    if (!isAuthenticated || !accessToken) {
+      toast({
+        title: "Sign In Required",
+        description: "Please sign in to manage your subscription",
+        variant: "destructive",
+      });
+      navigate('/auth');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/payments/create-portal-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          return_url: window.location.origin + '/subscription-manager',
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Failed to open billing portal');
+      }
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No portal URL provided');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to open billing portal';
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, accessToken, toast, navigate]);
 
   return {
     loading,

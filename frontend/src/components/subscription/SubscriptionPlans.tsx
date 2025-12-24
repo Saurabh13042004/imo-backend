@@ -116,7 +116,7 @@ export function SubscriptionPlans({
             Premium Subscription
           </CardTitle>
           <div className="flex items-center justify-center space-x-2">
-            <span className="text-3xl font-bold">$10.99</span>
+            <span className="text-3xl font-bold">$9.99</span>
             <span className="text-muted-foreground">/month</span>
           </div>
         </CardHeader>

@@ -149,6 +149,33 @@ async def get_subscription(
         raise HTTPException(status_code=500, detail="Failed to get subscription")
 
 
+class CreatePortalSessionRequest(BaseModel):
+    """Request to create a billing portal session."""
+    return_url: str
+
+
+@router.post("/create-portal-session")
+async def create_portal_session(
+    request: CreatePortalSessionRequest,
+    current_user: Profile = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a Stripe billing portal session."""
+    try:
+        result = await StripeService.create_billing_portal_session(
+            user_id=str(current_user.id),
+            session=db,
+            return_url=request.return_url,
+        )
+        return {
+            'success': True,
+            'url': result['url'],
+        }
+    except Exception as e:
+        logger.error(f"Error creating portal session: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,

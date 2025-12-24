@@ -1,6 +1,13 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
 
+interface PaymentMethod {
+  brand: string;
+  last4: string;
+  exp_month?: number;
+  exp_year?: number;
+}
+
 interface SubscriptionData {
   plan_type: string;
   is_active: boolean;
@@ -8,21 +15,29 @@ interface SubscriptionData {
   billing_cycle?: string;
   subscription_start?: string;
   subscription_end?: string;
+  trial_start?: string;
   trial_end?: string;
+  current_period_end?: string;
   days_remaining?: number;
+  cancel_at_period_end?: boolean;
+  status?: string;
+  payment_method?: PaymentMethod;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export function useUserAccess() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, accessToken } = useAuth();
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch subscription from backend
   const fetchSubscription = useCallback(async () => {
-    if (!isAuthenticated) {
+    console.log('fetchSubscription called', { isAuthenticated, hasAccessToken: !!accessToken, user });
+    
+    if (!isAuthenticated || !accessToken) {
+      console.log('fetchSubscription: Not authenticated or no token, skipping');
       setSubscription(null);
       return;
     }
@@ -31,23 +46,28 @@ export function useUserAccess() {
     setError(null);
 
     try {
-      const accessToken = localStorage.getItem('access_token');
-      if (!accessToken) {
-        setSubscription(null);
-        return;
-      }
-
+      console.log('fetchSubscription: Making API call to', `${API_BASE_URL}/api/v1/payments/subscription`);
+      
       const response = await fetch(`${API_BASE_URL}/api/v1/payments/subscription`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
 
+      console.log('Subscription API Response:', {
+        status: response.status,
+        ok: response.ok,
+        url: response.url
+      });
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Subscription API Error:', errorText);
         throw new Error('Failed to fetch subscription');
       }
 
       const data: SubscriptionData = await response.json();
+      console.log('Subscription API Data:', data);
       setSubscription(data);
       
       // Cache subscription in localStorage
@@ -63,12 +83,12 @@ export function useUserAccess() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessToken]);
 
   // Fetch on mount and when auth changes
   useEffect(() => {
     fetchSubscription();
-  }, [fetchSubscription, isAuthenticated]);
+  }, [fetchSubscription]);
 
   // Determine access level based on subscription
   const accessLevel = subscription?.plan_type === 'free' || !subscription?.is_active 
