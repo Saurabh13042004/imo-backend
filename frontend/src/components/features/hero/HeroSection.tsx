@@ -10,6 +10,7 @@ import { useSearchUrl } from '@/hooks/useSearchUrl';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import IMOVideo from '@/assets/IMOVideo.mp4';
 
 interface HeroSectionProps {
   className?: string;
@@ -368,10 +369,9 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
                 muted
                 loop
                 className="w-full h-full object-cover"
-                poster=""
               >
                 <source
-                  src="https://rr2---sn-h5576nsy.googlevideo.com/videoplayback?expire=1766569628&ei=fJpLadnQL9y-4t4P_bzL8Ao&ip=115.99.220.81&id=d868393b90f7f45a&itag=22&source=contrib_service_bard_storage&begin=0&requiressl=yes&xpc=EghoqJzIP3oBAQ==&met=1766562428,&mh=jU&mm=32&mn=sn-h5576nsy&ms=su&mv=m&mvi=2&pl=22&rms=su,su&sc=yes&susc=gg&app=fife&ic=976&eaua=a_Qr8pptUps&pcm2=yes&mime=video/mp4&vprv=1&rqh=1&dur=8.057&lmt=1766561918435991&mt=1766562080&txp=0000224&sparams=expire,ei,ip,id,itag,source,requiressl,xpc,susc,app,ic,eaua,pcm2,mime,vprv,rqh,dur,lmt&sig=AJfQdSswRgIhANHQ2XCCDJlcT7LO6p2KptGLCzsS_38DrLDBE2ASXMCmAiEA10J5QbYLib7unmVk9EhmeoT7QyArFX2WkJ7FLlRoLoo=&lsparams=met,mh,mm,mn,ms,mv,mvi,pl,rms,sc&lsig=APaTxxMwRgIhALDksqGQmgZCgPlyli2xPcqS4nhCAWcB1nXPiMwlcZ0gAiEAzqLLowtX1j7YvtlNuOU1rsgFQbPEkFeNICQHACT2PAc="
+                  src={IMOVideo}
                   type="video/mp4"
                 />
                 Your browser does not support the video tag.
