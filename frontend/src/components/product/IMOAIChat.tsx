@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Link, Code, Mic, X, Bot } from 'lucide-react';
+import { Send, Paperclip, Link, Code, Mic, X, Bot, Lock, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL } from '@/config/api';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserAccess } from '@/hooks/useUserAccess';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface Message {
   id: string;
@@ -32,6 +36,9 @@ export const IMOAIChat: React.FC<IMOAIChatProps> = ({
   productReviewsCount,
   aiVerdict
 }) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { hasActiveSubscription, subscription } = useUserAccess();
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [charCount, setCharCount] = useState(0);
@@ -41,18 +48,35 @@ export const IMOAIChat: React.FC<IMOAIChatProps> = ({
   const chatRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Check if user has access (trial or premium)
+  const hasAccess = user && hasActiveSubscription;
+  const isTrial = subscription?.is_trial === true;
+  const isPremium = subscription?.plan_type === 'premium';
+
   // Initial greeting message
   useEffect(() => {
     if (isChatOpen && messages.length === 0) {
-      const initialMessage: Message = {
-        id: '1',
-        type: 'bot',
-        content: `Hey 👋 I'm IMO AI, your personal shopping assistant!\n\nI'm here to help you research about "${productTitle}". You can ask me anything about:\n\n• Product features & specifications\n• Price comparisons\n• User reviews & ratings\n• Whether this product is right for you\n• Alternatives & similar products\n• Best places to buy\n\nWhat would you like to know?`,
-        timestamp: new Date(),
-      };
-      setMessages([initialMessage]);
+      if (!hasAccess) {
+        // Show upgrade message for free users
+        const upgradeMessage: Message = {
+          id: '1',
+          type: 'bot',
+          content: `👋 Hey there!\n\nThe IMO AI Chatbot is available exclusively for Trial and Premium users.\n\n✨ Upgrade now to get:\n• Instant answers about any product\n• Personalized shopping advice\n• Smart comparisons & recommendations\n• Priority support\n\nClick "View Pricing" below to unlock AI-powered shopping assistance! 🚀`,
+          timestamp: new Date(),
+        };
+        setMessages([upgradeMessage]);
+      } else {
+        // Show normal greeting for premium/trial users
+        const initialMessage: Message = {
+          id: '1',
+          type: 'bot',
+          content: `Hey 👋 I'm IMO AI, your personal shopping assistant!\n\nI'm here to help you research about "${productTitle}". You can ask me anything about:\n\n• Product features & specifications\n• Price comparisons\n• User reviews & ratings\n• Whether this product is right for you\n• Alternatives & similar products\n• Best places to buy\n\nWhat would you like to know?`,
+          timestamp: new Date(),
+        };
+        setMessages([initialMessage]);
+      }
     }
-  }, [isChatOpen, productTitle]);
+  }, [isChatOpen, productTitle, hasAccess]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -62,6 +86,11 @@ export const IMOAIChat: React.FC<IMOAIChatProps> = ({
 
   const handleSend = async () => {
     if (!message.trim()) return;
+    
+    // Block free users from sending messages
+    if (!hasAccess) {
+      return;
+    }
 
     // Add user message
     const userMsg: Message = {
@@ -284,65 +313,103 @@ export const IMOAIChat: React.FC<IMOAIChatProps> = ({
 
               {/* Input Section */}
               <div className="border-t border-zinc-700/50 p-4 bg-zinc-900/50">
-                <div className="relative overflow-hidden mb-3">
-                  <textarea
-                    value={message}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    rows={3}
-                    className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl outline-none resize-none text-sm leading-relaxed text-zinc-100 placeholder-zinc-500 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
-                    placeholder="Ask about this product... (e.g., 'Is it worth buying?', 'How does it compare to...')"
-                  />
-                </div>
-
-                {/* Action Buttons and Send */}
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/50 rounded-lg transition-colors"
-                      title="Attach files"
-                    >
-                      <Paperclip className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/50 rounded-lg transition-colors"
-                      title="Add web link"
-                    >
-                      <Link className="w-4 h-4" />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/50 rounded-lg transition-colors"
-                      title="Voice input"
-                    >
-                      <Mic className="w-4 h-4" />
-                    </motion.button>
+                {!hasAccess ? (
+                  // Upgrade prompt for free users
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-2 text-amber-400">
+                      <Lock className="w-5 h-5" />
+                      <span className="text-sm font-semibold">Premium Feature</span>
+                    </div>
+                    <p className="text-xs text-center text-zinc-400">
+                      Unlock AI chatbot with Trial or Premium
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          setIsChatOpen(false);
+                          navigate('/pricing');
+                        }}
+                        className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500"
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        View Pricing
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setIsChatOpen(false);
+                          navigate('/auth');
+                        }}
+                        variant="outline"
+                        className="flex-1 border-zinc-600 hover:bg-zinc-800"
+                      >
+                        Sign In
+                      </Button>
+                    </div>
                   </div>
+                ) : (
+                  // Chat input for premium/trial users
+                  <>
+                    <div className="relative overflow-hidden mb-3">
+                      <textarea
+                        value={message}
+                        onChange={handleInputChange}
+                        onKeyDown={handleKeyDown}
+                        rows={3}
+                        className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700/50 rounded-xl outline-none resize-none text-sm leading-relaxed text-zinc-100 placeholder-zinc-500 focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                        placeholder="Ask about this product... (e.g., 'Is it worth buying?', 'How does it compare to...')"
+                      />
+                    </div>
 
-                  <div className="text-xs text-zinc-500">
-                    {charCount}/{maxChars}
-                  </div>
+                    {/* Action Buttons and Send */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/50 rounded-lg transition-colors"
+                          title="Attach files"
+                        >
+                          <Paperclip className="w-4 h-4" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/50 rounded-lg transition-colors"
+                          title="Add web link"
+                        >
+                          <Link className="w-4 h-4" />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="p-2 text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700/50 rounded-lg transition-colors"
+                          title="Voice input"
+                        >
+                          <Mic className="w-4 h-4" />
+                        </motion.button>
+                      </div>
 
-                  <motion.button
-                    onClick={handleSend}
-                    disabled={!message.trim() || isLoading}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="p-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-lg hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-indigo-500/20"
-                  >
-                    <Send className="w-4 h-4" />
-                  </motion.button>
-                </div>
+                      <div className="text-xs text-zinc-500">
+                        {charCount}/{maxChars}
+                      </div>
 
-                {/* Footer Info */}
-                <div className="mt-2 pt-2 border-t border-zinc-800/50 text-xs text-zinc-500">
-                  <span>💡 Tip: Press Shift + Enter for new line</span>
-                </div>
+                      <motion.button
+                        onClick={handleSend}
+                        disabled={!message.trim() || isLoading}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-lg hover:from-indigo-500 hover:to-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-indigo-500/20"
+                      >
+                        <Send className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+
+                    {/* Footer Info */}
+                    <div className="mt-2 pt-2 border-t border-zinc-800/50 text-xs text-zinc-500">
+                      <span>💡 Tip: Press Shift + Enter for new line</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Floating Overlay */}
