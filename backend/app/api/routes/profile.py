@@ -1,13 +1,14 @@
 """Profile management API routes."""
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update
+from sqlalchemy import update, select
 from app.database import get_db
-from app.models.user import Profile
-from app.api.dependencies import get_current_user
+from app.models.user import Profile, UserRole
+from app.api.dependencies import get_current_user, get_optional_user
 from app.services.auth_service import AuthService
 from app.utils.auth import hash_password, verify_password
 from app.schemas.auth import UserResponse
+from typing import Optional
 import os
 import uuid
 
@@ -209,3 +210,27 @@ async def connect_oauth(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to connect OAuth provider"
         )
+
+
+@router.get("/admin-check")
+async def check_admin_status(
+    current_user: Optional[Profile] = Depends(get_optional_user),
+    session: AsyncSession = Depends(get_db)
+):
+    """Check if current user has admin role."""
+    if not current_user:
+        return {"is_admin": False}
+    
+    try:
+        # Check if user has admin role
+        stmt = select(UserRole).where(
+            (UserRole.user_id == current_user.id) & (UserRole.role == "admin")
+        )
+        result = await session.execute(stmt)
+        admin_role = result.scalars().first()
+        
+        is_admin = admin_role is not None
+        return {"is_admin": is_admin}
+    except Exception as e:
+        return {"is_admin": False}
+
