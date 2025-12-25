@@ -187,7 +187,7 @@ const Search = () => {
 				console.log("🚫 Daily limit reached - setting exhausted state");
 				setSearchesExhausted(true);
 				setHasSubmitted(true); // Ensure banner shows
-				toast.error("🚫 Daily search limit reached. Sign in for unlimited searches.");
+				toast.error("🚫 Daily search limit reached. Upgrade to premium for unlimited searches.");
 				setDailyLimitReached(true);
 
 
@@ -324,7 +324,7 @@ const Search = () => {
 							</div>
 						</div>
 					)}
-					
+
 
 					
 					

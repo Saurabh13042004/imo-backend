@@ -29,8 +29,9 @@ const TOKEN_STORAGE_KEY = 'auth_tokens';
 const USER_STORAGE_KEY = 'auth_user';
 const SUBSCRIPTION_STORAGE_KEY = 'user_subscription';
 
-// Use sessionStorage for security - tokens cleared when browser is closed
-const storage = sessionStorage;
+// Use localStorage so auth persists across tabs in same browser
+// Note: Clear localStorage on logout to remove tokens
+const storage = localStorage;
 
 export interface StoredTokens {
   accessToken: string;
