@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { API_BASE_URL } from "@/config/api";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 interface ShortVideo {
   id: string;
   platform: string; // "YouTube Shorts", "TikTok", "Instagram Reels"
@@ -50,11 +50,15 @@ export const useShortVideoReviews = (
         setError(null);
 
         // Pass product title as query parameter
-        const url = new URL(`${API_BASE_URL}/api/v1/product/${productId}/short-video-reviews`);
-        url.searchParams.append("title", productTitle);
 
-        const response = await fetch(url.toString());
+        // const url = new URL(`${API_BASE_URL}/api/v1/product/${productId}/short-video-reviews`);
+        // url.searchParams.append("title", productTitle);
+
+        // const response = await fetch(url.toString());
         
+
+        const response = await fetch(`${API_BASE_URL}/api/v1/product/${productId}/short-video-reviews?title=${encodeURIComponent(productTitle)}`);
+
         if (!response.ok) {
           if (response.status === 404) {
             throw new Error("Product not found");
