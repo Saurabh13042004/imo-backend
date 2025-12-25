@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PasswordStrengthMeter, calculatePasswordStrength } from './PasswordStrengthMeter';
 import { Mail, Lock, User } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -51,7 +53,7 @@ export const AuthForm = ({ mode = 'signin', isRecovery = false }: AuthFormProps)
       const loadingToast = toast.loading('Connecting to Google...');
       
       // Get Google login URL from backend
-      const response = await fetch('/api/v1/auth/google/login');
+      const response = await fetch(`${API_URL}/api/v1/auth/google/login`);
       const data = await response.json();
       
       toast.dismiss(loadingToast);

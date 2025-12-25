@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { User, Mail, Lock, Image, LogOut, Unlink, Link as LinkIcon } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
 interface UserProfile {
   id: string;
   email: string;
@@ -636,7 +638,7 @@ function MyReviewsTab() {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/v1/reviews/my-submissions', {
+        const response = await fetch(`${API_URL}/api/v1/reviews/my-submissions`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${accessToken}`,
