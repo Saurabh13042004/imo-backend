@@ -5,10 +5,7 @@
 
 import { getSessionId } from '@/utils/sessionUtils';
 
-const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "https://imo-6g57.onrender.com"
-    : "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 /**
  * Get auth token from sessionStorage

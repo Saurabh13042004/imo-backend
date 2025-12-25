@@ -129,3 +129,133 @@ async def get_user_geolocation():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"
         )
+
+
+class PageContentRequest(BaseModel):
+    """Request model for extracting search query from page content."""
+    content: str
+    url: str
+
+
+class SearchRedirectResponse(BaseModel):
+    """Response model for search redirect endpoint."""
+    redirectUrl: str
+    query: str
+
+
+@router.post(
+    "/extract-search-query",
+    response_model=SearchRedirectResponse,
+    responses={
+        400: {"model": ErrorResponse},
+        500: {"model": ErrorResponse}
+    }
+)
+async def extract_search_query(request: PageContentRequest):
+    """
+    Extract a search query from scraped page content using AI.
+    
+    This endpoint takes the content from a web page and uses AI to intelligently
+    identify the main product or topic the user is looking for. It then generates
+    a redirect URL to IMO search with the extracted query.
+    
+    Args:
+        content: Scraped text/HTML content from the page
+        url: Current page URL (for context)
+    
+    Returns:
+        - redirectUrl: URL to redirect user to IMO search
+        - query: The extracted search query used
+    
+    Example:
+        POST /api/v1/utils/extract-search-query
+        {
+            "content": "Best gaming laptops 2024...",
+            "url": "https://example.com/gaming-laptops"
+        }
+        
+        Response:
+        {
+            "redirectUrl": "https://informedmarketopinions.com/search?q=gaming%20laptop",
+            "query": "gaming laptop"
+        }
+    """
+    try:
+        # Validate inputs
+        if not request.content or not request.content.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Content cannot be empty"
+            )
+        
+        if not request.url or not request.url.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="URL cannot be empty"
+            )
+        
+        # Import AI service
+        from app.integrations.gemini_service import GeminiService
+        
+        ai_service = GeminiService()
+        
+        # Create prompt for AI to extract search query
+        prompt = f"""You are an AI assistant that extracts product search queries from web page content.
+
+Given the following page content, identify the main product or topic the user is interested in and extract a concise search query (1-4 words).
+
+Page URL: {request.url}
+Page Content:
+{request.content[:2000]}
+
+Return ONLY the search query as plain text, nothing else. Examples:
+- "gaming laptop"
+- "wireless headphones"
+- "coffee maker"
+- "running shoes"
+
+Search query:"""
+        
+        # Call AI to generate search query
+        response = ai_service.generate_text(prompt, max_tokens=50)
+        
+        if not response or not response.strip():
+            logger.warning(f"AI returned empty response for URL: {request.url}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to extract search query from content"
+            )
+        
+        # Clean up the query
+        query = response.strip().lower()
+        
+        # Remove quotes if present
+        query = query.strip('"\'')
+        
+        # Limit query length
+        if len(query) > 100:
+            query = query[:100]
+        
+        logger.info(f"Extracted search query: '{query}' from URL: {request.url}")
+        
+        # Generate redirect URL
+        from urllib.parse import urlencode
+        from app.config import settings
+        
+        # Assuming frontend is at informedmarketopinions.com
+        base_url = settings.FRONTEND_URL or "https://informedmarketopinions.com"
+        redirect_url = f"{base_url}/search?q={urlencode({'q': query}).split('=')[1]}"
+        
+        return SearchRedirectResponse(
+            redirectUrl=redirect_url,
+            query=query
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error extracting search query: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process request"
+        )
