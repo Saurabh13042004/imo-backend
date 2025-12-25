@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { FeaturedProductsSection } from "@/components/home/featured-products";
 import { ProblemStatementSection } from "@/components/home/problem-statement";
 import { FeaturesSection } from "@/components/home/features-section";
-import { TestimonialSection } from "@/components/home/testimonials";
+import { IMOTestimonials } from "@/components/ui/imo-testimonials";
 import { ComparisonSection } from "@/components/features/comparison";
 import { FaqSection } from "@/components/home/faq";
 import { PricingSection } from "@/components/home/pricing";
@@ -65,7 +65,7 @@ const Index = () => {
           <ProblemStatementSection />
           <FeaturesSection />
           <PricingSection />
-          <TestimonialSection />
+          <IMOTestimonials />
           <ComparisonSection />
         </div>
 
@@ -109,7 +109,9 @@ const Index = () => {
           </div>
           
           {/* Testimonials Section */}
-          <TestimonialSection />
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <IMOTestimonials />
+          </div>
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

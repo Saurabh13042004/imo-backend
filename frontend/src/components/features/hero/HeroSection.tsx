@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchUrl } from '@/hooks/useSearchUrl';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import IMOVideo from '@/assets/IMOVideo.mp4';
 
@@ -71,6 +71,43 @@ const AnimatedOrb = ({
   />
 );
 
+const Counter = ({ 
+  from = 0, 
+  to, 
+  suffix = '', 
+  duration = 2 
+}: { 
+  from?: number; 
+  to: number; 
+  suffix?: string; 
+  duration?: number 
+}) => {
+  const [count, setCount] = useState(from);
+
+  useEffect(() => {
+    let startTime: number;
+    let animationFrame: number;
+
+    const animate = (currentTime: number) => {
+      if (!startTime) startTime = currentTime;
+      const progress = (currentTime - startTime) / (duration * 1000);
+
+      if (progress < 1) {
+        setCount(Math.floor(from + (to - from) * progress));
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(to);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+
+    return () => cancelAnimationFrame(animationFrame);
+  }, [from, to, duration]);
+
+  return <>{count}{suffix}</>;
+};
+
 export const HeroSection = ({ className = '' }: HeroSectionProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -117,252 +154,238 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
 
       {/* Mobile Hero Section */}
       <motion.section
-        className="md:hidden relative z-10 px-4 py-12 sm:py-16"
+        className="md:hidden relative z-10 px-4 py-8 sm:py-12"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.div variants={itemVariants} className="text-center mb-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 bg-primary/10 px-3 py-1 rounded-full mb-4"
-          >
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-primary font-medium">
-              AI-Powered Product Research
-            </span>
-          </motion.div>
-
-          <h1 className="text-4xl font-bold tracking-tight mb-4 text-foreground">
-            AI That Reads Every Review –{' '}
-            <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-              Free Browser Extension
-            </span>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-foreground leading-tight">
+            AI That Reads Every Review
+            <br />
+            <span className="text-foreground text-2xl sm:text-3xl font-semibold">—So You Don't Have To</span>
           </h1>
 
-          <p className="text-base text-muted-foreground mb-8 leading-relaxed">
-            Auto-ranks real top-3 products on Amazon, Walmart & more. No fake reviews. No regrets. Install in seconds.
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-light">
+            IMO compares 10,000+ reviews, videos, Reddit threads, and blogs so you can shop smarter in seconds.
           </p>
         </motion.div>
 
-        {/* Mobile Search */}
+        {/* Mobile Search - Constrained */}
         <motion.form
           variants={itemVariants}
           onSubmit={handleSearch}
-          className="mb-8"
-        >
-          <div className="flex gap-2">
-            <Input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-4 py-3 rounded-lg"
-            />
-            <Button
-              type="submit"
-              size="sm"
-              className="px-4 bg-primary hover:bg-primary/90"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-          </div>
-        </motion.form>
-
-        {/* Mobile CTA */}
-        <motion.div variants={itemVariants} className="flex flex-col gap-3">
-          <Button
-            asChild
-            className="w-full bg-primary hover:bg-primary/90 text-white h-12 rounded-lg"
-          >
-            <a href="#" target="_blank" rel="noopener noreferrer">
-              Add to Chrome – Free
-            </a>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full h-12 rounded-lg"
-          >
-            <Link to="/search">Try Without Installing (3 Free Searches)</Link>
-          </Button>
-        </motion.div>
-
-        {/* Trust Bar */}
-        <motion.div
-          variants={itemVariants}
-          className="mt-6 text-xs text-center text-muted-foreground space-y-2"
-        >
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span>✓ Free forever (3 searches/month)</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span>Works on Amazon, Walmart, Best Buy & more</span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span>No card needed</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span>98% accuracy from 10K+ products</span>
-          </div>
-        </motion.div>
-
-        {/* Mobile Stats */}
-        <motion.div
-          variants={itemVariants}
-          className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t"
-        >
-          {[
-            { number: '10K+', label: 'Products' },
-            { number: '500+', label: 'Videos' },
-            { number: '98%', label: 'Accuracy' },
-          ].map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-xl font-bold text-foreground">{stat.number}</div>
-              <div className="text-xs text-muted-foreground">{stat.label}</div>
-            </div>
-          ))}
-        </motion.div>
-      </motion.section>
-
-      {/* Desktop Hero Section */}
-      <motion.section
-        className="hidden md:flex relative z-10 min-h-screen flex-col items-center justify-center px-6 py-20"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {/* Badge */}
-        <motion.div
-          variants={itemVariants}
-          className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-8"
-        >
-          <span className="text-sm font-medium">📌 Featured on Product Hunt</span>
-        </motion.div>
-
-        {/* Main Heading */}
-        <motion.h1
-          variants={itemVariants}
-          className="text-6xl lg:text-7xl font-bold tracking-tight mb-6 text-center max-w-4xl"
-        >
-          AI That Reads Every Review –{' '}
-          <motion.span
-            className="bg-gradient-to-r from-primary via-blue-500 to-purple-500 bg-clip-text text-transparent"
-            animate={{
-              backgroundPosition: ['0% center', '100% center', '0% center'],
-            }}
-            transition={{ duration: 6, repeat: Infinity }}
-          >
-            Free Browser Extension
-          </motion.span>
-        </motion.h1>
-
-        {/* Subtitle */}
-        <motion.p
-          variants={itemVariants}
-          className="text-xl text-muted-foreground mb-8 text-center max-w-2xl leading-relaxed"
-        >
-          Auto-ranks real top-3 products on Amazon, Walmart & more. No fake reviews. No regrets. Install in seconds.
-        </motion.p>
-
-        {/* Search Bar */}
-        {/* <motion.form
-          variants={itemVariants}
-          onSubmit={handleSearch}
-          className="w-full max-w-2xl mb-8"
+          className="mb-8 w-full"
         >
           <motion.div
             className="relative group"
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
             transition={{ type: 'spring', stiffness: 300 }}
           >
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
-            <div className="relative flex items-center bg-card/50 backdrop-blur-xl border rounded-xl p-2">
-              <Search className="w-5 h-5 text-muted-foreground ml-4" />
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-xl blur opacity-50 group-hover:opacity-75 transition duration-500" />
+            <div className="relative flex items-center bg-card/95 backdrop-blur-xl border border-primary/20 rounded-xl p-3">
+              <Search className="w-5 h-5 text-primary ml-3 flex-shrink-0" />
               <Input
                 type="text"
-                placeholder="Search for anything... (laptop, camera, headphones)"
+                placeholder="Search any product..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 border-0 bg-transparent px-4 py-3 text-lg placeholder:text-muted-foreground focus-visible:ring-0"
+                className="flex-1 border-0 bg-transparent px-3 py-3 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-0"
               />
-              <motion.button
+              <Button
                 type="submit"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="mr-2 px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+                size="sm"
+                className="mr-2 px-3 bg-primary hover:bg-primary/90"
               >
-                Search
-              </motion.button>
+                <Search className="w-4 h-4" />
+              </Button>
             </div>
           </motion.div>
 
           {!user && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 flex items-center justify-center gap-3 text-xs text-muted-foreground"
+              transition={{ delay: 0.2 }}
+              className="mt-2 flex items-center justify-center gap-1 text-xs text-muted-foreground"
             >
-              <div className="flex items-center gap-1">
-                <Zap className="w-3 h-3 text-yellow-500" />
-                <span>Get your free AI-powered search</span>
-              </div>
-              <div className="inline-flex items-center gap-1 bg-green-500/10 px-2 py-0.5 rounded-full">
-                <span className="text-xs font-medium text-green-600">✓ No signup required</span>
-              </div>
+              <Zap className="w-4 h-4 text-yellow-500" />
+              <span>No signup • 3 free • 7 days trial</span>
             </motion.div>
           )}
-        </motion.form> */}
+        </motion.form>
 
-        {/* CTA Buttons */}
+        {/* Trust Grid - Mobile (2x2) with Counting Animation */}
         <motion.div
           variants={itemVariants}
-          className="flex items-center gap-4 mb-6"
+          className="grid grid-cols-2 gap-4 mb-8"
         >
-          <motion.a
-            href="#"
-            target="_blank"
-            rel="noopener noreferrer"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-8 py-4 bg-primary hover:bg-primary/90 text-white rounded-lg font-semibold text-lg transition-colors flex items-center gap-2 h-14 shadow-lg"
-          >
-            <span>Add to Chrome – Free</span>
-          </motion.a>
-          
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link
-              to="/search"
-              className="px-8 py-4 border border-foreground/20 rounded-lg font-medium hover:bg-foreground/5 transition-colors flex items-center gap-2 h-14"
-            >
-              Try Without Installing (3 Free Searches)
-            </Link>
-          </motion.div>
-        </motion.div>
-
-        {/* Trust Bar */}
-        <motion.div
-          variants={itemVariants}
-          className="mb-8 text-sm text-center text-muted-foreground max-w-3xl"
-        >
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <span className="font-medium">✓ Free forever (3 searches/month)</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span>Works on Amazon, Walmart, Best Buy & more</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span>No card needed</span>
-            <span className="text-muted-foreground/50">•</span>
-            <span className="font-medium">98% accuracy from 10K+ products</span>
+          <div className="bg-card/50 rounded-lg p-4 border border-foreground/10 text-center">
+            <div className="text-2xl font-bold text-primary mb-1">
+              <Counter to={10} suffix="K+" duration={2} />
+            </div>
+            <div className="text-xs text-muted-foreground">Reviews</div>
+          </div>
+          <div className="bg-card/50 rounded-lg p-4 border border-foreground/10 text-center">
+            <div className="text-2xl font-bold text-primary mb-1">
+              <Counter to={98} suffix="%" duration={2} />
+            </div>
+            <div className="text-xs text-muted-foreground">Accuracy</div>
+          </div>
+          <div className="bg-card/50 rounded-lg p-4 border border-foreground/10 text-center">
+            <div className="text-2xl font-bold text-primary mb-1">
+              <Counter to={500} suffix="+" duration={2} />
+            </div>
+            <div className="text-xs text-muted-foreground">Videos</div>
+          </div>
+          <div className="bg-card/50 rounded-lg p-4 border border-foreground/10 text-center">
+            <div className="text-2xl font-bold text-primary mb-1">
+              <Counter to={100} suffix="+" duration={2} />
+            </div>
+            <div className="text-xs text-muted-foreground">Retailers</div>
           </div>
         </motion.div>
 
-        {/* Video Embed/Link */}
+        {/* Key Features - Mobile */}
         <motion.div
           variants={itemVariants}
-          className="w-full max-w-4xl mb-8"
+          className="space-y-3 mb-8"
+        >
+          <div className="flex gap-3 p-3 bg-card/50 rounded-lg border border-foreground/5">
+            <div className="text-2xl flex-shrink-0">📊</div>
+            <div className="text-sm">
+              <div className="font-semibold text-xs mb-1">Comprehensive Analysis</div>
+              <div className="text-xs text-muted-foreground">Amazon, Reddit, YouTube, blogs & more</div>
+            </div>
+          </div>
+          <div className="flex gap-3 p-3 bg-card/50 rounded-lg border border-foreground/5">
+            <div className="text-2xl flex-shrink-0">⚡</div>
+            <div className="text-sm">
+              <div className="font-semibold text-xs mb-1">AI-Powered</div>
+              <div className="text-xs text-muted-foreground">Filters fake reviews & real insights</div>
+            </div>
+          </div>
+          <div className="flex gap-3 p-3 bg-card/50 rounded-lg border border-foreground/5">
+            <div className="text-2xl flex-shrink-0">🎯</div>
+            <div className="text-sm">
+              <div className="font-semibold text-xs mb-1">Top 3 Ranked</div>
+              <div className="text-xs text-muted-foreground">Best options based on your needs</div>
+            </div>
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* Desktop Hero Section */}
+      <motion.section
+        className="hidden md:flex relative z-10 min-h-screen flex-col items-center justify-center px-6 pt-20 pb-12"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Main Heading - Professional and Bold */}
+        <motion.h1
+          variants={itemVariants}
+          className="text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center max-w-5xl leading-tight"
+        >
+          AI That Reads Every Review
+          <br />
+          <span className="text-foreground">—So You Don't Have To</span>
+        </motion.h1>
+
+        {/* Subtitle - Informative and Clear */}
+        <motion.p
+          variants={itemVariants}
+          className="text-xl text-muted-foreground mb-12 text-center max-w-3xl leading-relaxed font-light"
+        >
+          IMO compares and summarizes 10,000+ reviews, videos, Reddit threads, and blogs—so you can shop smarter in seconds, not hours.
+        </motion.p>
+
+        {/* Search Bar - Constrained Width */}
+        <motion.form
+          onSubmit={handleSearch}
+          className="mb-8 w-full max-w-2xl"
+          variants={itemVariants}
+          whileHover={{ scale: 1.01 }}
+          transition={{ type: 'spring', stiffness: 300 }}
+        >
+          <div className="relative group">
+            {/* Subtle glow */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-blue-500/20 rounded-2xl blur-2xl opacity-30 group-hover:opacity-50 transition duration-500" />
+            
+            {/* Search input */}
+            <div className="relative flex items-center bg-card/95 backdrop-blur-xl border border-primary/20 rounded-2xl p-5 shadow-xl">
+              <Search className="w-6 h-6 text-primary ml-4 flex-shrink-0" />
+              <Input
+                type="text"
+                placeholder="Search any product..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 border-0 bg-transparent px-4 py-3 text-base placeholder:text-muted-foreground/50 focus-visible:ring-0 focus-visible:outline-none"
+              />
+              <motion.button
+                type="submit"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                className="mr-2 px-6 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-lg font-semibold transition-colors text-sm"
+              >
+                Search
+              </motion.button>
+            </div>
+          </div>
+          
+          {!user && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground"
+            >
+              <Zap className="w-4 h-4 text-yellow-500" />
+              <span className="font-medium">No signup • 3 free searches • 7 days free trial</span>
+            </motion.div>
+          )}
+        </motion.form>
+
+        {/* Trust Indicators - Clean Grid with Counting Animation */}
+        <motion.div
+          variants={itemVariants}
+          className="w-full max-w-4xl mb-20 mt-8"
+        >
+          <div className="grid grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                <Counter to={10} suffix="K+" duration={2} />
+              </div>
+              <div className="text-sm text-muted-foreground">Reviews Analyzed</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                <Counter to={500} suffix="+" duration={2} />
+              </div>
+              <div className="text-sm text-muted-foreground">Video Sources</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                <Counter to={98} suffix="%" duration={2} />
+              </div>
+              <div className="text-sm text-muted-foreground">Accuracy</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                <Counter to={100} suffix="+" duration={2} />
+              </div>
+              <div className="text-sm text-muted-foreground">Retailers</div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Video Demo */}
+        <motion.div
+          variants={itemVariants}
+          className="w-full max-w-4xl mb-12"
         >
           <div className="relative rounded-xl overflow-hidden shadow-2xl border border-foreground/10">
-            <div className="aspect-video">
+            <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-500/20">
               <video
                 controls
                 autoPlay
@@ -378,50 +401,15 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
               </video>
             </div>
           </div>
+          <p className="text-center text-sm text-muted-foreground mt-3">
+            See how IMO works in action
+          </p>
         </motion.div>
-        {/* Stats Grid */}
-        <motion.div
-          variants={itemVariants}
-          className="grid grid-cols-3 gap-8 mb-8 text-center"
-        >
-          {[
-            { number: '10K+', label: 'Products Analyzed' },
-            { number: '500+', label: 'Review Videos' },
-            { number: '98%', label: 'Accuracy' },
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              whileHover={{ scale: 1.1 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-            >
-              <div className="text-4xl font-bold text-foreground mb-2">
-                {stat.number}
-              </div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Product Hunt Badge */}
-        {/* <motion.div
-          variants={itemVariants}
-          className="mb-4"
-        >
-          <a
-            href="https://www.producthunt.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 border rounded-lg text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <span>📌</span>
-            Featured on Product Hunt
-          </a>
-        </motion.div> */}
 
         {/* Scroll CTA */}
         <motion.button
           onClick={scrollToSection}
-          className="mt-2"
+          className="mt-4"
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
