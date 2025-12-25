@@ -201,6 +201,30 @@ async def init_db():
                 logger.info("subscription_id column already exists as UUID")
         except Exception as e:
             logger.debug(f"subscription_id column fix: {e}")
+        
+        # Add contacts table if it doesn't exist
+        try:
+            await conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS contacts (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    name VARCHAR(255) NOT NULL,
+                    email VARCHAR(255) NOT NULL,
+                    subject VARCHAR(500) NOT NULL,
+                    message TEXT NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            # Create indexes
+            await conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_contacts_email ON contacts(email)
+            """))
+            await conn.execute(text("""
+                CREATE INDEX IF NOT EXISTS idx_contacts_created_at ON contacts(created_at)
+            """))
+            logger.info("contacts table created or already exists")
+        except Exception as e:
+            logger.debug(f"contacts table: {e}")
 
 
 async def close_db():

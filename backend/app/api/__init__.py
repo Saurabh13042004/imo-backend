@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.routes import search, products, reviews, utils, auth, profile, payments, price_alerts, chatbot
+from app.api.routes import search, products, reviews, utils, auth, profile, payments, price_alerts, chatbot, contact
 
 api_router = APIRouter()
 
@@ -16,5 +16,6 @@ api_router.include_router(products.router)
 api_router.include_router(reviews.router)
 api_router.include_router(utils.router)
 api_router.include_router(chatbot.router)
+api_router.include_router(contact.router)
 
 __all__ = ["api_router"]

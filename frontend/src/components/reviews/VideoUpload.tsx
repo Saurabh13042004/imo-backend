@@ -112,8 +112,8 @@ export const VideoUpload = ({
       formData.append('rating', rating.toString());
       formData.append('video_file', videoFile);
 
-      // Get auth token from sessionStorage
-      const authData = JSON.parse(sessionStorage.getItem('auth_tokens') || '{}');
+      // Get auth token from localStorage
+      const authData = JSON.parse(localStorage.getItem('auth_tokens') || '{}');
       const accessToken = authData.accessToken;
 
       if (!accessToken) {

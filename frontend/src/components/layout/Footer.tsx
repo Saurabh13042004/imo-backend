@@ -20,8 +20,11 @@ export const Footer = () => {
             <p className="text-sm text-muted-foreground mb-2 font-semibold">
               AI-powered product research that saves you time and money
             </p>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground mb-4">
               Compare thousands of reviews, videos, and expert opinions in seconds—not hours.
+            </p>
+            <p className="text-xs text-muted-foreground/70 leading-relaxed">
+              <span className="font-semibold text-muted-foreground">Affiliate Note —</span> We partner with retailers like Amazon, Walmart, and Best Buy through affiliate programs. When you buy through our links, we may earn a small commission at no extra cost to you — this helps us keep IMO free and improving!
             </p>
           </div>
           

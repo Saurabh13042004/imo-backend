@@ -7,7 +7,7 @@ import { Navbar } from "@/components/layout/Navbar";
 const About = () => {
   return (
     <>
-      <Navbar />
+      {/* <Navbar /> */}
       <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
@@ -150,6 +150,22 @@ const About = () => {
               product analysis, comprehensive reviews, and personalized recommendations. We're just getting started 
               on our mission to transform how the world shops.
             </p>
+          </motion.div>
+
+          {/* Affiliate Note */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            viewport={{ once: true }}
+            className="mt-12 pt-8 border-t border-border/30"
+          >
+            <div className="bg-muted/50 rounded-lg p-6">
+              <h3 className="font-semibold text-foreground mb-3">Affiliate Note</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                We partner with retailers like Amazon, Walmart, and Best Buy through affiliate programs. When you buy through our links, we may earn a small commission at no extra cost to you — this helps us keep IMO free and improving! Our recommendations are always unbiased and based on genuine product quality and user feedback.
+              </p>
+            </div>
           </motion.div>
         </div>
       </section>
