@@ -42,4 +42,4 @@ jobs:
             docker-compose ps
             
             echo "📝 Recent logs:"
-            docker-compose logs --tail=20 imo_api
+            docker-compose logs --tail=20 api
