@@ -8,9 +8,8 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearchUrl } from '@/hooks/useSearchUrl';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import IMOVideo from '@/assets/IMOVideo.mp4';
 
 interface HeroSectionProps {
   className?: string;
@@ -113,6 +112,22 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
   const { user } = useAuth();
   const [videoOpen, setVideoOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+
+  // Lazy load video after component mounts
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.load();
+    }
+  }, []);
+
+  const handleVideoClick = () => {
+    if (videoRef.current && !isVideoPlaying) {
+      videoRef.current.play();
+      setIsVideoPlaying(true);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -384,21 +399,34 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
           variants={itemVariants}
           className="w-full max-w-4xl mb-12"
         >
-          <div className="relative rounded-xl overflow-hidden shadow-2xl border border-foreground/10">
-            <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-500/20">
+          <div 
+            className="relative rounded-xl overflow-hidden shadow-2xl border border-foreground/10 cursor-pointer group"
+            onClick={handleVideoClick}
+          >
+            <div className="aspect-video bg-gradient-to-br from-primary/20 to-purple-500/20 relative">
               <video
-                controls
-                autoPlay
+                ref={videoRef}
+                controls={isVideoPlaying}
                 muted
-                loop
+                playsInline
+                preload="none"
+                poster="https://d3tmtixqwd7vky.cloudfront.net/imo-assets/hero-poster.webp"
                 className="w-full h-full object-cover"
               >
                 <source
-                  src={IMOVideo}
+                  src="https://d3tmtixqwd7vky.cloudfront.net/imo-assets/IMOVideo-optimized.mp4"
                   type="video/mp4"
                 />
                 Your browser does not support the video tag.
               </video>
+              
+              {!isVideoPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                  <div className="flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full group-hover:bg-white/30 transition-colors">
+                    <Play className="w-8 h-8 text-white ml-1" fill="white" />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <p className="text-center text-sm text-muted-foreground mt-3">
