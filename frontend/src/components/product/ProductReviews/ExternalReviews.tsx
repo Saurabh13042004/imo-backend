@@ -280,31 +280,93 @@ export const ExternalReviews = ({ productId, reviews = [], reviewsSummary, isLoa
           </div>
 
           {reviewsSummary && (
-            <div className="bg-muted/50 rounded-lg p-4">
-              <h4 className="font-medium mb-2">Review Summary</h4>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gradient-to-br from-primary/5 via-transparent to-primary/5 rounded-lg p-5 border border-primary/10"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-1 w-1 rounded-full bg-primary"></div>
+                <h4 className="font-semibold text-foreground">Review Summary</h4>
+              </div>
+              
               {typeof reviewsSummary === 'string' ? (
                 <p className="text-sm text-muted-foreground">{reviewsSummary}</p>
               ) : (
-                <div className="space-y-2 text-sm text-muted-foreground">
+                <div className="space-y-4">
+                  {/* Average Rating */}
                   {reviewsSummary.average_rating && (
-                    <p><strong>Average Rating:</strong> {reviewsSummary.average_rating}/5</p>
-                  )}
-                  {reviewsSummary.overall_sentiment && (
-                    <p><strong>Sentiment:</strong> {reviewsSummary.overall_sentiment.replace(/_/g, ' ').toUpperCase()}</p>
-                  )}
-                  {reviewsSummary.common_praises && reviewsSummary.common_praises.length > 0 && (
-                    <div>
-                      <strong>Common Praises:</strong> {reviewsSummary.common_praises.join(', ')}
+                    <div className="flex items-center justify-between p-3 bg-white/50 dark:bg-slate-900/50 rounded-md">
+                      <span className="text-sm font-medium text-muted-foreground">Average Rating</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3.5 w-3.5 ${
+                                i < Math.round(reviewsSummary.average_rating)
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="font-semibold text-foreground ml-1">
+                          {reviewsSummary.average_rating.toFixed(1)}/5
+                        </span>
+                      </div>
                     </div>
                   )}
+
+                  {/* Overall Sentiment */}
+                  {reviewsSummary.overall_sentiment && (
+                    <div className="flex items-center justify-between p-3 bg-white/50 dark:bg-slate-900/50 rounded-md">
+                      <span className="text-sm font-medium text-muted-foreground">Overall Sentiment</span>
+                      <Badge 
+                        className={`text-xs font-semibold ${
+                          reviewsSummary.overall_sentiment === 'positive'
+                            ? 'bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-300'
+                            : reviewsSummary.overall_sentiment === 'negative'
+                            ? 'bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300'
+                            : reviewsSummary.overall_sentiment === 'mixed'
+                            ? 'bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300'
+                            : 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                        }`}
+                      >
+                        {reviewsSummary.overall_sentiment.toUpperCase()}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Common Praises */}
+                  {reviewsSummary.common_praises && reviewsSummary.common_praises.length > 0 && (
+                    <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-md border border-green-200 dark:border-green-900">
+                      <div className="flex gap-2 mb-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-green-600 dark:bg-green-400 mt-1 flex-shrink-0"></div>
+                        <p className="text-xs font-semibold text-green-900 dark:text-green-300">Common Praises</p>
+                      </div>
+                      <p className="text-xs text-green-800 dark:text-green-200 leading-relaxed ml-3.5">
+                        {reviewsSummary.common_praises.join(' • ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Common Complaints */}
                   {reviewsSummary.common_complaints && reviewsSummary.common_complaints.length > 0 && (
-                    <div>
-                      <strong>Common Complaints:</strong> {reviewsSummary.common_complaints.join(', ')}
+                    <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-md border border-red-200 dark:border-red-900">
+                      <div className="flex gap-2 mb-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-red-600 dark:bg-red-400 mt-1 flex-shrink-0"></div>
+                        <p className="text-xs font-semibold text-red-900 dark:text-red-300">Common Complaints</p>
+                      </div>
+                      <p className="text-xs text-red-800 dark:text-red-200 leading-relaxed ml-3.5">
+                        {reviewsSummary.common_complaints.join(' • ')}
+                      </p>
                     </div>
                   )}
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           <div className="space-y-4">
