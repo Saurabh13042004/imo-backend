@@ -48,6 +48,7 @@ const ProductDetails = () => {
   const [enrichmentLoading, setEnrichmentLoading] = useState(false);
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [isPriceAlertModalOpen, setIsPriceAlertModalOpen] = useState(false);
+  const [finalAIVerdict, setFinalAIVerdict] = useState<any>(null);
   const { trackProductView } = useAnalytics();
 
   // Check if this is a demo product
@@ -58,6 +59,18 @@ const ProductDetails = () => {
     productId,
     enrichedData
   );
+
+  // Use demo product's AI verdict when available, otherwise use API verdict
+  useEffect(() => {
+    if (isDemoProduct && demoProduct?.aiVerdict) {
+      setFinalAIVerdict({
+        ...demoProduct.aiVerdict,
+        imo_score: demoProduct.aiVerdict.verdict_score
+      });
+    } else if (aiVerdict) {
+      setFinalAIVerdict(aiVerdict);
+    }
+  }, [isDemoProduct, demoProduct, aiVerdict]);
 
   // Memoize store URLs - wait for enrichedData
   const storeUrls = enrichedData?.immersive_data?.product_results?.stores
@@ -305,8 +318,8 @@ const ProductDetails = () => {
                         title={product.title}
                         price={product.price}
                         imoScore={product.imo_score}
-                        aiVerdictScore={aiVerdict?.imo_score}
-                        verdictStatus={verdictStatus}
+                        aiVerdictScore={finalAIVerdict?.imo_score}
+                        verdictStatus={isDemoProduct ? "ready" : verdictStatus}
                         description={enrichedData?.bullet_points ? enrichedData.bullet_points.split('\n')[0] : (enrichedData?.description || product.description)}
                         productUrl={product.product_url}
                         source={product.source as any}
@@ -341,7 +354,7 @@ const ProductDetails = () => {
               {product && (
                 <div className="space-y-8 border-t border-border/50 pt-8">
                   {/* AI Verdict Section (for ALL products) */}
-                  {aiVerdict && verdictStatus === "ready" && (
+                  {finalAIVerdict && (isDemoProduct || verdictStatus === "ready") && (
                     <>
                       <motion.div
                         initial={{ y: 20, opacity: 0 }}
@@ -355,37 +368,45 @@ const ProductDetails = () => {
                               IMO AI Verdict
                             </h2>
                             <p className="text-muted-foreground">
-                              {aiVerdict.summary}
+                              {finalAIVerdict.summary}
                             </p>
                           </div>
                           <div className="text-right">
                             <div className="text-4xl font-bold text-primary">
-                              {aiVerdict.imo_score?.toFixed(1) || "N/A"}
+                              {finalAIVerdict.imo_score?.toFixed(1) || "N/A"}
                             </div>
                             <p className="text-xs text-muted-foreground">out of 10</p>
                           </div>
                         </div>
 
-                        {aiVerdict.who_should_buy && (
+                        {(finalAIVerdict.who_should_buy || finalAIVerdict.who_should_avoid) && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border/30">
                             <div>
                               <p className="text-sm font-semibold text-green-600 dark:text-green-400 mb-1">✓ Who should buy</p>
-                              <p className="text-sm text-muted-foreground">{aiVerdict.who_should_buy}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {Array.isArray(finalAIVerdict.who_should_buy) 
+                                  ? finalAIVerdict.who_should_buy.join(', ')
+                                  : finalAIVerdict.who_should_buy}
+                              </p>
                             </div>
-                            {aiVerdict.who_should_avoid && (
+                            {finalAIVerdict.who_should_avoid && (
                               <div>
                                 <p className="text-sm font-semibold text-orange-600 dark:text-orange-400 mb-1">✗ Who should avoid</p>
-                                <p className="text-sm text-muted-foreground">{aiVerdict.who_should_avoid}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {Array.isArray(finalAIVerdict.who_should_avoid) 
+                                    ? finalAIVerdict.who_should_avoid.join(', ')
+                                    : finalAIVerdict.who_should_avoid}
+                                </p>
                               </div>
                             )}
                           </div>
                         )}
 
-                        {aiVerdict.deal_breakers && aiVerdict.deal_breakers.length > 0 && (
+                        {finalAIVerdict.deal_breakers && finalAIVerdict.deal_breakers.length > 0 && (
                           <div className="pt-4 border-t border-border/30">
                             <p className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2">⚠ Deal Breakers</p>
                             <ul className="text-sm text-muted-foreground space-y-1">
-                              {aiVerdict.deal_breakers.map((issue: string, idx: number) => (
+                              {finalAIVerdict.deal_breakers.map((issue: string, idx: number) => (
                                 <li key={idx}>• {issue}</li>
                               ))}
                             </ul>
@@ -394,15 +415,15 @@ const ProductDetails = () => {
                       </motion.div>
 
                       {/* AI Verdict Pros and Cons */}
-                      {(aiVerdict.pros?.length > 0 || aiVerdict.cons?.length > 0) && (
+                      {(finalAIVerdict.pros?.length > 0 || finalAIVerdict.cons?.length > 0) && (
                         <motion.div
                           initial={{ y: 20, opacity: 0 }}
                           animate={{ y: 0, opacity: 1 }}
                           transition={{ duration: 0.4, delay: 0.1 }}
                         >
                           <ProductProsAndCons 
-                            pros={aiVerdict.pros}
-                            cons={aiVerdict.cons}
+                            pros={finalAIVerdict.pros}
+                            cons={finalAIVerdict.cons}
                           />
                         </motion.div>
                       )}

@@ -3,6 +3,8 @@
  * This provides complete product information including enriched data, reviews, AI verdicts, and store pricing
  */
 
+import { Thumb } from "@radix-ui/react-slider";
+
 export const DEMO_PRODUCTS = {
   fp1: {
     // Product Basic Info
@@ -107,32 +109,134 @@ export const DEMO_PRODUCTS = {
             {
               title: "Premium Wireless Headphones - Full Review",
               description: "Comprehensive review of the Premium Wireless Headphones",
-              link: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-              thumbnail: "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+              link: "https://www.youtube.com/watch?v=zZlYnk6BvBs",
+              thumbnail: "https://img.youtube.com/vi/zZlYnk6BvBs/mqdefault.jpg"
+            },
+
+            {
+              title: "Unboxing and First Impressions",
+              description: "Unboxing the Premium Wireless Headphones and sharing first impressions",
+              link: "https://www.youtube.com/watch?v=tIHldrPlsTk",
+              thumbnail: "https://img.youtube.com/vi/tIHldrPlsTk/mqdefault.jpg"
+            },
+
+            {
+              title: "Top 5 Features of Premium Wireless Headphones",
+              description: "Highlighting the top 5 features of the Premium Wireless Headphones",
+              link: "https://www.youtube.com/watch?v=JFfPF9r8Ueg",
+              thumbnail: "https://img.youtube.com/vi/JFfPF9r8Ueg/mqdefault.jpg"
+            },
+
+            {
+              title: "How to Maximize Battery Life",
+              description: "Tips and tricks to get the most out of your Premium Wireless Headphones' battery life",
+              link: "https://www.youtube.com/watch?v=N3UmLVLVdXk",
+              thumbnail: "https://img.youtube.com/vi/N3UmLVLVdXk/mqdefault.jpg"
             }
           ],
+          short_videos: [
+            {
+              title: "Quick Look at Premium Wireless Headphones",
+              link: "https://www.youtube.com/watch?v=QeX5j3Yz1jM",
+              thumbnail: "https://img.youtube.com/vi/QeX5j3Yz1jM/mqdefault.jpg"
+            },
+            {
+              title: "Premium Wireless Headphones Sound Test",
+              link: "https://www.youtube.com/watch?v=V7bX9F3K2jY",
+              thumbnail: "https://img.youtube.com/vi/V7bX9F3K2jY/mqdefault.jpg"
+            },
+
+            {
+              title: "Setting Up Your Premium Wireless Headphones",
+              link: "https://www.youtube.com/watch?v=Hk3J9L4m8QY",
+              thumbnail: "https://img.youtube.com/vi/Hk3J9L4m8QY/mqdefault.jpg"
+
+            },
+
+            {
+              title: "Premium Wireless Headphones vs Competitors",
+              link: "https://www.youtube.com/watch?v=Gz2L8J9K3mE",
+              thumbnail: "https://img.youtube.com/vi/Gz2L8J9K3mE/mqdefault.jpg"
+            }
+
+
+
+          ],
+
           stores: [
             {
               name: "Amazon",
               price: "$199.99",
+              extracted_price: 199.99,
               link: "https://www.amazon.com",
               rating: 4.8,
-              reviews: 2450
+              reviews: 2450,
+              tag: "Popular Choice",
+              details_and_offers: [
+                "Free shipping on orders over $25",
+                "Prime eligible - Free 2-day shipping",
+                "30-day returns"
+              ],
+              delivery_details: [
+                { type: "Free 2-day delivery" },
+                { type: "In stock - Ships today" }
+              ]
             },
             {
               name: "Best Buy",
               price: "$199.99",
+              extracted_price: 199.99,
               link: "https://www.bestbuy.com",
               rating: 4.7,
-              reviews: 1820
+              reviews: 1820,
+              details_and_offers: [
+                "Free in-store pickup available",
+                "15% off for members",
+                "Best Buy Protection Plan available"
+              ],
+              delivery_details: [
+                { type: "Free same-day delivery" },
+                { type: "Ready for pickup today" }
+              ]
             },
             {
               name: "Walmart",
               price: "$189.99",
+              extracted_price: 189.99,
               link: "https://www.walmart.com",
               rating: 4.6,
-              reviews: 1205
+              reviews: 1205,
+              tag: "Best Price",
+              details_and_offers: [
+                "Free 2-day shipping on $35+ orders",
+                "Price match guarantee",
+                "Easy returns at any Walmart"
+              ],
+              delivery_details: [
+                { type: "Free shipping on $35+" },
+                { type: "Ships in 1-2 business days" }
+              ]
             }
+          ],
+          about_the_product: {
+            description: "Professional-grade wireless headphones featuring adaptive noise cancellation, 30-hour battery life, and premium audio drivers. Perfect for music enthusiasts and professionals who demand superior sound quality.",
+            features: [
+              { title: "Driver Size", value: "40mm" },
+              { title: "Frequency Response", value: "20Hz - 20kHz" },
+              { title: "Impedance", value: "32 Ohms" },
+              { title: "Battery Life", value: "Up to 30 hours" },
+              { title: "Charging Time", value: "2 hours via USB-C" },
+              { title: "Bluetooth Version", value: "5.3" },
+              { title: "Weight", value: "250g" },
+              { title: "Water Resistance", value: "IPX4" }
+            ]
+          },
+          ratings: [
+            { stars: 5, amount: 1200 },
+            { stars: 4, amount: 800 },
+            { stars: 3, amount: 300 },
+            { stars: 2, amount: 100 },
+            { stars: 1, amount: 50 }
           ]
         }
       }
@@ -285,24 +389,76 @@ export const DEMO_PRODUCTS = {
             {
               name: "Walmart",
               price: "$449.99",
+              extracted_price: 449.99,
               link: "https://www.walmart.com",
               rating: 4.6,
-              reviews: 1820
+              reviews: 1820,
+              tag: "Best Price",
+              details_and_offers: [
+                "Free shipping on orders over $35",
+                "Extended warranty available",
+                "Easy 30-day returns"
+              ],
+              delivery_details: [
+                { type: "Free shipping on $35+" },
+                { type: "Ships in 2-3 business days" }
+              ]
             },
             {
               name: "Amazon",
               price: "$459.99",
+              extracted_price: 459.99,
               link: "https://www.amazon.com",
               rating: 4.5,
-              reviews: 1205
+              reviews: 1205,
+              tag: "Popular Choice",
+              details_and_offers: [
+                "Prime eligible - Free 2-day shipping",
+                "Amazon Basics protection plan included",
+                "30-day returns"
+              ],
+              delivery_details: [
+                { type: "Free Prime shipping" },
+                { type: "In stock - Ships today" }
+              ]
             },
             {
               name: "Best Buy",
               price: "$469.99",
+              extracted_price: 469.99,
               link: "https://www.bestbuy.com",
               rating: 4.7,
-              reviews: 892
+              reviews: 892,
+              details_and_offers: [
+                "Free in-store pickup available",
+                "Geek Squad setup service available",
+                "Best Buy Protection Plan included"
+              ],
+              delivery_details: [
+                { type: "Free same-day delivery" },
+                { type: "Ready for pickup today" }
+              ]
             }
+          ],
+          about_the_product: {
+            description: "Professional-grade 27-inch 4K monitor featuring USB-C connectivity, HDR support, and factory-calibrated color accuracy. Ideal for content creators, video editors, and gamers seeking pristine image quality.",
+            features: [
+              { title: "Screen Size", value: "27 inches" },
+              { title: "Resolution", value: "3840 x 2160 (4K)" },
+              { title: "Panel Type", value: "IPS" },
+              { title: "Refresh Rate", value: "60Hz" },
+              { title: "Response Time", value: "5ms" },
+              { title: "Color Gamut", value: "99% Adobe RGB" },
+              { title: "Brightness", value: "350 nits" },
+              { title: "Inputs", value: "USB-C, HDMI x2, DisplayPort" }
+            ]
+          },
+          ratings: [
+            { stars: 5, amount: 950 },
+            { stars: 4, amount: 650 },
+            { stars: 3, amount: 150 },
+            { stars: 2, amount: 40 },
+            { stars: 1, amount: 10 }
           ]
         }
       }
@@ -459,24 +615,76 @@ export const DEMO_PRODUCTS = {
             {
               name: "Amazon",
               price: "$159.99",
+              extracted_price: 159.99,
               link: "https://www.amazon.com",
               rating: 4.5,
-              reviews: 3200
+              reviews: 3200,
+              tag: "Popular Choice",
+              details_and_offers: [
+                "Prime eligible - Free 2-day shipping",
+                "Amazon Basics warranty included",
+                "30-day returns guarantee"
+              ],
+              delivery_details: [
+                { type: "Free Prime 2-day shipping" },
+                { type: "In stock - Ships today" }
+              ]
             },
             {
               name: "Newegg",
               price: "$164.99",
+              extracted_price: 164.99,
               link: "https://www.newegg.com",
               rating: 4.4,
-              reviews: 1850
+              reviews: 1850,
+              details_and_offers: [
+                "Free standard shipping",
+                "30-day return window",
+                "Newegg warranty support"
+              ],
+              delivery_details: [
+                { type: "Free standard shipping" },
+                { type: "Ships in 3-5 business days" }
+              ]
             },
             {
               name: "Best Buy",
               price: "$169.99",
+              extracted_price: 169.99,
               link: "https://www.bestbuy.com",
               rating: 4.6,
-              reviews: 945
+              reviews: 945,
+              tag: "Best Price",
+              details_and_offers: [
+                "Free in-store pickup available",
+                "Gamers Club benefits - 10% off",
+                "15% off for Best Buy members"
+              ],
+              delivery_details: [
+                { type: "Free same-day delivery" },
+                { type: "Pick up in 2 hours" }
+              ]
             }
+          ],
+          about_the_product: {
+            description: "High-performance mechanical gaming keyboard featuring custom-tuned switches, vibrant RGB lighting system, and programmable macro keys. Designed for competitive gamers and professionals who demand responsive input and aesthetic appeal.",
+            features: [
+              { title: "Switch Type", value: "Mechanical Red Linear" },
+              { title: "Keycaps", value: "PBT Double-shot" },
+              { title: "Layout", value: "Full Size (104 keys)" },
+              { title: "Backlighting", value: "Per-key RGB" },
+              { title: "Programmable Keys", value: "All keys" },
+              { title: "Connection", value: "Wired USB 2.0" },
+              { title: "Cable Length", value: "1.8 meters" },
+              { title: "Switch Lifespan", value: "50 million keystrokes" }
+            ]
+          },
+          ratings: [
+            { stars: 5, amount: 1800 },
+            { stars: 4, amount: 1200 },
+            { stars: 3, amount: 150 },
+            { stars: 2, amount: 40 },
+            { stars: 1, amount: 10 }
           ]
         }
       }

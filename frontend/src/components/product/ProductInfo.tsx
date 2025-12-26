@@ -64,12 +64,12 @@ export const ProductInfo = ({ title, price, imoScore, aiVerdictScore, verdictSta
         
         {/* Price Display */}
         <div className="space-y-2 mb-6">
-          {/* <p className="text-3xl font-bold text-primary">
-          
-          </p> */}
+          <p className="text-3xl font-bold text-primary">
+            {formatPrice(price)}
+          </p>
           {priceRange && (
-            <p className="text-xl text-muted-foreground">
-              Price Range: <span className="font-semibold text-foreground">  {priceRange}</span>
+            <p className="text-lg text-muted-foreground">
+              Price Range: <span className="font-semibold text-foreground">{priceRange}</span>
             </p>
           )}
         </div>
