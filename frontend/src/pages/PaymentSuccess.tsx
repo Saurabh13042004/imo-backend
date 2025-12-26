@@ -236,13 +236,13 @@ export default function PaymentSuccess() {
               )}
             </div>
 
-            {sessionId && (
+            {/* {sessionId && (
               <div className="bg-green-100 p-4 rounded-lg">
                 <p className="text-xs text-green-600 font-mono">
                   Session ID: {sessionId}
                 </p>
               </div>
-            )}
+            )} */}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
