@@ -255,7 +255,7 @@ const Search = () => {
 
 					{/* Guest Search Banner */}
 					{!user && remainingSearches > 0 && showGuestBanner && (
-						<div className="mb-6 mx-auto max-w-2xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-4 flex items-center justify-between gap-4">
+						<div className="hidden md:flex mb-6 mx-auto max-w-2xl bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-4 items-center justify-between gap-4">
 							<div className="flex items-center gap-3 flex-1">
 								<div className="bg-primary/20 rounded-full px-4 py-1.5 inline-flex items-center justify-center whitespace-nowrap">
 									<span className="text-sm font-semibold text-primary">
