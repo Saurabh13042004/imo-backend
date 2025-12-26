@@ -10,7 +10,6 @@ import { ComparisonSection } from "@/components/features/comparison";
 import { FaqSection } from "@/components/home/faq";
 import { PricingSection } from "@/components/home/pricing";
 import { HeroSection } from "@/components/features/hero";
-import { UnlockPrompt } from "@/components/subscription/UnlockPrompt";
 import { OnboardingFlow } from "@/components/subscription/OnboardingFlow";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useAuth } from "@/hooks/useAuth";
@@ -126,24 +125,6 @@ const Index = () => {
             <Separator className="opacity-30" />
           </div>
         </div>
-        
-        {/* Upgrade Prompt for Free Users */}
-        {!hasActiveSubscription && (
-          <>
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-              <UnlockPrompt 
-                variant="banner" 
-                message="Ready to unlock unlimited product insights?"
-                showBoth={false}
-                className="mb-8"
-              />
-            </div>
-            
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-              <Separator className="opacity-30" />
-            </div>
-          </>
-        )}
         
         {/* FAQ Section */}
         <FaqSection />

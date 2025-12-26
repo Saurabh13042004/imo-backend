@@ -343,15 +343,10 @@ const ProductDetails = () => {
                     </div>
                   </div>
 
-                  {/* Pros and Cons */}
-                  <ProductProsAndCons 
-                    pros={enrichedData?.analysis?.pros || product.pros}
-                    cons={enrichedData?.analysis?.cons || product.cons}
-                  />
+                  {/* Reviews and Videos Sections - Ready for API integration */}
                 </>
               ) : null}
 
-              {/* Reviews and Videos Sections - Ready for API integration */}
               {product && (
                 <div className="space-y-8 border-t border-border/50 pt-8">
                   {/* AI Verdict Section (for ALL products) */}
