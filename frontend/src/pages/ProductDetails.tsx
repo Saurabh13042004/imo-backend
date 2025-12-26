@@ -54,13 +54,14 @@ const ProductDetails = () => {
   // Check if this is a demo product
   const { isDemoProduct, demoProduct } = useDemoProduct(productId);
 
-  // Use AI Verdict hook for all products (not Amazon-specific)
+  // Use AI Verdict hook ONLY for non-demo products
+  // Demo products already have hardcoded verdicts
   const { verdict: aiVerdict, status: verdictStatus } = useAIVerdict(
-    productId,
+    isDemoProduct ? undefined : productId,
     enrichedData
   );
 
-  // Use demo product's AI verdict when available, otherwise use API verdict
+  // Use demo product's AI verdict immediately, otherwise wait for API verdict
   useEffect(() => {
     if (isDemoProduct && demoProduct?.aiVerdict) {
       setFinalAIVerdict({
