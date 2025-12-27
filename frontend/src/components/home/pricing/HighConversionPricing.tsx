@@ -12,7 +12,7 @@ export function HighConversionPricing() {
   const { createCheckoutSession, loading } = useSubscriptionFlow();
   const { user, isAuthenticated } = useAuth();
   const [loadingType, setLoadingType] = useState<'trial' | 'subscription' | null>(null);
-  const [billingPeriod, setBillingPeriod] = useState<'yearly' | 'monthly'>('yearly');
+  const [billingPeriod, setBillingPeriod] = useState<'yearly' | 'monthly'>('monthly');
 
   const monthlyPrice = 9.99;
   const yearlyPrice = 6.99;
