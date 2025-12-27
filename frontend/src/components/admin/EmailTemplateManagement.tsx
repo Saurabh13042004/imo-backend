@@ -8,6 +8,7 @@ import {
   EmailTemplate,
   EmailTemplateCreate,
 } from "@/hooks/useAdminApi";
+import { useToast } from "@/hooks/useToast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,6 +29,7 @@ export function EmailTemplateManagement() {
   const [viewingTemplate, setViewingTemplate] = useState<EmailTemplate | null>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const limit = 10;
+  const toast = useToast();
 
   const { data: templates, isLoading } = useEmailTemplates(currentPage * limit, limit);
   const createMutation = useCreateEmailTemplate();
@@ -35,15 +37,22 @@ export function EmailTemplateManagement() {
   const deleteMutation = useDeleteEmailTemplate();
 
   const handleCreate = async (data: EmailTemplateCreate) => {
+    const toastId = toast.loading("Creating email template...");
     try {
       await createMutation.mutateAsync(data);
+      toast.dismiss(toastId);
+      toast.success("Email template created successfully!");
       setIsCreateDialogOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to create template";
+      toast.error(errorMsg);
       console.error("Failed to create template:", error);
     }
   };
 
   const handleUpdate = async (templateId: string, data: Partial<EmailTemplate>) => {
+    const toastId = toast.loading("Updating email template...");
     try {
       await updateMutation.mutateAsync({
         templateId,
@@ -55,17 +64,28 @@ export function EmailTemplateManagement() {
           is_active: data.is_active,
         },
       });
+      toast.dismiss(toastId);
+      toast.success("Email template updated successfully!");
       setEditingTemplate(null);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to update template";
+      toast.error(errorMsg);
       console.error("Failed to update template:", error);
     }
   };
 
   const handleDelete = async (templateId: string) => {
     if (!confirm("Are you sure you want to delete this template?")) return;
+    const toastId = toast.loading("Deleting email template...");
     try {
       await deleteMutation.mutateAsync(templateId);
-    } catch (error) {
+      toast.dismiss(toastId);
+      toast.success("Email template deleted successfully!");
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to delete template";
+      toast.error(errorMsg);
       console.error("Failed to delete template:", error);
     }
   };

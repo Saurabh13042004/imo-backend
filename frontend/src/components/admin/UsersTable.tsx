@@ -22,6 +22,7 @@ import {
 import { Search, Filter, ChevronUp, ChevronDown, Loader2, Edit2, Trash2, Plus } from "lucide-react";
 import { useAdminUsers } from "@/hooks/useAdminApi";
 import { useCreateUser, useUpdateUser, useDeleteUser, type UserInput } from "@/hooks/useAdminCrud";
+import {toast} from "react-hot-toast";
 import { UserEditModal } from "./modals/UserEditModal";
 
 export const UsersTable = () => {
@@ -32,6 +33,7 @@ export const UsersTable = () => {
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+
   const { data: userData, isLoading } = useAdminUsers(page * 50, 50, search || undefined, filter !== "all" ? filter : undefined);
 
   const createUserMutation = useCreateUser();
@@ -39,34 +41,52 @@ export const UsersTable = () => {
   const deleteUserMutation = useDeleteUser();
 
   const handleCreate = async (data: UserInput) => {
+    const toastId = toast.loading("Creating user...");
     try {
       await createUserMutation.mutateAsync(data);
+      toast.dismiss(toastId);
+      toast.success("User created successfully!");
       setIsCreateModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to create user";
+      toast.error(errorMsg);
       console.error("Failed to create user:", error);
     }
   };
 
   const handleUpdate = async (data: UserInput) => {
     if (!editingUser) return;
+    const toastId = toast.loading("Updating user...");
     try {
       await updateUserMutation.mutateAsync({
         userId: editingUser.id,
         data,
       });
+      toast.dismiss(toastId);
+      toast.success("User updated successfully!");
       setEditingUser(null);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to update user";
+      toast.error(errorMsg);
       console.error("Failed to update user:", error);
     }
   };
 
   const handleDelete = async (userId: string) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
+    const toastId = toast.loading("Deleting user...");
     try {
       console.log("[UsersTable] Deleting user:", userId);
       await deleteUserMutation.mutateAsync(userId);
+      toast.dismiss(toastId);
+      toast.success("User deleted successfully!");
       console.log("[UsersTable] User deleted successfully");
     } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to delete user";
+      toast.error(errorMsg);
       console.error("[UsersTable] Failed to delete user:", {
         message: error?.message,
         response: error?.response?.data,

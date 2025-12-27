@@ -22,6 +22,7 @@ import {
 import { Search, Filter, Loader2, Edit2, Trash2, Plus } from "lucide-react";
 import { useAdminPaymentTransactions } from "@/hooks/useAdminApi";
 import { useCreateTransaction, useUpdateTransaction, useDeleteTransaction, type TransactionInput } from "@/hooks/useAdminCrud";
+import { useToast } from "@/hooks/useToast";
 import { TransactionEditModal } from "./modals/TransactionEditModal";
 
 interface Transaction {
@@ -41,6 +42,7 @@ export const TransactionsTable = () => {
   const [page, setPage] = useState(0);
   const [editingTransaction, setEditingTransaction] = useState<any | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const toast = useToast();
 
   const { data: transactionData, isLoading } = useAdminPaymentTransactions(page * 50, 50);
 
@@ -49,32 +51,50 @@ export const TransactionsTable = () => {
   const deleteTransactionMutation = useDeleteTransaction();
 
   const handleCreate = async (data: TransactionInput) => {
+    const toastId = toast.loading("Creating transaction...");
     try {
       await createTransactionMutation.mutateAsync(data);
+      toast.dismiss(toastId);
+      toast.success("Transaction created successfully!");
       setIsCreateModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to create transaction";
+      toast.error(errorMsg);
       console.error("Failed to create transaction:", error);
     }
   };
 
   const handleUpdate = async (data: TransactionInput) => {
     if (!editingTransaction) return;
+    const toastId = toast.loading("Updating transaction...");
     try {
       await updateTransactionMutation.mutateAsync({
         transactionId: editingTransaction.id,
         data,
       });
+      toast.dismiss(toastId);
+      toast.success("Transaction updated successfully!");
       setEditingTransaction(null);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to update transaction";
+      toast.error(errorMsg);
       console.error("Failed to update transaction:", error);
     }
   };
 
   const handleDelete = async (transactionId: string) => {
     if (!confirm("Are you sure you want to delete this transaction?")) return;
+    const toastId = toast.loading("Deleting transaction...");
     try {
       await deleteTransactionMutation.mutateAsync(transactionId);
-    } catch (error) {
+      toast.dismiss(toastId);
+      toast.success("Transaction deleted successfully!");
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to delete transaction";
+      toast.error(errorMsg);
       console.error("Failed to delete transaction:", error);
     }
   };

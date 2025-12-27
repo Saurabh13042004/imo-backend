@@ -1,81 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import { useAuth } from "./useAuth";
+import { API_BASE_URL } from "@/config/api";
 
-const API_BASE = "/api/v1/admin/crud";
-
-// Helper to get auth token from localStorage
-const getAuthToken = (): string | null => {
-  try {
-    // Check both 'auth' and 'auth_tokens' keys for compatibility
-    let auth = localStorage.getItem("auth_tokens");
-    if (!auth) {
-      auth = localStorage.getItem("auth");
-    }
-    
-    if (auth) {
-      const parsed = JSON.parse(auth);
-      const token = parsed.accessToken || null;
-      if (token) {
-        console.log("[axiosWithAuth] Token found, length:", token.length);
-      } else {
-        console.warn("[axiosWithAuth] No accessToken in parsed auth object. Keys:", Object.keys(parsed));
-      }
-      return token;
-    } else {
-      console.warn("[axiosWithAuth] No auth in localStorage");
-    }
-  } catch (e) {
-    console.error("[axiosWithAuth] Error parsing auth:", e);
-    return null;
-  }
-  return null;
-};
-
-// Helper to make authenticated axios requests
-const axiosWithAuth = {
-  get: <T = any,>(url: string, config: AxiosRequestConfig = {}) => {
-    const token = getAuthToken();
-    return axios.get<T>(url, {
-      ...config,
-      headers: {
-        ...(config?.headers || {}),
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-  },
-  post: <T = any,>(url: string, data?: any, config: AxiosRequestConfig = {}) => {
-    const token = getAuthToken();
-    return axios.post<T>(url, data, {
-      ...config,
-      headers: {
-        ...(config?.headers || {}),
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-  },
-  put: <T = any,>(url: string, data?: any, config: AxiosRequestConfig = {}) => {
-    const token = getAuthToken();
-    return axios.put<T>(url, data, {
-      ...config,
-      headers: {
-        ...(config?.headers || {}),
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-  },
-  delete: <T = any,>(url: string, config: AxiosRequestConfig = {}) => {
-    const token = getAuthToken();
-    const headers = {
-      ...(config?.headers || {}),
-      ...(token && { Authorization: `Bearer ${token}` }),
-    };
-    console.log("[axiosWithAuth.delete]", { url, hasToken: !!token, headersSet: !!headers.Authorization });
-    return axios.delete<T>(url, {
-      ...config,
-      headers,
-    });
-  },
-};
+const API_BASE = `${API_BASE_URL}/api/v1/admin/crud`;
 
 // ==================== Types ====================
 
@@ -159,73 +86,140 @@ export interface SubscriptionInput {
 // ==================== Users CRUD ====================
 
 export const useCreateUser = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: UserInput) => {
-      const response = await axiosWithAuth.post<User>(`${API_BASE}/users`, data);
-      return response.data;
+      const response = await fetch(`${API_BASE}/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to create user" }));
+        throw new Error(error.detail || "Failed to create user");
+      }
+
+      return response.json() as Promise<User>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
   });
 };
 
 export const useUpdateUser = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ userId, data }: { userId: string; data: UserInput }) => {
-      const response = await axiosWithAuth.put<User>(`${API_BASE}/users/${userId}`, data);
-      return response.data;
+      const response = await fetch(`${API_BASE}/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to update user" }));
+        throw new Error(error.detail || "Failed to update user");
+      }
+
+      return response.json() as Promise<User>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
   });
 };
 
 export const useDeleteUser = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      await axiosWithAuth.delete(`${API_BASE}/users/${userId}`);
+      const response = await fetch(`${API_BASE}/users/${userId}`, {
+        method: "DELETE",
+        headers: {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to delete user" }));
+        throw new Error(error.detail || "Failed to delete user");
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
   });
 };
 
 export const useGetUser = (userId: string) => {
+  const { accessToken } = useAuth();
+
   return useQuery({
-    queryKey: ["admin_user", userId],
+    queryKey: ["admin-user", userId],
     queryFn: async () => {
-      const response = await axiosWithAuth.get<User>(`${API_BASE}/users/${userId}`);
-      return response.data;
+      const response = await fetch(`${API_BASE}/users/${userId}`, {
+        method: "GET",
+        headers: {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user");
+      }
+
+      return response.json() as Promise<User>;
     },
+    enabled: !!accessToken && !!userId,
   });
 };
 
 // ==================== Transactions CRUD ====================
 
 export const useCreateTransaction = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: TransactionInput) => {
-      const response = await axiosWithAuth.post<Transaction>(`${API_BASE}/transactions`, data);
-      return response.data;
+      const response = await fetch(`${API_BASE}/transactions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to create transaction" }));
+        throw new Error(error.detail || "Failed to create transaction");
+      }
+
+      return response.json() as Promise<Transaction>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-payment-transactions"] });
     },
   });
 };
 
 export const useUpdateTransaction = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -236,60 +230,107 @@ export const useUpdateTransaction = () => {
       transactionId: string;
       data: Partial<TransactionInput>;
     }) => {
-      const response = await axiosWithAuth.put<Transaction>(
-        `${API_BASE}/transactions/${transactionId}`,
-        data
-      );
-      return response.data;
+      const response = await fetch(`${API_BASE}/transactions/${transactionId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to update transaction" }));
+        throw new Error(error.detail || "Failed to update transaction");
+      }
+
+      return response.json() as Promise<Transaction>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-payment-transactions"] });
     },
   });
 };
 
 export const useDeleteTransaction = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (transactionId: string) => {
-      await axiosWithAuth.delete(`${API_BASE}/transactions/${transactionId}`);
+      const response = await fetch(`${API_BASE}/transactions/${transactionId}`, {
+        method: "DELETE",
+        headers: {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to delete transaction" }));
+        throw new Error(error.detail || "Failed to delete transaction");
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-payment-transactions"] });
     },
   });
 };
 
 export const useGetTransaction = (transactionId: string) => {
+  const { accessToken } = useAuth();
+
   return useQuery({
-    queryKey: ["admin_transaction", transactionId],
+    queryKey: ["admin-transaction", transactionId],
     queryFn: async () => {
-      const response = await axiosWithAuth.get<Transaction>(
-        `${API_BASE}/transactions/${transactionId}`
-      );
-      return response.data;
+      const response = await fetch(`${API_BASE}/transactions/${transactionId}`, {
+        method: "GET",
+        headers: {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch transaction");
+      }
+
+      return response.json() as Promise<Transaction>;
     },
+    enabled: !!accessToken && !!transactionId,
   });
 };
 
 // ==================== Subscriptions CRUD ====================
 
 export const useCreateSubscription = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: SubscriptionInput) => {
-      const response = await axiosWithAuth.post<Subscription>(`${API_BASE}/subscriptions`, data);
-      return response.data;
+      const response = await fetch(`${API_BASE}/subscriptions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to create subscription" }));
+        throw new Error(error.detail || "Failed to create subscription");
+      }
+
+      return response.json() as Promise<Subscription>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
     },
   });
 };
 
 export const useUpdateSubscription = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -300,39 +341,71 @@ export const useUpdateSubscription = () => {
       subscriptionId: string;
       data: Partial<SubscriptionInput>;
     }) => {
-      const response = await axiosWithAuth.put<Subscription>(
-        `${API_BASE}/subscriptions/${subscriptionId}`,
-        data
-      );
-      return response.data;
+      const response = await fetch(`${API_BASE}/subscriptions/${subscriptionId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to update subscription" }));
+        throw new Error(error.detail || "Failed to update subscription");
+      }
+
+      return response.json() as Promise<Subscription>;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
     },
   });
 };
 
 export const useDeleteSubscription = () => {
+  const { accessToken } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (subscriptionId: string) => {
-      await axiosWithAuth.delete(`${API_BASE}/subscriptions/${subscriptionId}`);
+      const response = await fetch(`${API_BASE}/subscriptions/${subscriptionId}`, {
+        method: "DELETE",
+        headers: {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: "Failed to delete subscription" }));
+        throw new Error(error.detail || "Failed to delete subscription");
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin_subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
     },
   });
 };
 
 export const useGetSubscription = (subscriptionId: string) => {
+  const { accessToken } = useAuth();
+
   return useQuery({
-    queryKey: ["admin_subscription", subscriptionId],
+    queryKey: ["admin-subscription", subscriptionId],
     queryFn: async () => {
-      const response = await axiosWithAuth.get<Subscription>(
-        `${API_BASE}/subscriptions/${subscriptionId}`
-      );
-      return response.data;
+      const response = await fetch(`${API_BASE}/subscriptions/${subscriptionId}`, {
+        method: "GET",
+        headers: {
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch subscription");
+      }
+
+      return response.json() as Promise<Subscription>;
     },
+    enabled: !!accessToken && !!subscriptionId,
   });
 };

@@ -20,6 +20,7 @@ import {
   useDeleteSubscription,
   type SubscriptionInput,
 } from "@/hooks/useAdminCrud";
+import { useToast } from "@/hooks/useToast";
 import { SubscriptionEditModal } from "./modals/SubscriptionEditModal";
 
 const chartData = [
@@ -36,6 +37,7 @@ export const SubscriptionsTable = () => {
   const [filter, setFilter] = useState<"all" | "active" | "cancelled" | "expired">("all");
   const [editingSubscription, setEditingSubscription] = useState<any | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const toast = useToast();
   const { data: subData, isLoading: subsLoading } = useAdminSubscriptions(0, 500, filter !== "all" ? filter : undefined);
   const { data: transData, isLoading: transLoading } = useAdminPaymentTransactions(0, 500);
 
@@ -44,32 +46,50 @@ export const SubscriptionsTable = () => {
   const deleteSubscriptionMutation = useDeleteSubscription();
 
   const handleCreate = async (data: SubscriptionInput) => {
+    const toastId = toast.loading("Creating subscription...");
     try {
       await createSubscriptionMutation.mutateAsync(data);
+      toast.dismiss(toastId);
+      toast.success("Subscription created successfully!");
       setIsCreateModalOpen(false);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to create subscription";
+      toast.error(errorMsg);
       console.error("Failed to create subscription:", error);
     }
   };
 
   const handleUpdate = async (data: SubscriptionInput) => {
     if (!editingSubscription) return;
+    const toastId = toast.loading("Updating subscription...");
     try {
       await updateSubscriptionMutation.mutateAsync({
         subscriptionId: editingSubscription.id,
         data,
       });
+      toast.dismiss(toastId);
+      toast.success("Subscription updated successfully!");
       setEditingSubscription(null);
-    } catch (error) {
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to update subscription";
+      toast.error(errorMsg);
       console.error("Failed to update subscription:", error);
     }
   };
 
   const handleDelete = async (subscriptionId: string) => {
     if (!confirm("Are you sure you want to delete this subscription?")) return;
+    const toastId = toast.loading("Deleting subscription...");
     try {
       await deleteSubscriptionMutation.mutateAsync(subscriptionId);
-    } catch (error) {
+      toast.dismiss(toastId);
+      toast.success("Subscription deleted successfully!");
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      const errorMsg = error?.response?.data?.detail || error?.message || "Failed to delete subscription";
+      toast.error(errorMsg);
       console.error("Failed to delete subscription:", error);
     }
   };

@@ -13,7 +13,7 @@ class Subscription(Base):
     __tablename__ = 'subscriptions'
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id'), nullable=False, index=True)
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id', ondelete='CASCADE'), nullable=False, index=True)
     plan_type = Column(String, nullable=False, default='free')  # free, trial, premium
     billing_cycle = Column(String, nullable=True)  # monthly, yearly
     is_active = Column(Boolean, default=False, nullable=False)
@@ -37,7 +37,7 @@ class PaymentTransaction(Base):
     __tablename__ = 'payment_transactions'
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id'), nullable=False, index=True)
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id', ondelete='CASCADE'), nullable=False, index=True)
     subscription_id = Column(PG_UUID(as_uuid=True), ForeignKey('subscriptions.id'), nullable=True)
     transaction_id = Column(String, unique=True, nullable=False)
     amount = Column(Numeric, nullable=False)
@@ -60,7 +60,7 @@ class SearchUnlock(Base):
     __tablename__ = 'search_unlocks'
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id'), nullable=False, index=True)
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id', ondelete='CASCADE'), nullable=False, index=True)
     search_query = Column(String, nullable=False)
     unlock_date = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     payment_amount = Column(Numeric, nullable=False)
@@ -75,7 +75,7 @@ class PriceAlert(Base):
     __tablename__ = 'price_alerts'
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id'), nullable=True, index=True)  # nullable for non-authenticated users
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id', ondelete='CASCADE'), nullable=True, index=True)  # nullable for non-authenticated users
     product_id = Column(String, nullable=False, index=True)
     product_name = Column(String, nullable=False)
     product_url = Column(String, nullable=False)
@@ -98,7 +98,7 @@ class DailySearchUsage(Base):
     __tablename__ = 'daily_search_usage'
 
     id = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
-    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id'), nullable=True, index=True)  # nullable for guest users
+    user_id = Column(PG_UUID(as_uuid=True), ForeignKey('profiles.id', ondelete='CASCADE'), nullable=True, index=True)  # nullable for guest users
     session_id = Column(String, nullable=True, index=True)  # For tracking guest users
     search_date = Column(Date, nullable=False, index=True)  # Date of search (without time)
     search_count = Column(Integer, default=0, nullable=False)  # Number of searches performed
