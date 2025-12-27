@@ -1,4 +1,5 @@
 """Authentication API routes for sign up, sign in, and token refresh."""
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
@@ -7,12 +8,15 @@ from app.schemas.auth import (
     UserResponse, RefreshTokenRequest, ChangePasswordRequest
 )
 from app.services.auth_service import AuthService
+from app.services.imo_mail_service import IMOMailService
 from app.api.dependencies import get_current_user
 from app.models.user import Profile
 from app.utils.auth import get_token_expiration_time
 from app.utils.google_oauth import GoogleOAuth
 from app.config import settings
 import secrets
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
@@ -41,6 +45,20 @@ async def sign_up(
         
         # Get user roles
         roles = await AuthService.get_user_roles(session, str(profile.id))
+        
+        # Send welcome email asynchronously
+        try:
+            await IMOMailService.send_new_user_onboarding_email(
+                db=session,
+                user_email=profile.email,
+                user_name=profile.full_name,
+                has_trial=True,
+                trial_days=7
+            )
+            logger.info(f"Welcome email sent to {profile.email}")
+        except Exception as email_error:
+            logger.error(f"Failed to send welcome email to {profile.email}: {email_error}")
+            # Don't fail the signup if email fails
         
         user_response = UserResponse(
             id=str(profile.id),

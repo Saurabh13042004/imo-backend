@@ -73,6 +73,17 @@ class Settings(BaseSettings):
     # Password hashing
     PASSWORD_MIN_LENGTH: int = 8
 
+    # Email configuration
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "imhollc27@gmail.com")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "zgvm hqqv tlpp sefm")
+    MAIL_FROM: str = os.getenv("MAIL_FROM", "imhollc27@gmail.com")
+    MAIL_PORT: int = int(os.getenv("MAIL_PORT", 465))
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    MAIL_STARTTLS: bool = os.getenv("MAIL_STARTTLS", "False").lower() == "true"
+    MAIL_SSL_TLS: bool = os.getenv("MAIL_SSL_TLS", "True").lower() == "true"
+    USE_CREDENTIALS: bool = os.getenv("USE_CREDENTIALS", "True").lower() == "true"
+    VALIDATE_CERTS: bool = os.getenv("VALIDATE_CERTS", "True").lower() == "true"
+
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 

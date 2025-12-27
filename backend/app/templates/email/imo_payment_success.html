@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - Welcome to IMO Premium</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+        .wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+        .intro-text {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        .receipt-section {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .receipt-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0066cc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+        .receipt-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+        .receipt-row:last-child {
+            border-bottom: none;
+        }
+        .receipt-label {
+            color: #666;
+            font-weight: 500;
+        }
+        .receipt-value {
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        .features-section {
+            margin: 30px 0;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0066cc;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .feature-list {
+            list-style: none;
+        }
+        .feature-item {
+            padding: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #555;
+            font-size: 14px;
+        }
+        .feature-item::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .button-primary {
+            display: inline-block;
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+        .next-steps {
+            background: linear-gradient(135deg, #e8f4ff 0%, #f0f9ff 100%);
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .next-steps-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0066cc;
+            margin-bottom: 12px;
+        }
+        .next-steps-list {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.8;
+        }
+        .next-steps-list li {
+            margin-bottom: 8px;
+        }
+        .footer {
+            background-color: #f5f7fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.8;
+        }
+        .footer-links {
+            margin: 15px 0;
+        }
+        .footer-links a {
+            color: #0066cc;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 12px;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e2e8f0;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .header {
+                padding: 30px 20px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-icon">✓</div>
+                <h1>Payment Successful!</h1>
+                <p>Welcome to IMO Premium</p>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <p class="greeting">Thank you, {{ user_name|default('valued customer') }}! 🎉</p>
+                
+                <p class="intro-text">
+                    Your payment has been processed successfully. Your IMO Premium subscription is now active, and you have unlimited access to all our powerful features.
+                </p>
+
+                <!-- Receipt Section -->
+                <div class="receipt-section">
+                    <div class="receipt-title">Transaction Details</div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Transaction ID:</span>
+                        <span class="receipt-value">{{ transaction_id|default('N/A') }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Plan:</span>
+                        <span class="receipt-value">{{ plan_type|default('Premium Unlimited') }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Amount Charged:</span>
+                        <span class="receipt-value">{{ amount|default('$9.99') }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Billing Cycle:</span>
+                        <span class="receipt-value">Monthly</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Next Billing Date:</span>
+                        <span class="receipt-value">{{ next_billing_date|default('N/A') }}</span>
+                    </div>
+                    <div class="receipt-row">
+                        <span class="receipt-label">Date:</span>
+                        <span class="receipt-value">{{ payment_date|default('N/A') }}</span>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="features-section">
+                    <p class="section-title">Your Premium Features</p>
+                    <ul class="feature-list">
+                        <li class="feature-item">Trust Score (Filtered Fake Reviews)</li>
+                        <li class="feature-item">Comprehensive Review Summaries</li>
+                        <li class="feature-item">Cross-Platform Text, Video & Reel Reviews</li>
+                        <li class="feature-item">Unlimited Price Comparison</li>
+                        <li class="feature-item">Unlimited Price Drop Alerts</li>
+                        <li class="feature-item">AI-Powered Sentiment Analysis</li>
+                        <li class="feature-item">Cross-Site Inventory Analysis</li>
+                        <li class="feature-item">AI Chatbot + Review Interaction</li>
+                    </ul>
+                </div>
+
+                <!-- Next Steps -->
+                <div class="next-steps">
+                    <div class="next-steps-title">What's Next?</div>
+                    <ul class="next-steps-list">
+                        <li>Start exploring products with unlimited access</li>
+                        <li>Set up price drop alerts on your favorite items</li>
+                        <li>Use AI Sentiment Analysis to compare products</li>
+                        <li>Chat with our AI chatbot about any product</li>
+                    </ul>
+                </div>
+
+                <!-- CTA Section -->
+                <div class="cta-section">
+                    <a href="{{ dashboard_url|default('https://informedmarketopinions.com') }}" class="button-primary">Go to Dashboard</a>
+                </div>
+
+                <!-- Support Text -->
+                <p style="font-size: 14px; color: #666; line-height: 1.8; margin-top: 30px;">
+                    <strong>Note:</strong> Your subscription will automatically renew on {{ next_billing_date|default('the same date next month') }}. You can cancel anytime from your account settings with no penalties.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-text">
+                    <strong>Need Help?</strong><br>
+                    Have questions about your subscription? Contact our support team.
+                </div>
+                <div class="divider"></div>
+                <div class="footer-links">
+                    <a href="https://informedmarketopinions.com/contact">Contact Support</a>
+                    <a href="https://informedmarketopinions.com/faq">FAQ</a>
+                    <a href="https://informedmarketopinions.com/privacy">Privacy</a>
+                </div>
+                <div class="footer-text">
+                    © 2025 IMO. All rights reserved. Made with ❤️ for smart shoppers.<br>
+                    <a href="https://informedmarketopinions.com" style="color: #0066cc; text-decoration: none;">informedmarketopinions.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

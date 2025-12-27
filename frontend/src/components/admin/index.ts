@@ -6,3 +6,5 @@ export { SubscriptionsView } from './SubscriptionsTableData';
 export { ServerMonitoring } from './ServerMonitoring';
 export { UrlsTable } from './UrlsTable';
 export { AdminDashboardContent } from './AdminDashboardContent';
+export { EmailTemplateManagement } from './EmailTemplateManagement';
+export { SendEmail } from './SendEmail';

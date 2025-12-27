@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Cancelled - No Charges</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+        .wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+        .intro-text {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        .info-section {
+            background-color: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .info-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #fcd34d;
+            font-size: 14px;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #92400e;
+            font-weight: 500;
+        }
+        .info-value {
+            color: #78350f;
+            font-weight: 600;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0066cc;
+            margin: 30px 0 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .no-charge-badge {
+            background-color: #d1fae5;
+            border: 2px solid #10b981;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .badge-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: 8px;
+        }
+        .badge-desc {
+            font-size: 14px;
+            color: #047857;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .option-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        .option-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .option-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        .option-desc {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .button-primary {
+            display: inline-block;
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+        .button-secondary {
+            display: inline-block;
+            padding: 14px 40px;
+            background-color: #f0f4f8;
+            color: #0066cc;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            border: 2px solid #0066cc;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+        .button-secondary:hover {
+            background-color: #0066cc;
+            color: white;
+        }
+        .footer {
+            background-color: #f5f7fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.8;
+        }
+        .footer-links {
+            margin: 15px 0;
+        }
+        .footer-links a {
+            color: #0066cc;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 12px;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e2e8f0;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                padding: 30px 20px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-icon">⚠️</div>
+                <h1>Payment Cancelled</h1>
+                <p>No charges have been made to your account</p>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <p class="greeting">Hi {{ user_name|default('there') }},</p>
+                
+                <p class="intro-text">
+                    We noticed that your payment was cancelled. Don't worry—no charges have been made to your account, and your data is safe.
+                </p>
+
+                <!-- No Charge Badge -->
+                <div class="no-charge-badge">
+                    <div class="badge-text">✓ No Charges Made</div>
+                    <div class="badge-desc">Your payment was not processed</div>
+                </div>
+
+                <!-- Transaction Info -->
+                <div class="info-section">
+                    <div class="info-title">Payment Details</div>
+                    <div class="info-row">
+                        <span class="info-label">Transaction ID:</span>
+                        <span class="info-value">{{ transaction_id|default('N/A') }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Plan Attempted:</span>
+                        <span class="info-value">{{ plan_type|default('Premium Unlimited') }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Amount:</span>
+                        <span class="info-value">{{ amount|default('$9.99') }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Cancelled On:</span>
+                        <span class="info-value">{{ cancellation_date|default('N/A') }}</span>
+                    </div>
+                    {% if reason %}
+                    <div class="info-row">
+                        <span class="info-label">Reason:</span>
+                        <span class="info-value">{{ reason }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- What You Can Do -->
+                <p class="section-title">What Happens Now?</p>
+
+                <p style="font-size: 14px; color: #555; line-height: 1.8; margin-bottom: 30px;">
+                    Your account will remain active with free tier features. You can:
+                </p>
+
+                <div class="options-grid">
+                    <div class="option-card">
+                        <div class="option-icon">🔍</div>
+                        <div class="option-title">Continue Using IMO</div>
+                        <div class="option-desc">Enjoy free tier features with basic product search</div>
+                    </div>
+                    <div class="option-card">
+                        <div class="option-icon">💳</div>
+                        <div class="option-title">Try Again</div>
+                        <div class="option-desc">Attempt payment again with a different method</div>
+                    </div>
+                </div>
+
+                <!-- Why Upgrade -->
+                <div style="background-color: #f0f6ff; border-left: 4px solid #0066cc; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                    <p style="font-size: 14px; font-weight: 700; color: #0066cc; margin-bottom: 12px;">Why Choose IMO Premium?</p>
+                    <ul style="font-size: 13px; color: #555; line-height: 1.8; list-style: none; padding: 0;">
+                        <li style="margin-bottom: 6px;">✓ Analyze 5,000+ reviews automatically</li>
+                        <li style="margin-bottom: 6px;">✓ Get one IMO Score instead of reading endless reviews</li>
+                        <li style="margin-bottom: 6px;">✓ Unlimited price drop alerts</li>
+                        <li style="margin-bottom: 6px;">✓ AI-powered sentiment analysis</li>
+                        <li>✓ Starting at just $9.99/month</li>
+                    </ul>
+                </div>
+
+                <!-- CTA Section -->
+                <div class="cta-section">
+                    <p style="font-size: 15px; color: #555; margin-bottom: 20px;">Ready to give it another try?</p>
+                    <a href="{{ upgrade_url|default('https://informedmarketopinions.com/pricing') }}" class="button-primary">Try Again</a>
+                    <a href="{{ pricing_url|default('https://informedmarketopinions.com/pricing') }}" class="button-secondary">View All Plans</a>
+                </div>
+
+                <!-- Support -->
+                <p style="font-size: 14px; color: #666; line-height: 1.8; margin-top: 30px;">
+                    If you encountered an issue or have questions, our support team is here to help. <a href="https://informedmarketopinions.com/contact" style="color: #0066cc; text-decoration: none;">Contact us</a> anytime.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-text">
+                    <strong>Questions?</strong><br>
+                    We're here to help with any issues or concerns.
+                </div>
+                <div class="divider"></div>
+                <div class="footer-links">
+                    <a href="https://informedmarketopinions.com/contact">Contact Support</a>
+                    <a href="https://informedmarketopinions.com/faq">FAQ</a>
+                    <a href="https://informedmarketopinions.com/privacy">Privacy</a>
+                </div>
+                <div class="footer-text">
+                    © 2025 IMO. All rights reserved. Made with ❤️ for smart shoppers.<br>
+                    <a href="https://informedmarketopinions.com" style="color: #0066cc; text-decoration: none;">informedmarketopinions.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

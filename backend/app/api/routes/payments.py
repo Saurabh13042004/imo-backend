@@ -1,7 +1,7 @@
 """Payment and subscription routes."""
 import logging
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +9,7 @@ from sqlalchemy import select, desc
 
 from app.api.dependencies import get_db, get_current_user
 from app.services.stripe_service import StripeService
+from app.services.imo_mail_service import IMOMailService
 from app.models.user import Profile
 from app.models.subscription import PaymentTransaction
 
@@ -107,6 +108,24 @@ async def checkout_complete(
         )
         if not success:
             raise HTTPException(status_code=400, detail="Failed to process checkout")
+
+        # Send payment success email
+        try:
+            next_billing = (datetime.utcnow() + timedelta(days=30)).strftime("%B %d, %Y")
+            await IMOMailService.send_payment_success_email(
+                db=db,
+                user_email=current_user.email,
+                user_name=current_user.full_name,
+                transaction_id=request.session_id,
+                amount="$9.99",
+                plan_type="Premium Unlimited",
+                payment_date=datetime.utcnow().strftime("%B %d, %Y at %I:%M %p"),
+                next_billing_date=next_billing
+            )
+            logger.info(f"Payment success email sent to {current_user.email}")
+        except Exception as email_error:
+            logger.error(f"Failed to send payment success email: {email_error}")
+            # Don't fail the payment if email fails
 
         return {
             'success': True,
@@ -415,6 +434,29 @@ async def stripe_webhook(
                 db_session=db,
             )
             await db.commit()
+            
+            # Send payment cancelled email
+            if user_id:
+                try:
+                    # Get user details
+                    user_stmt = select(Profile).where(Profile.id == user_id)
+                    user_result = await db.execute(user_stmt)
+                    user = user_result.scalars().first()
+                    
+                    if user:
+                        await IMOMailService.send_payment_cancelled_email(
+                            db=db,
+                            user_email=user.email,
+                            user_name=user.full_name,
+                            transaction_id=session_id,
+                            amount="$9.99",
+                            plan_type="Premium Unlimited",
+                            cancellation_date=datetime.utcnow().strftime("%B %d, %Y at %I:%M %p"),
+                            reason="Checkout session expired"
+                        )
+                        logger.info(f"Payment cancelled email sent to {user.email}")
+                except Exception as email_error:
+                    logger.error(f"Failed to send payment cancelled email: {email_error}")
 
         elif event['type'] == 'charge.failed':
             # Payment charge failed
@@ -436,6 +478,28 @@ async def stripe_webhook(
                     db_session=db,
                 )
                 await db.commit()
+                
+                # Send payment failed/cancelled email
+                try:
+                    # Get user details
+                    user_stmt = select(Profile).where(Profile.id == user_id)
+                    user_result = await db.execute(user_stmt)
+                    user = user_result.scalars().first()
+                    
+                    if user:
+                        await IMOMailService.send_payment_cancelled_email(
+                            db=db,
+                            user_email=user.email,
+                            user_name=user.full_name,
+                            transaction_id=transaction_id,
+                            amount=f"${amount:.2f}",
+                            plan_type="Premium Unlimited",
+                            cancellation_date=datetime.utcnow().strftime("%B %d, %Y at %I:%M %p"),
+                            reason=charge.get('failure_message', 'Payment processing failed')
+                        )
+                        logger.info(f"Payment failed email sent to {user.email}")
+                except Exception as email_error:
+                    logger.error(f"Failed to send payment failed email: {email_error}")
 
         elif event['type'] == 'charge.refunded':
             # Payment refunded

@@ -14,6 +14,7 @@ from app.schemas.price_alert import (
     UpdatePriceAlertRequest,
     PriceAlertListResponse,
 )
+from app.services.imo_mail_service import IMOMailService
 
 logger = logging.getLogger(__name__)
 
@@ -102,6 +103,36 @@ async def create_price_alert(
         await db.refresh(alert)
 
         logger.info(f"Price alert created: {alert.id} for product {request_data.product_id}")
+
+        # SEND PRICE ALERT EMAIL
+        try:
+            user_name = current_user.full_name if current_user else "Shopper"
+            
+            # Calculate savings amount if possible
+            savings_amount = None
+            try:
+                current = float(request_data.current_price)
+                target = float(request_data.target_price)
+                if current > target:
+                    savings = current - target
+                    savings_amount = f"${savings:.2f}"
+            except (ValueError, TypeError):
+                pass
+            
+            await IMOMailService.send_price_alert_email(
+                db=db,
+                user_email=email,
+                user_name=user_name,
+                product_name=request_data.product_name,
+                current_price=request_data.current_price,
+                target_price=request_data.target_price,
+                product_id=request_data.product_id,
+                savings_amount=savings_amount
+            )
+            logger.info(f"Price alert confirmation email sent to {email}")
+        except Exception as email_error:
+            logger.error(f"Failed to send price alert email: {email_error}")
+            # Don't fail the alert creation if email fails
 
         return PriceAlertResponse.from_orm(alert)
 

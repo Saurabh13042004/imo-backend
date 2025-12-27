@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .success-icon::after {
+            content: "✓";
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+        }
+        h1 {
+            color: #4CAF50;
+            margin: 0;
+        }
+        .content {
+            margin: 30px 0;
+        }
+        .info-box {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+        }
+        .info-value {
+            color: #333;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon"></div>
+            <h1>Payment Successful!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Dear {{ user_name|default('Valued Customer') }},</p>
+            
+            <p>Thank you for your payment! Your transaction has been processed successfully.</p>
+            
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Transaction ID:</span>
+                    <span class="info-value">{{ transaction_id|default('N/A') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Amount:</span>
+                    <span class="info-value">{{ amount|default('N/A') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Plan:</span>
+                    <span class="info-value">{{ plan_type|default('N/A') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">{{ payment_date|default('N/A') }}</span>
+                </div>
+            </div>
+            
+            <p>Your subscription is now active. You can start enjoying all the premium features immediately!</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ dashboard_url|default('#') }}" class="button">Go to Dashboard</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>If you have any questions, please don't hesitate to contact our support team.</p>
+            <p>&copy; {{ current_year|default('2025') }} Your Company. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+

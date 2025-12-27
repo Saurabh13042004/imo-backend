@@ -12,6 +12,8 @@ import {
   Mail,
   Activity,
   Loader2,
+  FileCode,
+  Send,
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,7 +25,7 @@ import {
   SidebarProvider,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { AdminDashboardContent, UsersTable, SubscriptionsTable, TransactionsTable, SubscriptionsView, ServerMonitoring, UrlsTable } from "@/components/admin";
+import { AdminDashboardContent, UsersTable, SubscriptionsTable, TransactionsTable, SubscriptionsView, ServerMonitoring, UrlsTable, EmailTemplateManagement, SendEmail } from "@/components/admin";
 import { 
   useAdminPaymentTransactions, 
   useAdminErrorLogs, 
@@ -87,6 +89,18 @@ const menuItems = [
     value: "contacts",
     description: "User queries",
   },
+  {
+    title: "Email Templates",
+    icon: FileCode,
+    value: "email-templates",
+    description: "Manage email templates",
+  },
+  {
+    title: "Send Email",
+    icon: Send,
+    value: "send-email",
+    description: "Send emails to users",
+  },
 ];
 
 const Admin = () => {
@@ -145,6 +159,10 @@ const Admin = () => {
         return <ReviewsView />;
       case "contacts":
         return <ContactsView />;
+      case "email-templates":
+        return <EmailTemplateManagement />;
+      case "send-email":
+        return <SendEmail />;
       default:
         return <AdminDashboardContent />;
     }

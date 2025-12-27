@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price Alert Set - IMO</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f7fa;
+        }
+        .wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+        .intro-text {
+            font-size: 15px;
+            color: #555;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        .product-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f0f6ff 100%);
+            border: 2px solid #0066cc;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+        .product-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            word-break: break-word;
+        }
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        .price-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .price-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0066cc;
+        }
+        .current-price {
+            background-color: #f9f9f9;
+        }
+        .target-price {
+            background-color: #e8f4ff;
+            border-left: 4px solid #10b981;
+        }
+        .target-price .price-value {
+            color: #10b981;
+        }
+        .savings-info {
+            background-color: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .savings-text {
+            font-size: 14px;
+            color: #92400e;
+            font-weight: 600;
+        }
+        .savings-amount {
+            font-size: 18px;
+            color: #10b981;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+        .how-it-works {
+            background-color: #f0f6ff;
+            border-left: 4px solid #0066cc;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0066cc;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+        .steps-list {
+            list-style: none;
+            padding: 0;
+        }
+        .step-item {
+            padding: 8px 0;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .step-item::before {
+            content: "✓";
+            color: #0066cc;
+            font-weight: 700;
+            margin-right: 10px;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .button-primary {
+            display: inline-block;
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+        .manage-alerts {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .manage-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        .manage-text {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .footer {
+            background-color: #f5f7fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer-text {
+            font-size: 13px;
+            color: #888;
+            line-height: 1.8;
+        }
+        .footer-links {
+            margin: 15px 0;
+        }
+        .footer-links a {
+            color: #0066cc;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 12px;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e2e8f0;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .product-card {
+                padding: 20px;
+            }
+            .price-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .price-value {
+                font-size: 18px;
+                margin-top: 8px;
+            }
+            .header {
+                padding: 30px 20px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-icon">🔔</div>
+                <h1>Price Alert Active!</h1>
+                <p>We'll notify you when the price drops</p>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <p class="greeting">Hey {{ user_name|default('there') }} 👋</p>
+                
+                <p class="intro-text">
+                    Your price alert has been successfully created! We'll monitor this product and notify you as soon as the price reaches your target.
+                </p>
+
+                <!-- Product Card -->
+                <div class="product-card">
+                    <div class="product-name">{{ product_name|default('Product Name') }}</div>
+                    
+                    <div class="price-row current-price">
+                        <span class="price-label">Current Price</span>
+                        <span class="price-value">{{ current_price|default('$0.00') }}</span>
+                    </div>
+                    
+                    <div class="price-row target-price">
+                        <span class="price-label">🎯 Target Price</span>
+                        <span class="price-value">{{ target_price|default('$0.00') }}</span>
+                    </div>
+                </div>
+
+                <!-- Savings Info -->
+                {% if savings_amount %}
+                <div class="savings-info">
+                    <div class="savings-text">You'll save:</div>
+                    <div class="savings-amount">{{ savings_amount|default('$0.00') }}</div>
+                </div>
+                {% endif %}
+
+                <!-- How It Works -->
+                <div class="how-it-works">
+                    <p class="section-title">How It Works</p>
+                    <ul class="steps-list">
+                        <li class="step-item">We monitor prices across 55+ retailers</li>
+                        <li class="step-item">When price drops to {{ target_price|default('target') }} or lower, we'll send you an instant email</li>
+                        <li class="step-item">You'll have direct links to purchase at the best price</li>
+                        <li class="step-item">Manage or cancel alerts anytime</li>
+                    </ul>
+                </div>
+
+                <!-- Manage Alerts -->
+                <div class="manage-alerts">
+                    <div class="manage-title">📋 Manage Your Alerts</div>
+                    <div class="manage-text">
+                        You can view, edit, or remove this alert anytime from your dashboard. Set up multiple price alerts to track different products!
+                    </div>
+                </div>
+
+                <!-- CTA Section -->
+                <div class="cta-section">
+                    <p style="font-size: 15px; color: #555; margin-bottom: 20px;">Ready to find more deals?</p>
+                    <a href="{{ dashboard_url|default('https://informedmarketopinions.com') }}" class="button-primary">Back to Dashboard</a>
+                </div>
+
+                <!-- Additional Info -->
+                <p style="font-size: 13px; color: #666; line-height: 1.8; margin-top: 30px;">
+                    <strong>Note:</strong> Price alerts are updated every 6 hours. We'll send you an email notification as soon as the price drops to your target or below. You'll receive one email per price drop.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-text">
+                    <strong>Alert Details:</strong><br>
+                    Created: {{ created_at|default('N/A') }}<br>
+                    Product: {{ product_id|default('N/A') }}
+                </div>
+                <div class="divider"></div>
+                <div class="footer-links">
+                    <a href="https://informedmarketopinions.com">Dashboard</a>
+                    <a href="https://informedmarketopinions.com/faq">FAQ</a>
+                    <a href="https://informedmarketopinions.com/contact">Contact</a>
+                </div>
+                <div class="footer-text">
+                    © 2025 IMO. All rights reserved. Made with ❤️ for smart shoppers.<br>
+                    <a href="https://informedmarketopinions.com" style="color: #0066cc; text-decoration: none;">informedmarketopinions.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

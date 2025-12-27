@@ -1,30 +1,30 @@
 # Python dependencies
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-sqlalchemy==2.0.23
-asyncpg==0.29.0
-pydantic==2.5.0
-pydantic-settings==2.1.0
-email-validator==2.1.0
-httpx==0.25.2
-redis==5.0.1
-google-generativeai==0.3.1
-python-multipart==0.0.6
-google-search-results==2.4.2
-beautifulsoup4==4.12.2
+fastapi
+uvicorn[standard]
+sqlalchemy
+asyncpg
+pydantic
+pydantic-settings
+email-validator
+httpx
+redis
+google-generativeai
+python-multipart
+google-search-results
+beautifulsoup4
 
 # Celery and async task processing
-celery==5.3.4
-flower==2.0.1  # Celery monitoring dashboard
+celery
+flower  # Celery monitoring dashboard
 
 # Docker SDK for health checks
-docker==7.0.0
+docker
 
 # System monitoring
-psutil==5.9.6
+psutil
 
 # Payment processing
-stripe==14.1.0
+stripe
 
 # AWS SDK for S3 uploads
 boto3
@@ -32,24 +32,26 @@ s3transfer
 botocore 
 
 # Authentication dependencies
-PyJWT==2.8.0
-passlib[bcrypt]==1.7.4
-bcrypt==4.1.1
-google-auth-oauthlib==1.2.0
-google-auth-httplib2==0.2.0
+PyJWT
+passlib[bcrypt]
+bcrypt==4.3.0
+google-auth-oauthlib
+google-auth-httplib2
 
 # Browser automation (for JS-rendered pages)
-playwright==1.41.0
-selenium==4.15.2
+playwright
+selenium
 
 # Additional utilities
-python-dotenv==1.0.0
-pytz==2023.3
-requests==2.31.0
+python-dotenv
+pytz
+requests
+fastapi-mail
+jinja2
 
 # Development dependencies
-pytest==7.4.3
-pytest-asyncio==0.21.1
-black==23.12.1
-flake8==6.1.0
-mypy==1.7.1
+pytest
+pytest-asyncio
+black
+flake8
+mypy

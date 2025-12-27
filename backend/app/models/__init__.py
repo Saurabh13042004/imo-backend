@@ -35,6 +35,9 @@ from app.models.task import BackgroundAnalysisTask
 # User content models
 from app.models.user_content import UserReview, Like, Comment, ProductReview
 
+# Email models
+from app.models.email_template import EmailTemplate
+
 __all__ = [
     "Base",
     # Existing
@@ -72,4 +75,6 @@ __all__ = [
     "Like",
     "Comment",
     "ProductReview",
+    # Email
+    "EmailTemplate",
 ]

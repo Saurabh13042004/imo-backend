@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getSessionId } from '@/utils/sessionUtils';
 import { useAuth } from '@/hooks/useAuth';
+import { API_BASE_URL } from '@/config/api';
 
 interface AdminStats {
   totalUsers: number;
@@ -97,44 +97,6 @@ interface PaymentTransaction {
   createdAt: string;
 }
 
-// Helper to make API calls
-async function adminApiCall<T>(endpoint: string, authToken: string, options?: RequestInit): Promise<T> {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const url = `${API_URL}${endpoint}`;
-  
-  const sessionId = getSessionId();
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Session-ID': sessionId,
-      ...(authToken && { 'Authorization': `Bearer ${authToken}` }),
-      ...options?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    let errorMessage = `API Error: ${response.status} ${response.statusText}`;
-    try {
-      const errorData = await response.json();
-      if (errorData.detail) {
-        errorMessage = typeof errorData.detail === 'string'
-          ? errorData.detail
-          : JSON.stringify(errorData.detail);
-      }
-    } catch {
-      const errorText = await response.text();
-      if (errorText) {
-        errorMessage = errorText;
-      }
-    }
-    throw new Error(errorMessage);
-  }
-
-  return response.json();
-}
-
 // Admin Stats Hook
 export function useAdminStats() {
   const { accessToken } = useAuth();
@@ -142,11 +104,21 @@ export function useAdminStats() {
   return useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<AdminStats>('/api/v1/admin/stats', accessToken);
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/stats`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch admin stats');
+      }
+
+      return response.json() as Promise<AdminStats>;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 30 * 1000,
     enabled: !!accessToken,
   });
 }
@@ -163,13 +135,20 @@ export function useAdminUsers(skip: number = 0, limit: number = 50, search?: str
   return useQuery({
     queryKey: ['admin-users', skip, limit, search, subscriptionTier],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: User[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/users?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/users?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      return response.json() as Promise<{ data: User[]; total: number; skip: number; limit: number }>;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
     enabled: !!accessToken,
   });
 }
@@ -185,11 +164,18 @@ export function useAdminSubscriptions(skip: number = 0, limit: number = 50, stat
   return useQuery({
     queryKey: ['admin-subscriptions', skip, limit, status],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: Subscription[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/subscriptions?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/subscriptions?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch subscriptions');
+      }
+
+      return response.json() as Promise<{ data: Subscription[]; total: number; skip: number; limit: number }>;
     },
     staleTime: 2 * 60 * 1000,
     enabled: !!accessToken,
@@ -206,11 +192,18 @@ export function useAdminContacts(skip: number = 0, limit: number = 50) {
   return useQuery({
     queryKey: ['admin-contacts', skip, limit],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: Contact[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/contacts?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/contacts?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch contacts');
+      }
+
+      return response.json() as Promise<{ data: Contact[]; total: number; skip: number; limit: number }>;
     },
     staleTime: 2 * 60 * 1000,
     enabled: !!accessToken,
@@ -228,11 +221,18 @@ export function useAdminProducts(skip: number = 0, limit: number = 50, source?: 
   return useQuery({
     queryKey: ['admin-products', skip, limit, source],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: Product[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/products?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/products?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+
+      return response.json() as Promise<{ data: Product[]; total: number; skip: number; limit: number }>;
     },
     staleTime: 2 * 60 * 1000,
     enabled: !!accessToken,
@@ -249,11 +249,18 @@ export function useAdminReviews(skip: number = 0, limit: number = 50) {
   return useQuery({
     queryKey: ['admin-reviews', skip, limit],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: Review[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/reviews?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/reviews?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviews');
+      }
+
+      return response.json() as Promise<{ data: Review[]; total: number; skip: number; limit: number }>;
     },
     staleTime: 2 * 60 * 1000,
     enabled: !!accessToken,
@@ -270,11 +277,18 @@ export function useAdminErrorLogs(skip: number = 0, limit: number = 50) {
   return useQuery({
     queryKey: ['admin-error-logs', skip, limit],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: ErrorLog[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/errors?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/errors?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch error logs');
+      }
+
+      return response.json() as Promise<{ data: ErrorLog[]; total: number; skip: number; limit: number }>;
     },
     staleTime: 2 * 60 * 1000,
     enabled: !!accessToken,
@@ -292,14 +306,21 @@ export function useAdminBackgroundTasks(skip: number = 0, limit: number = 50, st
   return useQuery({
     queryKey: ['admin-background-tasks', skip, limit, status],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: BackgroundTask[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/tasks?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/tasks?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch background tasks');
+      }
+
+      return response.json() as Promise<{ data: BackgroundTask[]; total: number; skip: number; limit: number }>;
     },
     staleTime: 2 * 60 * 1000,
-    refetchInterval: 10 * 1000, // Refetch every 10 seconds
+    refetchInterval: 10 * 1000,
     enabled: !!accessToken,
   });
 }
@@ -315,11 +336,18 @@ export function useAdminPaymentTransactions(skip: number = 0, limit: number = 50
   return useQuery({
     queryKey: ['admin-payment-transactions', skip, limit, status],
     queryFn: async () => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall<{ data: PaymentTransaction[]; total: number; skip: number; limit: number }>(
-        `/api/v1/admin/payment-transactions?${params.toString()}`,
-        accessToken
-      );
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/payment-transactions?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch payment transactions');
+      }
+
+      return response.json() as Promise<{ data: PaymentTransaction[]; total: number; skip: number; limit: number }>;
     },
     staleTime: 2 * 60 * 1000,
     enabled: !!accessToken,
@@ -333,11 +361,20 @@ export function useUpdateUserRole() {
 
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall(`/api/v1/admin/users/${userId}/role`, accessToken, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}/role`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ role }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user role');
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
@@ -352,16 +389,222 @@ export function useUpdateUserSubscription() {
 
   return useMutation({
     mutationFn: async ({ userId, planType }: { userId: string; planType: string }) => {
-      if (!accessToken) throw new Error('Not authenticated');
-      return adminApiCall(`/api/v1/admin/users/${userId}/subscription`, accessToken, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/users/${userId}/subscription`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ plan_type: planType }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to update user subscription');
+      }
+
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
       queryClient.invalidateQueries({ queryKey: ['admin-subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+    },
+  });
+}
+
+// Email Template Interfaces
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body_html: string;
+  body_text?: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailTemplateCreate {
+  name: string;
+  subject: string;
+  body_html: string;
+  body_text?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface EmailTemplateUpdate {
+  subject?: string;
+  body_html?: string;
+  body_text?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface SendEmailRequest {
+  template_name?: string;
+  recipients: string[];
+  subject?: string;
+  body_html?: string;
+  body_text?: string;
+  context?: Record<string, any>;
+  recipients_with_names?: Array<{ name: string; email: string }>;
+}
+
+// Email Templates Hooks
+export function useEmailTemplates(skip: number = 0, limit: number = 50, activeOnly: boolean = false) {
+  const { accessToken } = useAuth();
+  const params = new URLSearchParams();
+  params.append('skip', skip.toString());
+  params.append('limit', limit.toString());
+  if (activeOnly) params.append('active_only', 'true');
+
+  return useQuery({
+    queryKey: ['email-templates', skip, limit, activeOnly],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/email/templates?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch email templates');
+      }
+
+      return response.json() as Promise<EmailTemplate[]>;
+    },
+    staleTime: 2 * 60 * 1000,
+    enabled: !!accessToken,
+  });
+}
+
+export function useEmailTemplate(templateId: string) {
+  const { accessToken } = useAuth();
+
+  return useQuery({
+    queryKey: ['email-template', templateId],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/email/templates/${templateId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch email template');
+      }
+
+      return response.json() as Promise<EmailTemplate>;
+    },
+    enabled: !!accessToken && !!templateId,
+  });
+}
+
+export function useCreateEmailTemplate() {
+  const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: EmailTemplateCreate) => {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/email/templates`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Failed to create email template' }));
+        throw new Error(error.detail || 'Failed to create email template');
+      }
+
+      return response.json() as Promise<EmailTemplate>;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+    },
+  });
+}
+
+export function useUpdateEmailTemplate() {
+  const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ templateId, data }: { templateId: string; data: EmailTemplateUpdate }) => {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/email/templates/${templateId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Failed to update email template' }));
+        throw new Error(error.detail || 'Failed to update email template');
+      }
+
+      return response.json() as Promise<EmailTemplate>;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['email-template', variables.templateId] });
+    },
+  });
+}
+
+export function useDeleteEmailTemplate() {
+  const { accessToken } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (templateId: string) => {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/email/templates/${templateId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Failed to delete email template' }));
+        throw new Error(error.detail || 'Failed to delete email template');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+    },
+  });
+}
+
+export function useSendEmail() {
+  const { accessToken } = useAuth();
+
+  return useMutation({
+    mutationFn: async (data: SendEmailRequest) => {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/email/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Failed to send email' }));
+        throw new Error(error.detail || 'Failed to send email');
+      }
+
+      return response.json();
     },
   });
 }
