@@ -95,11 +95,9 @@ async def send_email(
             subject=subject,
             recipients=recipient_list,
             body=body_html,
-            subtype=MessageType.html
+            subtype=MessageType.html,
+            body_text=body_text
         )
-        
-        if body_text:
-            message.body_text = body_text
         
         await fm.send_message(message)
         logger.info(f"Email sent successfully to {len(recipients)} recipient(s)")
