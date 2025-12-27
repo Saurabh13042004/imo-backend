@@ -1,4 +1,4 @@
-import { Search as SearchIcon } from "lucide-react";
+import Search from "lucide-react/dist/esm/icons/search";
 import { SharedSearchInput } from "@/components/search/SharedSearchInput";
 
 interface SearchFormProps {

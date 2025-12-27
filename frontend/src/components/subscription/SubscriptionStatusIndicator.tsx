@@ -1,5 +1,8 @@
 import { Badge } from '@/components/ui/badge';
-import { Crown, Sparkles, CheckCircle, Clock } from 'lucide-react';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import CheckCircle from 'lucide-react/dist/esm/icons/check-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserAccess } from '@/hooks/useUserAccess';
 import { useEffect, useState } from 'react';

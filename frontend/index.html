@@ -32,18 +32,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="canonical" href="https://informedmarketopinions.com/" />
 
-
-    <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "uqmmkc39qz");
-</script>
+    <!-- Performance: Preload CSS to avoid render-blocking -->
+    <link rel="preload" href="/assets/index-*.css" as="style" />
 
   </head>
   <body>
     <div id="root"></div>
+    <!-- Performance: type="module" ensures async loading and deferred execution -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,4 +1,7 @@
-import { ShoppingBag, ArrowRight, ShoppingCart, Search } from "lucide-react";
+import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
+import Search from "lucide-react/dist/esm/icons/search";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

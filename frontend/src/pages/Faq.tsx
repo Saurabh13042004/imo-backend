@@ -1,8 +1,18 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { FaqSection } from "@/components/home/faq";
 
 const Faq = () => {
+  const [enableAnimations, setEnableAnimations] = useState(false);
+
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => setEnableAnimations(true));
+    } else {
+      setTimeout(() => setEnableAnimations(true), 0);
+    }
+  }, []);
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -10,7 +20,7 @@ const Faq = () => {
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
             <Badge variant="secondary" className="mb-4">FAQ</Badge>
@@ -37,7 +47,7 @@ const Faq = () => {
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">

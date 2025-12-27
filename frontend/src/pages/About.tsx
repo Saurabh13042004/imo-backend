@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Target, Lightbulb, Heart } from "lucide-react";
+import Users from "lucide-react/dist/esm/icons/users";
+import Target from "lucide-react/dist/esm/icons/target";
+import Lightbulb from "lucide-react/dist/esm/icons/lightbulb";
+import Heart from "lucide-react/dist/esm/icons/heart";
 import { Navbar } from "@/components/layout/Navbar";
 
 const About = () => {

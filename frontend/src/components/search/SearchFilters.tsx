@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Filter, SlidersHorizontal, ArrowUpDown, X, ChevronDown, Star, DollarSign, TrendingUp } from 'lucide-react';
+import Filter from 'lucide-react/dist/esm/icons/filter';
+import SlidersHorizontal from 'lucide-react/dist/esm/icons/sliders-horizontal';
+import ArrowUpDown from 'lucide-react/dist/esm/icons/arrow-up-down';
+import X from 'lucide-react/dist/esm/icons/x';
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
+import Star from 'lucide-react/dist/esm/icons/star';
+import DollarSign from 'lucide-react/dist/esm/icons/dollar-sign';
+import TrendingUp from 'lucide-react/dist/esm/icons/trending-up';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';

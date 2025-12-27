@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Clock, CreditCard } from 'lucide-react';
+import AlertTriangle from 'lucide-react/dist/esm/icons/alert-triangle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import CreditCard from 'lucide-react/dist/esm/icons/credit-card';
 import { useUserAccess } from '@/hooks/useUserAccess';
 import { useSubscriptionFlow } from '@/hooks/useSubscriptionFlow';
 

@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
-import { Package, Search } from "lucide-react";
+import Package from "lucide-react/dist/esm/icons/package";
+import Search from "lucide-react/dist/esm/icons/search";
+import { useState, useEffect } from "react";
 import {
 	Pagination,
 	PaginationContent,
@@ -46,6 +48,18 @@ export const SearchResults = ({
 	isGuest = false,
 	productDisplayLimit = 50,
 }: SearchResultsProps) => {
+	const [enableAnimations, setEnableAnimations] = useState(false);
+
+	// Enable animations after first paint
+	useEffect(() => {
+		if ('requestIdleCallback' in window) {
+			requestIdleCallback(() => setEnableAnimations(true));
+		} else {
+			const timeoutId = setTimeout(() => setEnableAnimations(true), 0);
+			return () => clearTimeout(timeoutId);
+		}
+	}, []);
+
 	// Filter out products with invalid IDs to get the actual valid count
 	const validProducts = products.filter((product) => {
 		return (
@@ -65,7 +79,7 @@ export const SearchResults = ({
 			<div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
+					animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
 					transition={{ duration: 0.6 }}
 					className="space-y-6"
 				>
@@ -91,7 +105,7 @@ export const SearchResults = ({
 			<div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
+					animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
 					transition={{ duration: 0.6 }}
 					className="space-y-6"
 				>

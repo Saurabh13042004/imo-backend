@@ -1,4 +1,4 @@
-import { Clock } from "lucide-react";
+import Clock from "lucide-react/dist/esm/icons/clock";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { Video } from "@/types/search";

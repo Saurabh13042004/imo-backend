@@ -1,6 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, ShoppingBag, Loader2 } from "lucide-react";
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +48,7 @@ const ProductDetails = () => {
   const [loading, setLoading] = useState(true);
   const [enrichedData, setEnrichedData] = useState<any>(null);
   const [enrichmentLoading, setEnrichmentLoading] = useState(false);
+  const [enableAnimations, setEnableAnimations] = useState(false);
   const [refreshReviews, setRefreshReviews] = useState(0);
   const [isPriceAlertModalOpen, setIsPriceAlertModalOpen] = useState(false);
   const [finalAIVerdict, setFinalAIVerdict] = useState<any>(null);
@@ -72,6 +75,15 @@ const ProductDetails = () => {
       setFinalAIVerdict(aiVerdict);
     }
   }, [isDemoProduct, demoProduct, aiVerdict]);
+
+  // Defer animations until after first paint
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => setEnableAnimations(true));
+    } else {
+      setTimeout(() => setEnableAnimations(true), 0);
+    }
+  }, []);
 
   // Memoize store URLs - wait for enrichedData
   const storeUrls = enrichedData?.immersive_data?.product_results?.stores
@@ -292,7 +304,7 @@ const ProductDetails = () => {
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <motion.div
               initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
+              animate={enableAnimations ? { y: 0, opacity: 1 } : { y: 0, opacity: 1 }}
               transition={{ duration: 0.6 }}
               className="space-y-8"
             >
@@ -354,7 +366,7 @@ const ProductDetails = () => {
                     <>
                       <motion.div
                         initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
+                        animate={enableAnimations ? { y: 0, opacity: 1 } : { y: 0, opacity: 1 }}
                         transition={{ duration: 0.4 }}
                         className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg border border-primary/20 p-6 space-y-4"
                       >
@@ -430,7 +442,7 @@ const ProductDetails = () => {
                   {verdictStatus === "processing" && !aiVerdict && (
                     <motion.div
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      animate={enableAnimations ? { opacity: 1 } : { opacity: 1 }}
                       className="flex items-center justify-center py-12 gap-3 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg border border-border/30 p-6"
                     >
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -442,7 +454,7 @@ const ProductDetails = () => {
                   {enrichedData && !enrichmentLoading && (
                     <motion.div
                       initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
+                      animate={enableAnimations ? { y: 0, opacity: 1 } : { y: 0, opacity: 1 }}
                       transition={{ duration: 0.4 }}
                       className="space-y-6"
                     >
@@ -577,7 +589,7 @@ const ProductDetails = () => {
                               <motion.div
                                 key={idx}
                                 initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
+                                animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.05 }}
                                 className="border border-border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all"
                               >
@@ -730,7 +742,7 @@ const ProductDetails = () => {
                   {enrichmentLoading && !enrichedData && (
                     <motion.div
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      animate={enableAnimations ? { opacity: 1 } : { opacity: 1 }}
                       className="flex items-center justify-center py-12 gap-3"
                     >
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />

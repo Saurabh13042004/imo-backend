@@ -2,7 +2,14 @@ import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { XCircle, Home, Search, RefreshCw, Crown, Shield, Clock, Check } from 'lucide-react';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Home from 'lucide-react/dist/esm/icons/home';
+import Search from 'lucide-react/dist/esm/icons/search';
+import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import Shield from 'lucide-react/dist/esm/icons/shield';
+import Clock from 'lucide-react/dist/esm/icons/clock';
+import Check from 'lucide-react/dist/esm/icons/check';
 import { useSubscriptionFlow } from '@/hooks/useSubscriptionFlow';
 import { SubscriptionPlans } from '@/components/subscription/SubscriptionPlans';
 

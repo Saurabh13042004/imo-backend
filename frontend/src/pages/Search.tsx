@@ -17,7 +17,8 @@ import {
 	getGuestFreeSearchCount,
 } from "@/utils/accessControl";
 import { Button } from "@/components/ui/button";
-import { X, LogIn } from "lucide-react";
+import X from 'lucide-react/dist/esm/icons/x';
+import LogIn from 'lucide-react/dist/esm/icons/log-in';
 import { useNavigate } from "react-router-dom";
 import { MetaTags } from "@/components/seo";
 import { number } from "framer-motion";

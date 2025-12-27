@@ -1,5 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Home, Search, ArrowLeft, Zap, Sparkles } from 'lucide-react';
+import Home from 'lucide-react/dist/esm/icons/home';
+import Search from 'lucide-react/dist/esm/icons/search';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Zap from 'lucide-react/dist/esm/icons/zap';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 

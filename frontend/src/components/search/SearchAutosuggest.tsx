@@ -1,4 +1,5 @@
-import { Search, TrendingUp } from "lucide-react";
+import Search from "lucide-react/dist/esm/icons/search";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import {
   Command,
   CommandItem,

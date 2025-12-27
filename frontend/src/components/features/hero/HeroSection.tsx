@@ -1,7 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Search, Play, ChevronDown, Sparkles, Zap } from 'lucide-react';
+import Search from 'lucide-react/dist/esm/icons/search';
+import Play from 'lucide-react/dist/esm/icons/play';
+import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import Zap from 'lucide-react/dist/esm/icons/zap';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';

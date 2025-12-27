@@ -1,5 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
+import Play from 'lucide-react/dist/esm/icons/play';
+import Pause from 'lucide-react/dist/esm/icons/pause';
+import Volume2 from 'lucide-react/dist/esm/icons/volume-2';
+import VolumeX from 'lucide-react/dist/esm/icons/volume-x';
+import Maximize from 'lucide-react/dist/esm/icons/maximize';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 

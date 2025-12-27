@@ -4,7 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Crown, Star, Sparkles, ArrowRight, Check, Gift, Zap } from 'lucide-react';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import Star from 'lucide-react/dist/esm/icons/star';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import ArrowRight from 'lucide-react/dist/esm/icons/arrow-right';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Gift from 'lucide-react/dist/esm/icons/gift';
+import Zap from 'lucide-react/dist/esm/icons/zap';
 import { SubscriptionPlans } from '@/components/subscription/SubscriptionPlans';
 import { getAppConfig, type AppConfig } from '@/utils/appConfig';
 

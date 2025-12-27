@@ -18,12 +18,13 @@ import {
   Phone,
   MapPin
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Contact = () => {
+  const [enableAnimations, setEnableAnimations] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,6 +32,14 @@ const Contact = () => {
     message: ""
   });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => setEnableAnimations(true));
+    } else {
+      setTimeout(() => setEnableAnimations(true), 0);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +112,7 @@ const Contact = () => {
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-center"
           >
@@ -126,7 +135,7 @@ const Contact = () => {
 
             <motion.div
               initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
               className="flex items-center justify-center gap-4 flex-wrap"
             >
@@ -150,8 +159,7 @@ const Contact = () => {
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="mb-12"
           >
@@ -166,9 +174,8 @@ const Contact = () => {
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            viewport={{ once: true }}
           >
             <Card className="border-0 shadow-2xl overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
@@ -180,8 +187,7 @@ const Contact = () => {
                     <motion.div 
                       className="space-y-3"
                       initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
+                      animate={enableAnimations ? { opacity: 1, x: 0 } : { opacity: 1, x: 0 }}
                     >
                       <Label htmlFor="name" className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <span>Full Name</span>
@@ -201,8 +207,7 @@ const Contact = () => {
                     <motion.div 
                       className="space-y-3"
                       initial={{ opacity: 0, x: 10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
+                      animate={enableAnimations ? { opacity: 1, x: 0 } : { opacity: 1, x: 0 }}
                     >
                       <Label htmlFor="email" className="text-sm font-semibold text-foreground flex items-center gap-2">
                         <span>Email Address</span>
@@ -225,8 +230,7 @@ const Contact = () => {
                   <motion.div 
                     className="space-y-3"
                     initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                   >
                     <Label htmlFor="subject" className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <span>Subject</span>
@@ -247,8 +251,7 @@ const Contact = () => {
                   <motion.div 
                     className="space-y-3"
                     initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                   >
                     <Label htmlFor="message" className="text-sm font-semibold text-foreground flex items-center gap-2">
                       <span>Message</span>
@@ -272,8 +275,7 @@ const Contact = () => {
                   {/* Submit Button */}
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                   >
                     <Button 
                       type="submit" 
@@ -301,8 +303,7 @@ const Contact = () => {
           {/* Form Tips */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
             className="mt-12 grid md:grid-cols-3 gap-6"
           >
@@ -350,8 +351,7 @@ const Contact = () => {
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
@@ -384,9 +384,8 @@ const Contact = () => {
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
               >
                 <Card className="border bg-background shadow-sm hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
@@ -410,8 +409,7 @@ const Contact = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
           className="max-w-3xl mx-auto text-center"
         >
           <Card className="border-0 shadow-2xl bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 overflow-hidden">

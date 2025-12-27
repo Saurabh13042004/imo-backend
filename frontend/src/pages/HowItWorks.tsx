@@ -1,9 +1,22 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Brain, Users, CheckCircle } from "lucide-react";
+import Search from "lucide-react/dist/esm/icons/search";
+import Brain from "lucide-react/dist/esm/icons/brain";
+import Users from "lucide-react/dist/esm/icons/users";
+import CheckCircle from "lucide-react/dist/esm/icons/check-circle";
 
 const HowItWorks = () => {
+  const [enableAnimations, setEnableAnimations] = useState(false);
+
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => setEnableAnimations(true));
+    } else {
+      setTimeout(() => setEnableAnimations(true), 0);
+    }
+  }, []);
   const steps = [
     {
       step: "01",
@@ -46,7 +59,7 @@ const HowItWorks = () => {
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
             <Badge variant="secondary" className="mb-4">How It Works</Badge>
@@ -74,7 +87,7 @@ const HowItWorks = () => {
                 <motion.div
                   key={step.step}
                   initial={{ opacity: 0, x: isEven ? -40 : 40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  animate={enableAnimations ? { opacity: 1, x: 0 } : { opacity: 1, x: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-8 lg:gap-16`}

@@ -7,7 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Mail, Lock, Image, LogOut, Unlink, Link as LinkIcon } from 'lucide-react';
+import User from 'lucide-react/dist/esm/icons/user';
+import Mail from 'lucide-react/dist/esm/icons/mail';
+import Lock from 'lucide-react/dist/esm/icons/lock';
+import Image from 'lucide-react/dist/esm/icons/image';
+import LogOut from 'lucide-react/dist/esm/icons/log-out';
+import Unlink from 'lucide-react/dist/esm/icons/unlink';
+import LinkIcon from 'lucide-react/dist/esm/icons/link';
 
 const API_URL = import.meta.env.VITE_API_URL;
 

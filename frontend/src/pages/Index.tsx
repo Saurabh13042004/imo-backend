@@ -1,19 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Separator } from "@/components/ui/separator";
 import { useParallax } from "@/hooks/useParallax";
 import { motion } from "framer-motion";
-import { FeaturedProductsSection } from "@/components/home/featured-products";
-import { ProblemStatementSection } from "@/components/home/problem-statement";
-import { FeaturesSection } from "@/components/home/features-section";
-import { IMOTestimonials } from "@/components/ui/imo-testimonials";
-import { ComparisonSection } from "@/components/features/comparison";
-import { FaqSection } from "@/components/home/faq";
-import { PricingSection } from "@/components/home/pricing";
 import { HeroSection } from "@/components/features/hero";
 import { OnboardingFlow } from "@/components/subscription/OnboardingFlow";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useAuth } from "@/hooks/useAuth";
 import { getAppConfig } from "@/utils/appConfig";
+
+// Lazy load non-critical sections
+const FeaturedProductsSection = lazy(() => import("@/components/home/featured-products").then(m => ({ default: m.FeaturedProductsSection })));
+const ProblemStatementSection = lazy(() => import("@/components/home/problem-statement").then(m => ({ default: m.ProblemStatementSection })));
+const FeaturesSection = lazy(() => import("@/components/home/features-section").then(m => ({ default: m.FeaturesSection })));
+const IMOTestimonials = lazy(() => import("@/components/ui/imo-testimonials").then(m => ({ default: m.IMOTestimonials })));
+const ComparisonSection = lazy(() => import("@/components/features/comparison").then(m => ({ default: m.ComparisonSection })));
+const FaqSection = lazy(() => import("@/components/home/faq").then(m => ({ default: m.FaqSection })));
+const PricingSection = lazy(() => import("@/components/home/pricing").then(m => ({ default: m.PricingSection })));
+
+// Lightweight loading placeholder
+const SectionSkeleton = ({ height = "h-96" }: { height?: string }) => (
+  <div className={`${height} bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-pulse rounded-lg`} />
+);
 
 const Index = () => {
   useParallax();
@@ -60,12 +67,29 @@ const Index = () => {
         
         {/* Mobile App Sections - Card-based Layout */}
         <div className="md:hidden space-y-4 px-4 pb-8">
-          <FeaturedProductsSection />
-          <ProblemStatementSection />
-          <FeaturesSection />
-          <PricingSection />
-          <IMOTestimonials />
-          <ComparisonSection />
+          <Suspense fallback={<SectionSkeleton height="h-80" />}>
+            <FeaturedProductsSection />
+          </Suspense>
+          
+          <Suspense fallback={<SectionSkeleton height="h-64" />}>
+            <ProblemStatementSection />
+          </Suspense>
+          
+          <Suspense fallback={<SectionSkeleton height="h-96" />}>
+            <FeaturesSection />
+          </Suspense>
+          
+          <Suspense fallback={<SectionSkeleton height="h-80" />}>
+            <PricingSection />
+          </Suspense>
+          
+          <Suspense fallback={<SectionSkeleton height="h-72" />}>
+            <IMOTestimonials />
+          </Suspense>
+          
+          <Suspense fallback={<SectionSkeleton height="h-96" />}>
+            <ComparisonSection />
+          </Suspense>
         </div>
 
         {/* Desktop Sections with Separators */}
@@ -76,7 +100,9 @@ const Index = () => {
           </div>
           
           {/* Featured Products */}
-          <FeaturedProductsSection />
+          <Suspense fallback={<SectionSkeleton height="h-96" />}>
+            <FeaturedProductsSection />
+          </Suspense>
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -84,7 +110,9 @@ const Index = () => {
           </div>
 
           {/* Problem Statement Section */}
-          <ProblemStatementSection />
+          <Suspense fallback={<SectionSkeleton height="h-80" />}>
+            <ProblemStatementSection />
+          </Suspense>
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -92,7 +120,9 @@ const Index = () => {
           </div>
           
           {/* Features Section */}
-          <FeaturesSection />
+          <Suspense fallback={<SectionSkeleton height="h-96" />}>
+            <FeaturesSection />
+          </Suspense>
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -100,7 +130,9 @@ const Index = () => {
           </div>
           
           {/* Pricing Section */}
-          <PricingSection />
+          <Suspense fallback={<SectionSkeleton height="h-96" />}>
+            <PricingSection />
+          </Suspense>
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -109,7 +141,9 @@ const Index = () => {
           
           {/* Testimonials Section */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <IMOTestimonials />
+            <Suspense fallback={<SectionSkeleton height="h-72" />}>
+              <IMOTestimonials />
+            </Suspense>
           </div>
           
           {/* Section Separator */}
@@ -118,7 +152,9 @@ const Index = () => {
           </div>
           
           {/* Comparison Section */}
-          <ComparisonSection />
+          <Suspense fallback={<SectionSkeleton height="h-96" />}>
+            <ComparisonSection />
+          </Suspense>
           
           {/* Section Separator */}
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -127,7 +163,9 @@ const Index = () => {
         </div>
         
         {/* FAQ Section */}
-        <FaqSection />
+        <Suspense fallback={<SectionSkeleton height="h-96" />}>
+          <FaqSection />
+        </Suspense>
       </div>
       
       <OnboardingFlow

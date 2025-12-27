@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { ShoppingBag, Menu, X, Heart } from "lucide-react";
+import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
+import Menu from "lucide-react/dist/esm/icons/menu";
+import X from "lucide-react/dist/esm/icons/x";
+import Heart from "lucide-react/dist/esm/icons/heart";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';

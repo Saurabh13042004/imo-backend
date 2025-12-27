@@ -1,6 +1,13 @@
 import { motion } from "framer-motion";
-import { useState, useRef } from "react";
-import { Play, Eye, ThumbsUp, Youtube, Video as VideoIcon, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import Play from "lucide-react/dist/esm/icons/play";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import ThumbsUp from "lucide-react/dist/esm/icons/thumbs-up";
+import Youtube from "lucide-react/dist/esm/icons/youtube";
+import VideoIcon from "lucide-react/dist/esm/icons/video";
+import X from "lucide-react/dist/esm/icons/x";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,9 +44,20 @@ const scrollbarHideStyles = `
 export const VideoReviews = ({ productId, videos = [] }: VideoReviewsProps) => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [enableAnimations, setEnableAnimations] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(videos.length > 3);
+
+  // Defer animations until after first paint
+  useEffect(() => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => setEnableAnimations(true));
+    } else {
+      const timeoutId = setTimeout(() => setEnableAnimations(true), 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, []);
 
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
@@ -106,7 +124,7 @@ export const VideoReviews = ({ productId, videos = [] }: VideoReviewsProps) => {
   return (
     <motion.div
       initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
+      animate={enableAnimations ? { y: 0, opacity: 1 } : { y: 0, opacity: 1 }}
       transition={{ duration: 0.7, delay: 0.2 }}
       className="space-y-6 pt-12"
     >
@@ -144,7 +162,7 @@ export const VideoReviews = ({ productId, videos = [] }: VideoReviewsProps) => {
               <motion.div
                 key={video.id}
                 initial={{ y: 20, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
+                animate={enableAnimations ? { y: 0, opacity: 1 } : { y: 0, opacity: 1 }}
                 transition={{ duration: 0.6 }}
                 whileHover={{ y: -4 }}
                 className="flex-shrink-0 w-80"

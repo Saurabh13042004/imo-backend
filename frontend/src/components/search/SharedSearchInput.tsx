@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Search as SearchIcon, Loader2, ArrowRight, MapPin, Globe } from "lucide-react";
+import Search from "lucide-react/dist/esm/icons/search";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Globe from "lucide-react/dist/esm/icons/globe";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearchUrl } from "@/hooks/useSearchUrl";

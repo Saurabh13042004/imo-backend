@@ -1,7 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Crown, Sparkles, Check, Zap, Loader2 } from 'lucide-react';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Zap from 'lucide-react/dist/esm/icons/zap';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import { useUserAccess } from '@/hooks/useUserAccess';
 import { useSubscriptionFlow } from '@/hooks/useSubscriptionFlow';
 import { useState } from 'react';

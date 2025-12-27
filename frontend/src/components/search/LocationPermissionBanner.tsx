@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, MapPin, X } from 'lucide-react';
+import AlertCircle from 'lucide-react/dist/esm/icons/alert-circle';
+import MapPin from 'lucide-react/dist/esm/icons/map-pin';
+import X from 'lucide-react/dist/esm/icons/x';
 import { Button } from '@/components/ui/button';
 import { detectUserCountry, storeCountry, setLocationPermission, getStoredCountry } from '@/utils/locationUtils';
 

@@ -1,7 +1,10 @@
 import { ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lock, Crown, Eye, EyeOff } from 'lucide-react';
+import Lock from 'lucide-react/dist/esm/icons/lock';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import Eye from 'lucide-react/dist/esm/icons/eye';
+import EyeOff from 'lucide-react/dist/esm/icons/eye-off';
 import { useUserAccess } from '@/hooks/useUserAccess';
 import { useToast } from '@/hooks/use-toast';
 

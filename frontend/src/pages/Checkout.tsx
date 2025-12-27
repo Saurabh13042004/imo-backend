@@ -4,7 +4,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSubscriptionFlow } from '@/hooks/useSubscriptionFlow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Crown, Sparkles, ArrowLeft, Check, Zap } from 'lucide-react';
+import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
+import Crown from 'lucide-react/dist/esm/icons/crown';
+import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
+import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import Check from 'lucide-react/dist/esm/icons/check';
+import Zap from 'lucide-react/dist/esm/icons/zap';
 
 export default function Checkout() {
   const location = useLocation();
