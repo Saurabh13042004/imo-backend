@@ -10,6 +10,20 @@ interface ProductLikeButtonProps {
   // Initial values from backend to prevent extra API calls
   initialLikeCount?: number;
   initialLikedByUser?: boolean;
+  // Product data to save when creating/updating product on like
+  productData?: {
+    title?: string;
+    image_url?: string;
+    price?: number;
+    currency?: string;
+    source?: string;
+    source_id?: string;
+    brand?: string;
+    description?: string;
+    url?: string;
+    category?: string;
+    availability?: string;
+  };
 }
 
 export function ProductLikeButton({ 
@@ -17,13 +31,15 @@ export function ProductLikeButton({
   className, 
   showCount = true,
   initialLikeCount,
-  initialLikedByUser 
+  initialLikedByUser,
+  productData
 }: ProductLikeButtonProps) {
-  const { isLiked, likeCount, toggleLike, loading } = useProductLikes(
+  const { isLiked, likeCount, toggleLike, loading } = useProductLikes({
     productId, 
     initialLikeCount, 
-    initialLikedByUser
-  );
+    initialLikedByUser,
+    productData
+  });
 
   return (
     <Button

@@ -83,6 +83,12 @@ export function getCurrencyConfig(country: string = 'United States'): CurrencyCo
  */
 export function formatPriceWithCurrency(price: number, country: string = 'United States'): string {
   const config = getCurrencyConfig(country);
+  
+  // Handle null or undefined prices
+  if (price === null || price === undefined) {
+    return `${config.symbol}0.00`;
+  }
+  
   const numValue = typeof price === 'string' ? parseFloat(price) : price;
   
   if (isNaN(numValue)) {

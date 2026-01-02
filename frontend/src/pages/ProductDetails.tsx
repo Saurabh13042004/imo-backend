@@ -340,7 +340,21 @@ const ProductDetails = () => {
                         enrichedProductDescription={enrichedData?.immersive_data?.product_results?.about_the_product?.description}
                       />
                       <div className="flex justify-start gap-3">
-                        <ProductLikeButton productId={product.id} />
+                        <ProductLikeButton 
+                          productId={product.id}
+                          productData={{
+                            title: product.title,
+                            image_url: product.image_url || product.image_urls?.[0],
+                            price: product.price,
+                            currency: product.currency,
+                            brand: product.brand,
+                            description: product.description,
+                            source: product.source,
+                            source_id: product.source_id,
+                            url: product.url,
+                            category: product.category,
+                          }}
+                        />
                         <button
                           onClick={() => setIsPriceAlertModalOpen(true)}
                           className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"

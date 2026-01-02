@@ -53,6 +53,18 @@ export const FeaturedProductCard = ({ product, index }: FeaturedProductCardProps
             showCount={false}
             initialLikeCount={product.like_count}
             initialLikedByUser={product.liked_by_user}
+            productData={{
+              title: product.title,
+              image_url: product.image_urls?.[0],
+              price: product.price,
+              currency: product.currency,
+              brand: product.brand,
+              description: product.description,
+              source: product.source,
+              source_id: product.source_id,
+              url: product.url,
+              category: product.category,
+            }}
           />
         </div>
         <CardContent className="p-6 flex flex-col h-full">

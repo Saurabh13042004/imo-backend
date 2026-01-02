@@ -47,6 +47,7 @@ const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
 
 // Routes that require react-query (async data fetching)
 const QUERY_CLIENT_ROUTES = new Set([
+  '/',
   '/search',
   '/product/:slug',
   '/admin',

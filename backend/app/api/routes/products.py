@@ -2,7 +2,7 @@
 
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
@@ -29,6 +29,7 @@ from app.services.s3_service import S3Service
 from app.api.dependencies import get_db, get_current_user
 from app.config import Settings
 from app.models import UserReview, Product
+from app.models.user import Profile
 from app.utils.helpers import parse_relative_date
 
 logger = logging.getLogger(__name__)
@@ -1094,4 +1095,141 @@ async def get_my_submitted_reviews(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch your reviews: {str(e)}"
+        )
+
+
+# ========================
+# Product Like Endpoints
+# ========================
+
+@router.post("/products/{product_id}/like")
+async def toggle_product_like(
+    product_id: str,
+    product_data: dict = Body(None),
+    current_user: Profile = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Toggle like status for a product (add or remove like).
+    
+    Request body (optional):
+    {
+        "title": "Product Title",
+        "image_url": "https://...",
+        "price": 99.99,
+        "currency": "USD",
+        "source": "amazon",
+        "source_id": "B123456",
+        "brand": "Brand Name",
+        "description": "Product description"
+    }
+    
+    Returns: {is_liked: bool, like_count: int}
+    """
+    try:
+        from app.services.product_like_service import ProductLikeService
+        
+        is_liked, like_count = await ProductLikeService.toggle_like(
+            db, current_user.id, product_id, product_data
+        )
+        
+        logger.info(f"User {current_user.id} toggled like for product {product_id}. Is liked: {is_liked}")
+        
+        return {
+            "is_liked": is_liked,
+            "like_count": like_count
+        }
+        
+    except ValueError as e:
+        logger.warning(f"Invalid product: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error toggling like for product {product_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle like"
+        )
+
+
+@router.get("/products/{product_id}/like/status")
+async def get_product_like_status(
+    product_id: str,
+    current_user: Profile = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get like status for a product (whether current user liked it and total like count).
+    
+    Returns: {is_liked: bool, like_count: int}
+    """
+    try:
+        from app.services.product_like_service import ProductLikeService
+        
+        is_liked, like_count = await ProductLikeService.get_like_status(
+            db, current_user.id, product_id
+        )
+        
+        return {
+            "is_liked": is_liked,
+            "like_count": like_count
+        }
+        
+    except ValueError as e:
+        logger.warning(f"Invalid product: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error getting like status for product {product_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get like status"
+        )
+
+
+@router.get("/products/likes")
+async def get_user_liked_products(
+    limit: int = 20,
+    offset: int = 0,
+    current_user: Profile = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Get all products liked by current user (paginated).
+    
+    Query Parameters:
+    - limit: Number of products to return (default: 20, max: 100)
+    - offset: Pagination offset (default: 0)
+    
+    Returns: {products: [Product], total: int, limit: int, offset: int}
+    """
+    try:
+        from app.services.product_like_service import ProductLikeService
+        
+        # Validate pagination params
+        limit = min(limit, 100)  # Max 100 per request
+        offset = max(offset, 0)
+        
+        products, total = await ProductLikeService.get_user_liked_products(
+            db, current_user.id, limit=limit, offset=offset
+        )
+        
+        logger.info(f"User {current_user.id} retrieved {len(products)} liked products")
+        
+        return {
+            "products": products,
+            "total": total,
+            "limit": limit,
+            "offset": offset
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching liked products for user {current_user.id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch liked products"
         )
