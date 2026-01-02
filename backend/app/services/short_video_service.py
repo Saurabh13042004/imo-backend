@@ -8,6 +8,7 @@ import re
 from uuid import UUID
 from datetime import datetime, timedelta
 from app.config import settings
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

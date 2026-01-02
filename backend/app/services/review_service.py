@@ -14,6 +14,7 @@ from app.integrations.amazon import AmazonClient
 from app.integrations.reddit import RedditClient
 from app.integrations.youtube import YouTubeClient
 from app.integrations.forums import ForumClient
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

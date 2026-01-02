@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 import jwt
 from passlib.context import CryptContext
 from app.config import settings
+from app.utils.error_logger import log_error
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

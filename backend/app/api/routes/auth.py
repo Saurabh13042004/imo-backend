@@ -16,6 +16,7 @@ from app.api.dependencies import get_current_user
 from app.models.user import Profile
 from app.utils.auth import get_token_expiration_time
 from app.utils.google_oauth import GoogleOAuth
+from app.utils.error_logger import log_error
 from app.config import settings
 import secrets
 
@@ -103,11 +104,25 @@ async def sign_up(
         return AuthResponse(user=user_response, token=token_response)
         
     except ValueError as e:
+        await log_error(
+            db=session,
+            function_name="sign_up",
+            error=e,
+            error_type="validation_error",
+            query_context=f"Email: {request.email}"
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except Exception as e:
+        await log_error(
+            db=session,
+            function_name="sign_up",
+            error=e,
+            error_type="auth_error",
+            query_context=f"Email: {request.email}"
+        )
         logger.error(f"[Auth] Signup error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -176,12 +191,26 @@ async def sign_in(
         return AuthResponse(user=user_response, token=token_response)
         
     except ValueError as e:
+        await log_error(
+            db=session,
+            function_name="sign_in",
+            error=e,
+            error_type="validation_error",
+            query_context=f"Email: {request.email}"
+        )
         logger.warning(f"[Auth] Signin validation error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e)
         )
     except Exception as e:
+        await log_error(
+            db=session,
+            function_name="sign_in",
+            error=e,
+            error_type="auth_error",
+            query_context=f"Email: {request.email}"
+        )
         logger.error(f"[Auth] Signin error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -326,6 +355,13 @@ async def forgot_password(
                     )
                     logger.info(f"[Auth] Password reset email sent to {user_email}")
                 except Exception as email_error:
+                    await log_error(
+                        db=session,
+                        function_name="forgot_password",
+                        error=email_error,
+                        error_type="email_error",
+                        query_context=f"Email: {user_email}"
+                    )
                     logger.error(f"[Auth] Failed to send password reset email: {email_error}")
                     # Don't fail the request even if email fails
         
@@ -335,6 +371,13 @@ async def forgot_password(
         )
         
     except Exception as e:
+        await log_error(
+            db=session,
+            function_name="forgot_password",
+            error=e,
+            error_type="password_reset_error",
+            query_context=f"Email: {request.email}"
+        )
         logger.error(f"[Auth] Password reset request error: {str(e)}", exc_info=True)
         # Return success message anyway for security
         return PasswordResetResponse(
@@ -379,6 +422,13 @@ async def reset_password(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=session,
+            function_name="reset_password",
+            error=e,
+            error_type="password_reset_error",
+            query_context="Password reset attempt"
+        )
         logger.error(f"[Auth] Password reset error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -414,6 +464,13 @@ async def verify_reset_token(
             }
             
     except Exception as e:
+        await log_error(
+            db=session,
+            function_name="verify_reset_token",
+            error=e,
+            error_type="token_verification_error",
+            query_context="Token verification"
+        )
         logger.error(f"[Auth] Token verification error: {str(e)}", exc_info=True)
         return {
             "valid": False,
@@ -514,7 +571,14 @@ async def google_callback(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error in Google callback: {e}")
+        await log_error(
+            db=session,
+            function_name="google_callback",
+            error=e,
+            error_type="oauth_error",
+            query_context="Google OAuth authentication"
+        )
+        logger.error(f"Error in Google callback: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during Google authentication"

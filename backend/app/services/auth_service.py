@@ -8,6 +8,7 @@ from sqlalchemy import select
 from app.models.user import Profile, UserRole
 from app.schemas.auth import SignUpRequest, SignInRequest, UserResponse
 from app.utils.auth import hash_password, verify_password, create_tokens, decode_token
+from app.utils.error_logger import log_error
 from app.config import settings
 
 

@@ -5,6 +5,7 @@ import httpx
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -254,6 +255,7 @@ Search query:"""
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error extracting search query: {e}")
         logger.error(f"Error extracting search query: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

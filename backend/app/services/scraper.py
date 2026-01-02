@@ -8,6 +8,7 @@ import httpx
 from bs4 import BeautifulSoup
 import logging
 from difflib import SequenceMatcher
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -300,7 +301,8 @@ def get_domain(url: str) -> str:
         parsed = urlparse(url)
         domain = parsed.netloc.replace('www.', '')
         return domain.split('.')[0]  # Get main domain name
-    except Exception:
+    except Exception as e:
+        print(f"Error in get_domain: {e}")
         return 'unknown'
 
 

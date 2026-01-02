@@ -13,6 +13,7 @@ from app.services.scraper import (
     needs_js_rendering,
     deduplicate_reviews,
 )
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,8 @@ async def render_with_browser(url: str) -> str | None:
                 await browser.close()
                 return html
                 
-        except ImportError:
+        except ImportError as e:
+            logger.warning(f"Playwright not available, falling back to Selenium: {e}")
             # Fallback to Selenium
             from selenium import webdriver
             from selenium.webdriver.support.ui import WebDriverWait

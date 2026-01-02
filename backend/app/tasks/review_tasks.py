@@ -8,6 +8,8 @@ from app.services.community_review_service import CommunityReviewService
 from app.services.ai_review_service import AIReviewService
 from app.services.store_review_service import StoreReviewService
 from app.services.google_review_service import GoogleReviewService
+from app.utils.error_logger import log_error
+from app.database import AsyncSessionLocal
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +109,22 @@ def fetch_community_reviews_task(
     except Exception as e:
         logger.error(f"[Task {self.request.id}] Error fetching community reviews: {e}", exc_info=True)
         
+        # Log to database
+        async def log_error_async():
+            async with AsyncSessionLocal() as db:
+                await log_error(
+                    db=db,
+                    function_name="fetch_community_reviews_task",
+                    error=e,
+                    error_type="celery_task_error",
+                    query_context=f"Product: {product_name}, Brand: {brand}"
+                )
+        
+        try:
+            asyncio.run(log_error_async())
+        except Exception as log_ex:
+            logger.error(f"Failed to log error: {log_ex}")
+        
         # Retry with exponential backoff
         raise self.retry(exc=e, countdown=60 * (2 ** self.request.retries))
 
@@ -194,6 +212,23 @@ def fetch_store_reviews_task(
         
     except Exception as e:
         logger.error(f"[Task {self.request.id}] Error fetching store reviews: {e}", exc_info=True)
+        
+        # Log to database
+        async def log_error_async():
+            async with AsyncSessionLocal() as db:
+                await log_error(
+                    db=db,
+                    function_name="fetch_store_reviews_task",
+                    error=e,
+                    error_type="celery_task_error",
+                    query_context=f"Product: {product_name}, URLs: {len(store_urls)}"
+                )
+        
+        try:
+            asyncio.run(log_error_async())
+        except Exception as log_ex:
+            logger.error(f"Failed to log error: {log_ex}")
+        
         raise self.retry(exc=e, countdown=60 * (2 ** self.request.retries))
 
 
@@ -334,6 +369,23 @@ def fetch_google_reviews_task(
         
     except Exception as e:
         logger.error(f"[Task {self.request.id}] Error fetching Google reviews: {e}", exc_info=True)
+        
+        # Log to database
+        async def log_error_async():
+            async with AsyncSessionLocal() as db:
+                await log_error(
+                    db=db,
+                    function_name="fetch_google_reviews_task",
+                    error=e,
+                    error_type="celery_task_error",
+                    query_context=f"Product: {product_name}"
+                )
+        
+        try:
+            asyncio.run(log_error_async())
+        except Exception as log_ex:
+            logger.error(f"Failed to log error: {log_ex}")
+        
         raise self.retry(exc=e, countdown=90 * (2 ** self.request.retries))
 
 
@@ -449,4 +501,21 @@ def generate_ai_verdict_task(
         
     except Exception as e:
         logger.error(f"[Task {self.request.id}] Error generating AI verdict: {e}", exc_info=True)
+        
+        # Log to database
+        async def log_error_async():
+            async with AsyncSessionLocal() as db:
+                await log_error(
+                    db=db,
+                    function_name="generate_ai_verdict_task",
+                    error=e,
+                    error_type="celery_task_error",
+                    query_context=f"Product: {product_id}"
+                )
+        
+        try:
+            asyncio.run(log_error_async())
+        except Exception as log_ex:
+            logger.error(f"Failed to log error: {log_ex}")
+        
         raise self.retry(exc=e, countdown=60 * (2 ** self.request.retries))

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import Profile
 from app.api.dependencies import get_db, get_current_user
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

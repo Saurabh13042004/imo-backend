@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional, Dict, Tuple
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

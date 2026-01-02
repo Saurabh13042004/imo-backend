@@ -15,6 +15,7 @@ from app.schemas.price_alert import (
     PriceAlertListResponse,
 )
 from app.services.imo_mail_service import IMOMailService
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +140,14 @@ async def create_price_alert(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="create_price_alert",
+            error=e,
+            error_type="price_alert_error",
+            user_id=str(current_user.id) if current_user else None,
+            query_context=f"Creating price alert for product {request_data.product_id} with target price {request_data.target_price}"
+        )
         logger.error(f"Error creating price alert: {e}")
         raise HTTPException(status_code=500, detail="Failed to create price alert")
 
@@ -196,6 +205,14 @@ async def list_price_alerts(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_price_alerts",
+            error=e,
+            error_type="price_alert_fetch_error",
+            user_id=str(current_user.id) if current_user else None,
+            query_context=f"Listing price alerts for user/email {email or current_user.email if current_user else 'unknown'}"
+        )
         logger.error(f"Error fetching price alerts: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch price alerts")
 
@@ -225,6 +242,14 @@ async def get_price_alert(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_price_alert",
+            error=e,
+            error_type="price_alert_fetch_error",
+            user_id=str(current_user.id),
+            query_context=f"Fetching price alert {alert_id} for user {current_user.id}"
+        )
         logger.error(f"Error fetching price alert: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch price alert")
 
@@ -264,6 +289,14 @@ async def update_price_alert(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="update_price_alert",
+            error=e,
+            error_type="price_alert_update_error",
+            user_id=str(current_user.id),
+            query_context=f"Updating price alert {alert_id} with data {request_data}"
+        )
         logger.error(f"Error updating price alert: {e}")
         raise HTTPException(status_code=500, detail="Failed to update price alert")
 
@@ -296,6 +329,14 @@ async def delete_price_alert(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="delete_price_alert",
+            error=e,
+            error_type="price_alert_delete_error",
+            user_id=str(current_user.id),
+            query_context=f"Deleting price alert {alert_id} for user {current_user.id}"
+        )
         logger.error(f"Error deleting price alert: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete price alert")
 
@@ -335,5 +376,13 @@ async def claim_orphaned_alerts(
         }
 
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="claim_orphaned_alerts",
+            error=e,
+            error_type="price_alert_claim_error",
+            user_id=str(current_user.id),
+            query_context=f"Claiming orphaned alerts for user {current_user.id} with email {current_user.email}"
+        )
         logger.error(f"Error claiming orphaned alerts: {e}")
         raise HTTPException(status_code=500, detail="Failed to claim orphaned alerts")

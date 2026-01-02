@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.subscription import DailySearchUsage, Subscription
 from app.models.user import Profile
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -127,6 +128,14 @@ class SearchLimitService:
             return False, 0, "Session information required to perform search"
         
         except Exception as e:
+            await log_error(
+                db=db,
+                function_name="check_search_access",
+                error=e,
+                error_type="search_access_error",
+                user_id=user_id,
+                query_context=f"User: {user_id}, Session: {session_id}"
+            )
             logger.error(f"[Search Access] ERROR checking access: {str(e)}", exc_info=True)
             # Fail open on error - allow search but log it
             return True, -1, "Access granted (system error - bypassed limit check)"
@@ -225,6 +234,14 @@ class SearchLimitService:
             return True
         
         except Exception as e:
+            await log_error(
+                db=db,
+                function_name="increment_search_count",
+                error=e,
+                error_type="search_count_error",
+                user_id=user_id,
+                query_context=f"User: {user_id}, Session: {session_id}"
+            )
             logger.error(f"[Search Count] ERROR incrementing count: {str(e)}", exc_info=True)
             await db.rollback()
             return False
@@ -310,6 +327,14 @@ class SearchLimitService:
             return True
         
         except Exception as e:
+            await log_error(
+                db=db,
+                function_name="migrate_guest_session_to_user",
+                error=e,
+                error_type="session_migration_error",
+                user_id=user_id,
+                query_context=f"Session: {session_id}, User: {user_id}"
+            )
             logger.error(f"[Session Migration] ERROR: {str(e)}", exc_info=True)
             await db.rollback()
             return False

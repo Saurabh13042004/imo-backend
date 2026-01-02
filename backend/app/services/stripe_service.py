@@ -10,6 +10,7 @@ from sqlalchemy import select
 from app.config import settings
 from app.models.subscription import Subscription, PaymentTransaction
 from app.models.user import Profile
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

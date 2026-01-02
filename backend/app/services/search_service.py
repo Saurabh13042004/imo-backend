@@ -14,6 +14,7 @@ import time
 from app.schemas import SearchRequest, ProductResponse
 from app.config import settings
 from app.integrations.google_shopping import GoogleShoppingClient
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

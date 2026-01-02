@@ -12,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -321,7 +322,8 @@ class GoogleReviewService:
                     try:
                         driver.execute_script("arguments[0].click();", button)
                         return True
-                    except:
+                    except Exception as e:
+                        print(f"Error clicking button: {e}")
                         return False
                 
                 # Submit all clicks to thread pool
@@ -330,9 +332,11 @@ class GoogleReviewService:
                 for future in as_completed(futures, timeout=5):
                     try:
                         future.result()
-                    except:
+                    except Exception as e:
+                        print(f"Error in button click future: {e}")
                         pass
-        except:
+        except Exception as e:
+            print(f"Error in _expand_all_reviews_fast: {e}")
             pass
 
     def _expand_all_reviews(self, driver):
@@ -345,9 +349,11 @@ class GoogleReviewService:
             for b in buttons:
                 try:
                     driver.execute_script("arguments[0].click();", b)
-                except:
+                except Exception as e:
+                    print(f"Error expanding review: {e}")
                     pass
-        except:
+        except Exception as e:
+            print(f"Error in _expand_all_reviews: {e}")
             pass
     
     def _click_more_reviews(self, driver, wait) -> bool:
@@ -358,7 +364,8 @@ class GoogleReviewService:
             ))
             driver.execute_script("arguments[0].click();", btn)
             return True
-        except:
+        except Exception as e:
+            print(f"Error clicking more reviews: {e}")
             return False
 
     def _click_more_reviews_fast(self, driver, wait) -> bool:
@@ -371,7 +378,8 @@ class GoogleReviewService:
             ))
             driver.execute_script("arguments[0].click();", btn)
             return True
-        except:
+        except Exception as e:
+            print(f"Error clicking more reviews (fast): {e}")
             return False
     
     def _parse_reviews(self, driver) -> List[Dict[str, Any]]:
@@ -395,11 +403,13 @@ class GoogleReviewService:
                         # Parse "Reviewed on ebay.com" -> "ebay.com"
                         if "Reviewed on" in source_text:
                             source = source_text.replace("Reviewed on ", "").strip()
-                    except:
+                    except Exception as e:
+                        print(f"Error extracting source: {e}")
                         pass
                     
                     review_data.append((name, rating_text, review_text, source))
-                except:
+                except Exception as e:
+                    print(f"Error extracting review element: {e}")
                     pass
             
             # Process reviews in parallel
@@ -437,7 +447,8 @@ class GoogleReviewService:
                         result = future.result()
                         if result:
                             results.append(result)
-                    except:
+                    except Exception as e:
+                        print(f"Error processing review: {e}")
                         pass
             
             logger.info(f"  Parsed {len(results)} reviews")
@@ -461,6 +472,7 @@ class GoogleReviewService:
             has_shopping = 'ibp' in params or 'prds' in params or 'udm' in params
             
             return has_shopping
-        except:
+        except Exception as e:
+            print(f"Error validating Google Shopping URL: {e}")
             return False
 

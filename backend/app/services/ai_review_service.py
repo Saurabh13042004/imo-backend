@@ -7,6 +7,7 @@ import re
 
 import google.generativeai as genai
 from app.config import settings
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -44,13 +45,15 @@ class AIReviewService:
             
             # Parse JSON
             return json.loads(text)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON response: {e}")
             # Try to extract JSON from response
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 try:
                     return json.loads(json_match.group())
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
+                    print(f"Error parsing extracted JSON: {e}")
                     pass
             raise ValueError("Could not parse JSON from response")
     

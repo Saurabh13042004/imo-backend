@@ -16,6 +16,7 @@ from app.models.contact import Contact
 from app.models.task import BackgroundAnalysisTask
 from app.models.analytics import AnalyticsEvent, ErrorLog
 from app.api.dependencies import get_db, get_current_user
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,14 @@ async def get_admin_stats(
             "apiCalls": api_calls,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_admin_stats",
+            error=e,
+            error_type="admin_stats_error",
+            user_id=str(admin.id),
+            query_context="Fetching admin dashboard statistics"
+        )
         logger.error(f"Error fetching admin stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -197,6 +206,14 @@ async def list_users(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_users",
+            error=e,
+            error_type="user_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing users with search={search}, subscription_tier={subscription_tier}, skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching users: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -265,6 +282,14 @@ async def list_subscriptions(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_subscriptions",
+            error=e,
+            error_type="subscription_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing subscriptions with status={status}, skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching subscriptions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -309,6 +334,14 @@ async def list_contacts(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_contacts",
+            error=e,
+            error_type="contact_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing contact submissions with skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching contacts: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -363,6 +396,14 @@ async def list_products(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_products",
+            error=e,
+            error_type="product_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing products with source={source}, skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching products: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -414,6 +455,14 @@ async def list_reviews(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_reviews",
+            error=e,
+            error_type="review_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing reviews with skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching reviews: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -456,6 +505,14 @@ async def list_errors(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_errors",
+            error=e,
+            error_type="error_log_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing error logs with skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching error logs: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -508,6 +565,14 @@ async def list_background_tasks(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_background_tasks",
+            error=e,
+            error_type="task_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing background tasks with status={status}, skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching background tasks: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -566,6 +631,14 @@ async def list_payment_transactions(
             "limit": limit,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_payment_transactions",
+            error=e,
+            error_type="transaction_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing payment transactions with status={status}, skip={skip}, limit={limit}"
+        )
         logger.error(f"Error fetching payment transactions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -613,6 +686,12 @@ async def update_user_role(
 
         return {"message": f"User role updated to {role}"}
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="update_user_role",
+            error=e,
+            error_type="exception"
+        )
         await db.rollback()
         logger.error(f"Error updating user role: {e}")
         raise HTTPException(
@@ -674,6 +753,12 @@ async def update_user_subscription(
             "subscriptionTier": plan_type,
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="update_user_subscription",
+            error=e,
+            error_type="exception"
+        )
         await db.rollback()
         logger.error(f"Error updating user subscription: {e}")
         raise HTTPException(
@@ -747,6 +832,14 @@ async def get_recent_activities(
             "total": len(activities),
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_recent_activities",
+            error=e,
+            error_type="activity_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Fetching recent user activities with limit={limit}"
+        )
         logger.error(f"Error fetching recent activities: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

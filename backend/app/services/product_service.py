@@ -9,6 +9,7 @@ from app.schemas import ProductResponse
 from app.config import settings
 from app.integrations.google_shopping import GoogleShoppingClient
 from app.services.search_service import PRODUCT_CACHE, PRODUCT_BY_SOURCE
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

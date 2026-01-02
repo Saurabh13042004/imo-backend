@@ -313,24 +313,63 @@ const TransactionsView = () => {
 // Logs View Component
 const LogsView = () => {
   const { data: errorData, isLoading } = useAdminErrorLogs(0, 50);
+  const [expandedLog, setExpandedLog] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<string>('all');
 
   if (isLoading) {
     return <div className="text-center py-8"><Loader2 className="w-8 h-8 animate-spin mx-auto" /></div>;
   }
 
   const errorLogs = errorData?.data || [];
+  const filteredLogs = filterType === 'all' 
+    ? errorLogs 
+    : errorLogs.filter((e: any) => e.errorType === filterType);
+
+  const errorTypes = [...new Set(errorLogs.map((e: any) => e.errorType))];
+
+  const getErrorSeverity = (errorType: string): 'critical' | 'warning' | 'info' => {
+    if (errorType?.includes('critical') || errorType?.includes('error') || errorType?.includes('Error')) return 'critical';
+    if (errorType?.includes('warning') || errorType?.includes('timeout')) return 'warning';
+    return 'info';
+  };
+
+  const getSeverityColor = (severity: 'critical' | 'warning' | 'info') => {
+    switch (severity) {
+      case 'critical': return 'bg-red-50 border-red-200 text-red-900';
+      case 'warning': return 'bg-amber-50 border-amber-200 text-amber-900';
+      default: return 'bg-blue-50 border-blue-200 text-blue-900';
+    }
+  };
+
+  const getSeverityIcon = (severity: 'critical' | 'warning' | 'info') => {
+    switch (severity) {
+      case 'critical': return '🔴';
+      case 'warning': return '🟡';
+      default: return '🔵';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return dateString;
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: "Total Errors", value: errorData?.total?.toString() || '0', color: "bg-red-50 border-red-200" },
-          { label: "Recent 24h", value: errorLogs.filter(e => {
-            const date = new Date(e.created_at);
+          { label: "Recent 24h", value: errorLogs.filter((e: any) => {
+            const date = new Date(e.createdAt);
             const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
             return date > dayAgo;
           }).length.toString(), color: "bg-orange-50 border-orange-200" },
-          { label: "Critical", value: errorLogs.filter(e => e.error_type === 'critical' || e.error_message?.includes('Error')).length.toString(), color: "bg-yellow-50 border-yellow-200" },
+          { label: "Critical", value: errorLogs.filter((e: any) => getErrorSeverity(e.errorType) === 'critical').length.toString(), color: "bg-red-100 border-red-300" },
+          { label: "Types", value: errorTypes.length.toString(), color: "bg-purple-50 border-purple-200" },
         ].map((stat, idx) => (
           <div key={idx} className={`rounded-lg border ${stat.color} p-6`}>
             <p className="text-sm text-slate-600 font-medium">{stat.label}</p>
@@ -339,31 +378,146 @@ const LogsView = () => {
         ))}
       </div>
 
+      {/* Filter */}
+      <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <p className="text-sm font-medium text-slate-700 mb-3">Filter by Error Type</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setFilterType('all')}
+            className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              filterType === 'all'
+                ? 'bg-slate-900 text-white'
+                : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+            }`}
+          >
+            All ({errorLogs.length})
+          </button>
+          {errorTypes.map((type: any) => (
+            <button
+              key={type}
+              onClick={() => setFilterType(type)}
+              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                filterType === type
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              {type} ({errorLogs.filter((e: any) => e.errorType === type).length})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Error Logs */}
       <div className="bg-white rounded-lg border border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Error Logs</h3>
-        <div className="space-y-3 max-h-96 overflow-y-auto">
-          {errorLogs.map((log, idx) => (
-            <div key={idx} className={`p-4 rounded-lg border bg-red-50 border-red-200`}>
-              <div className="flex items-start gap-3">
-                <span className="text-lg text-red-600">❌</span>
-                <div className="flex-1">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-red-900">{log.function_name || 'Unknown Function'}</p>
-                      <p className="text-xs text-red-700 mt-1">{log.error_type}</p>
-                      <p className="text-sm text-slate-700 mt-2">{log.error_message}</p>
-                      {log.query_context && (
-                        <p className="text-xs text-slate-600 mt-1">Context: {log.query_context}</p>
-                      )}
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Error Logs ({filteredLogs.length})</h3>
+        <div className="space-y-3 max-h-[600px] overflow-y-auto">
+          {filteredLogs.map((log: any, idx: number) => {
+            const severity = getErrorSeverity(log.errorType);
+            const isExpanded = expandedLog === log.id;
+            
+            return (
+              <div
+                key={idx}
+                className={`p-4 rounded-lg border transition-all ${getSeverityColor(severity)}`}
+              >
+                <button
+                  onClick={() => setExpandedLog(isExpanded ? null : log.id)}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-lg flex-shrink-0">{getSeverityIcon(severity)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <p className="font-semibold truncate">{log.functionName || 'Unknown Function'}</p>
+                        <span className="text-xs px-2 py-1 bg-white bg-opacity-50 rounded whitespace-nowrap font-medium">
+                          {log.errorType}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-2 line-clamp-2">{log.errorMessage}</p>
+                      <p className="text-xs text-slate-600 mt-2">
+                        {formatDate(log.createdAt)}
+                      </p>
+                    </div>
+                    <div className="text-slate-500 flex-shrink-0">
+                      {isExpanded ? '▼' : '▶'}
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">{log.created_at ? new Date(log.created_at).toLocaleString() : 'Just now'}</p>
-                </div>
+                </button>
+
+                {/* Expanded Details */}
+                {isExpanded && (
+                  <div className="mt-4 pt-4 border-t border-current border-opacity-20 space-y-3">
+                    {/* Function Name */}
+                    <div>
+                      <p className="text-xs font-semibold opacity-75 mb-1">Function</p>
+                      <p className="text-sm bg-white bg-opacity-40 rounded p-2 font-mono">{log.functionName}</p>
+                    </div>
+
+                    {/* Error Type */}
+                    <div>
+                      <p className="text-xs font-semibold opacity-75 mb-1">Error Type</p>
+                      <p className="text-sm bg-white bg-opacity-40 rounded p-2 font-mono">{log.errorType}</p>
+                    </div>
+
+                    {/* Error Message */}
+                    <div>
+                      <p className="text-xs font-semibold opacity-75 mb-1">Error Message</p>
+                      <div className="bg-white bg-opacity-40 rounded p-3 max-h-64 overflow-y-auto">
+                        <pre className="text-xs font-mono whitespace-pre-wrap break-words">{log.errorMessage}</pre>
+                      </div>
+                    </div>
+
+                    {/* Error Details/Traceback */}
+                    {log.errorDetails && (
+                      <div>
+                        <p className="text-xs font-semibold opacity-75 mb-1">Error Details</p>
+                        <div className="bg-white bg-opacity-40 rounded p-3 max-h-64 overflow-y-auto">
+                          {typeof log.errorDetails === 'string' ? (
+                            <pre className="text-xs font-mono whitespace-pre-wrap break-words">{log.errorDetails}</pre>
+                          ) : log.errorDetails.traceback ? (
+                            <pre className="text-xs font-mono whitespace-pre-wrap break-words">{log.errorDetails.traceback}</pre>
+                          ) : (
+                            <pre className="text-xs font-mono whitespace-pre-wrap break-words">{JSON.stringify(log.errorDetails, null, 2)}</pre>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Query Context */}
+                    {log.queryContext && (
+                      <div>
+                        <p className="text-xs font-semibold opacity-75 mb-1">Query Context</p>
+                        <p className="text-sm bg-white bg-opacity-40 rounded p-2 font-mono text-xs">{log.queryContext}</p>
+                      </div>
+                    )}
+
+                    {/* User ID */}
+                    {log.userId && (
+                      <div>
+                        <p className="text-xs font-semibold opacity-75 mb-1">User ID</p>
+                        <p className="text-sm bg-white bg-opacity-40 rounded p-2 font-mono text-xs break-all">{log.userId}</p>
+                      </div>
+                    )}
+
+                    {/* Metadata */}
+                    <div className="flex gap-2 flex-wrap text-xs">
+                      <span className="bg-white bg-opacity-40 rounded px-2 py-1 font-mono">
+                        ID: {log.id?.slice(0, 8) || 'N/A'}...
+                      </span>
+                      <span className="bg-white bg-opacity-40 rounded px-2 py-1">
+                        {formatDate(log.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
+            );
+          })}
+          {filteredLogs.length === 0 && (
+            <div className="text-center py-8 text-slate-500">
+              {filterType === 'all' ? 'No error logs found' : `No logs of type "${filterType}"`}
             </div>
-          ))}
-          {errorLogs.length === 0 && (
-            <div className="text-center py-8 text-slate-500">No error logs found</div>
           )}
         </div>
       </div>

@@ -13,6 +13,7 @@ from app.models.email_template import EmailTemplate
 from app.api.dependencies import get_db, get_current_user
 from app.services.mail_service import send_templated_email, send_email, get_template_from_db, render_template
 from fastapi_mail import NameEmail
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +147,12 @@ async def create_template(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="create_template",
+            error=e,
+            error_type="exception"
+        )
         await db.rollback()
         logger.error(f"Error creating template: {e}")
         raise HTTPException(
@@ -324,6 +331,12 @@ async def update_template(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="update_template",
+            error=e,
+            error_type="exception"
+        )
         await db.rollback()
         logger.error(f"Error updating template: {e}")
         raise HTTPException(
@@ -360,6 +373,12 @@ async def delete_template(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="delete_template",
+            error=e,
+            error_type="exception"
+        )
         await db.rollback()
         logger.error(f"Error deleting template: {e}")
         raise HTTPException(

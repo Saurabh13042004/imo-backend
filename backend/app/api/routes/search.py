@@ -10,6 +10,7 @@ from app.services import SearchService
 from app.services.search_limit_service import SearchLimitService
 from app.api.dependencies import get_db, get_optional_user
 from app.models.user import Profile
+from app.utils.error_logger import log_error
 from app.config import settings
 from app.utils.validators import validate_search_query
 
@@ -151,6 +152,14 @@ async def search_products(
         # Re-raise HTTP exceptions (validation errors, limit errors, etc.)
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="search_products",
+            error=e,
+            error_type="search_error",
+            user_id=str(current_user.id) if current_user else None,
+            query_context=f"Keyword: {request.keyword}, Country: {request.country}"
+        )
         logger.error(f"[Search] UNEXPECTED ERROR: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -210,6 +219,14 @@ async def get_search_limits(
         }
 
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_search_limits",
+            error=e,
+            error_type="search_limits_error",
+            user_id=str(current_user.id) if current_user else None,
+            query_context="Get search limits"
+        )
         logger.error(f"[Search Limits] ERROR: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

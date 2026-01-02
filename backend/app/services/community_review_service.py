@@ -14,6 +14,7 @@ from app.services.scraper import (
     get_domain,
     deduplicate_reviews,
 )
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

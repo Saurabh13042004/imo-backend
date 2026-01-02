@@ -4,6 +4,7 @@ import json
 import httpx
 from typing import Optional, Dict, Any
 from app.config import settings
+from app.utils.error_logger import log_error
 
 
 class GoogleOAuth:

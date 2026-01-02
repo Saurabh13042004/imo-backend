@@ -6,6 +6,7 @@ from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.mail_service import send_templated_email
 from app.config import settings
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

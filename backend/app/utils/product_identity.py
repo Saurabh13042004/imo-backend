@@ -3,6 +3,7 @@
 import logging
 import re
 from typing import Dict, Any, List, Optional
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

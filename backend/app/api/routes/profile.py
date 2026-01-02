@@ -11,6 +11,7 @@ from app.schemas.auth import UserResponse
 from typing import Optional
 import os
 import uuid
+from app.utils.error_logger import log_error
 
 router = APIRouter(prefix="/api/v1/profile", tags=["profile"])
 
@@ -65,6 +66,12 @@ async def update_profile(
             oauth_provider=current_user.oauth_provider
         )
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="update_profile",
+            error=e,
+            error_type="exception"
+        )
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -107,6 +114,12 @@ async def upload_photo(
             "avatar_url": avatar_url
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="upload_photo",
+            error=e,
+            error_type="exception"
+        )
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -147,6 +160,12 @@ async def change_password(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="change_password",
+            error=e,
+            error_type="exception"
+        )
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -180,6 +199,12 @@ async def disconnect_oauth(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="disconnect_oauth",
+            error=e,
+            error_type="exception"
+        )
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -205,6 +230,12 @@ async def connect_oauth(
         
         return {"message": f"{provider.capitalize()} connected successfully"}
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="connect_oauth",
+            error=e,
+            error_type="exception"
+        )
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -232,5 +263,11 @@ async def check_admin_status(
         is_admin = admin_role is not None
         return {"is_admin": is_admin}
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="check_admin_status",
+            error=e,
+            error_type="exception"
+        )
         return {"is_admin": False}
 

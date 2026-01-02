@@ -11,6 +11,7 @@ from sqlalchemy import and_
 
 from app.models import SearchCache
 from app.config import settings
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

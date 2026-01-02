@@ -4,6 +4,7 @@ import logging
 import httpx
 from typing import Optional, Dict, Any
 from app.utils.helpers import format_location_for_serpapi
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

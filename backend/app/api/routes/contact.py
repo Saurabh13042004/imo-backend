@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from app.database import get_db
 from app.models.contact import Contact
 from app.schemas.contact import ContactCreate, ContactResponse
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +89,14 @@ async def submit_contact_form(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="submit_contact_form",
+            error=e,
+            error_type="contact_submission_error",
+            user_id=None,
+            query_context=f"Submitting contact form from {contact_data.email} with subject '{contact_data.subject}'"
+        )
         logger.error(f"Error submitting contact form: {e}", exc_info=True)
         await db.rollback()
         raise HTTPException(
@@ -128,6 +137,14 @@ async def get_contact_submissions(
         return [ContactResponse.from_orm(contact) for contact in contacts]
         
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_contact_submissions",
+            error=e,
+            error_type="contact_fetch_error",
+            user_id=None,
+            query_context="Fetching all contact form submissions"
+        )
         logger.error(f"Error fetching contact submissions: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

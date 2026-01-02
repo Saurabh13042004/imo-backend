@@ -8,6 +8,7 @@ import google.generativeai as genai
 
 from app.config import settings
 from app.api.dependencies import get_optional_user
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -162,6 +163,14 @@ Please provide a helpful, friendly response:"""
         return ChatResponse(message=ai_message)
     
     except Exception as e:
+        await log_error(
+            db=None,
+            function_name="chat_with_product",
+            error=e,
+            error_type="chatbot_error",
+            user_id=str(current_user.get('id')) if current_user else None,
+            query_context=f"Chatbot conversation about product '{request.product_title}' with message: {request.message[:50]}"
+        )
         logger.error(f"[Chatbot] Error generating response: {e}", exc_info=True)
         return ChatResponse(
             message="I'm having trouble processing your question right now. Please try again in a moment.",

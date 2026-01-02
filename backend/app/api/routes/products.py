@@ -31,6 +31,7 @@ from app.config import Settings
 from app.models import UserReview, Product
 from app.models.user import Profile
 from app.utils.helpers import parse_relative_date
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -139,6 +140,14 @@ async def get_product_details(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_product_details",
+            error=e,
+            error_type="product_fetch_error",
+            user_id=None,
+            query_context=f"Fetching product details for product ID {product_id}"
+        )
         logger.error(f"Error fetching product details: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -180,6 +189,14 @@ async def get_product_by_id(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_product_by_id",
+            error=e,
+            error_type="product_fetch_error",
+            user_id=None,
+            query_context=f"Fetching product by ID {product_id}"
+        )
         logger.error(f"Error fetching product by ID: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -238,6 +255,14 @@ async def get_amazon_product_details(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_amazon_product_details",
+            error=e,
+            error_type="product_fetch_error",
+            user_id=None,
+            query_context=f"Fetching Amazon product by ASIN {asin}"
+        )
         logger.error(f"Error fetching product: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -521,6 +546,14 @@ async def get_intelligent_product_analysis(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_intelligent_product_analysis",
+            error=e,
+            error_type="product_analysis_error",
+            user_id=None,
+            query_context=f"Generating intelligent product analysis for ASIN {asin}"
+        )
         logger.error(f"[Intelligent] Error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -559,6 +592,14 @@ async def get_product_details_by_source(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_product_details_by_source",
+            error=e,
+            error_type="product_fetch_error",
+            user_id=None,
+            query_context=f"Fetching product by source {source}/{source_id}"
+        )
         logger.error(f"Error fetching product: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -590,6 +631,14 @@ async def get_immersive_product_details(
         }
 
     except Exception as e:
+        await log_error(
+            db=None,
+            function_name="get_immersive_product_details",
+            error=e,
+            error_type="product_fetch_error",
+            user_id=None,
+            query_context=f"Fetching immersive product details for product ID {product_id}"
+        )
         logger.error(f"Error fetching immersive product details: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -653,12 +702,28 @@ async def get_enriched_product_details(
             }
 
     except httpx.HTTPError as e:
+        await log_error(
+            db=None,
+            function_name="get_enriched_product_details",
+            error=e,
+            error_type="external_api_error",
+            user_id=None,
+            query_context=f"Calling SerpAPI immersive product endpoint for product {product_id}"
+        )
         logger.error(f"HTTP error fetching immersive product details: {e}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Failed to fetch data from external API"
         )
     except Exception as e:
+        await log_error(
+            db=None,
+            function_name="get_enriched_product_details",
+            error=e,
+            error_type="product_enrichment_error",
+            user_id=None,
+            query_context=f"Fetching enriched product details for product {product_id}"
+        )
         logger.error(f"Error fetching enriched product details: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -734,6 +799,14 @@ async def generate_ai_verdict(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="generate_ai_verdict",
+            error=e,
+            error_type="ai_verdict_queue_error",
+            user_id=None,
+            query_context=f"Queuing AI verdict generation for product {product_id}"
+        )
         logger.error(f"[AI Verdict API] Error queuing verdict for {product_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -803,6 +876,14 @@ async def get_short_video_reviews(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_short_video_reviews",
+            error=e,
+            error_type="video_error",
+            user_id=None,
+            query_context=f"Fetching short video reviews for product {product_id} titled {title}"
+        )
         logger.error(f"[ShortVideoReviews] Error fetching videos for {product_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -971,6 +1052,14 @@ async def upload_video_review(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="upload_video_review",
+            error=e,
+            error_type="video_upload_error",
+            user_id=str(current_user.id) if current_user else None,
+            query_context=f"Uploading video review for product {product_id} by user {current_user.id if current_user else 'unknown'}"
+        )
         logger.error(f"Error uploading video review: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1032,6 +1121,14 @@ async def get_user_reviews_for_product(
         return review_responses
         
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_user_reviews_for_product",
+            error=e,
+            error_type="user_review_fetch_error",
+            user_id=None,
+            query_context=f"Fetching user video reviews for product {product_id}"
+        )
         logger.error(f"Error fetching user reviews for product {product_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1091,6 +1188,14 @@ async def get_my_submitted_reviews(
         return review_responses
         
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_my_submitted_reviews",
+            error=e,
+            error_type="user_review_fetch_error",
+            user_id=str(current_user.id),
+            query_context=f"Fetching submitted reviews for user {current_user.id}"
+        )
         logger.error(f"Error fetching submitted reviews for user {current_user.id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1147,6 +1252,14 @@ async def toggle_product_like(
             detail=str(e)
         )
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="toggle_product_like",
+            error=e,
+            error_type="product_like_error",
+            user_id=str(current_user.id),
+            query_context=f"Toggling like status for product {product_id} by user {current_user.id}"
+        )
         logger.error(f"Error toggling like for product {product_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1184,6 +1297,14 @@ async def get_product_like_status(
             detail=str(e)
         )
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_product_like_status",
+            error=e,
+            error_type="product_like_error",
+            user_id=str(current_user.id),
+            query_context=f"Getting like status for product {product_id} by user {current_user.id}"
+        )
         logger.error(f"Error getting like status for product {product_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1228,6 +1349,14 @@ async def get_user_liked_products(
         }
         
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="get_user_liked_products",
+            error=e,
+            error_type="product_fetch_error",
+            user_id=str(current_user.id),
+            query_context=f"Fetching liked products for user {current_user.id} with limit={limit}, offset={offset}"
+        )
         logger.error(f"Error fetching liked products for user {current_user.id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

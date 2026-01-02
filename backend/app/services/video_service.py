@@ -7,6 +7,7 @@ from sqlalchemy.future import select
 
 from app.models import Video, Product
 from app.integrations.youtube import YouTubeClient
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

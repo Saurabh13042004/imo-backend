@@ -2,6 +2,7 @@
 
 import re
 from typing import Optional
+from app.utils.error_logger import log_error
 
 
 def validate_search_query(query: str) -> bool:

@@ -12,6 +12,7 @@ from app.services.stripe_service import StripeService
 from app.services.imo_mail_service import IMOMailService
 from app.models.user import Profile
 from app.models.subscription import PaymentTransaction
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +87,12 @@ async def create_checkout_session(
             'url': result['url'],
         }
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="create_checkout_session",
+            error=e,
+            error_type="exception"
+        )
         import traceback
         logger.error(f"Error creating checkout session: {e}")
         logger.error(f"Full traceback: {traceback.format_exc()}")
@@ -160,6 +167,12 @@ async def start_trial(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="start_trial",
+            error=e,
+            error_type="exception"
+        )
         error_msg = str(e) if str(e) else "Could not start trial. You may already have an active subscription."
         logger.error(f"Error starting trial: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)

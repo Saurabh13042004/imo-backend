@@ -4,6 +4,7 @@ import re
 from typing import Optional, List
 from datetime import datetime, timedelta
 import logging
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 

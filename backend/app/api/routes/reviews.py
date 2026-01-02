@@ -22,6 +22,7 @@ from app.tasks.review_tasks import (
     fetch_store_reviews_task,
     fetch_google_reviews_task
 )
+from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,14 @@ async def fetch_product_reviews(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="fetch_product_reviews",
+            error=e,
+            error_type="review_error",
+            user_id=None,
+            query_context=f"Fetching reviews for product {product_id} from sources {request.sources}"
+        )
         logger.error(f"Error fetching reviews: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -140,6 +149,14 @@ async def fetch_product_videos(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=db,
+            function_name="fetch_product_videos",
+            error=e,
+            error_type="video_error",
+            user_id=None,
+            query_context=f"Fetching videos for product {product_id}"
+        )
         logger.error(f"Error fetching videos: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -209,6 +226,14 @@ async def get_community_reviews_stateless(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=None,
+            function_name="get_community_reviews_stateless",
+            error=e,
+            error_type="community_review_queue_error",
+            user_id=None,
+            query_context=f"Queuing community reviews task for product {body.get('product_name')}"
+        )
         logger.error(f"Error queuing community reviews task: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -284,6 +309,14 @@ async def get_store_reviews_stateless(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=None,
+            function_name="get_store_reviews_stateless",
+            error=e,
+            error_type="store_review_queue_error",
+            user_id=None,
+            query_context=f"Queuing store reviews task for {product_name} from {len(store_urls)} URLs"
+        )
         logger.error(f"Error queuing store reviews task: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -360,6 +393,14 @@ async def get_google_reviews_stateless(
     except HTTPException:
         raise
     except Exception as e:
+        await log_error(
+            db=None,
+            function_name="get_google_reviews_stateless",
+            error=e,
+            error_type="google_review_queue_error",
+            user_id=None,
+            query_context=f"Queuing Google Shopping reviews task for {product_name}"
+        )
         logger.error(f"Error queuing Google reviews task: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -417,6 +458,14 @@ async def get_review_task_status(task_id: str):
         return response
         
     except Exception as e:
+        await log_error(
+            db=None,
+            function_name="get_review_task_status",
+            error=e,
+            error_type="task_status_error",
+            user_id=None,
+            query_context=f"Checking status for task {task_id}"
+        )
         logger.error(f"Error checking task status {task_id}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
