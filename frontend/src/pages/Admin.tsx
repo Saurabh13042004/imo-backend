@@ -26,7 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { AdminDashboardContent, UsersTable, SubscriptionsTable, TransactionsTable, SubscriptionsView, ServerMonitoring, UrlsTable, EmailTemplateManagement, SendEmail } from "@/components/admin";
-import { AnalyticsDashboardNew } from "@/components/analytics/AnalyticsDashboardNew";
+import { ClarityDetailedAnalytics } from "@/components/analytics/ClarityDetailedAnalytics";
 import { 
   useAdminPaymentTransactions, 
   useAdminErrorLogs, 
@@ -46,7 +46,7 @@ const menuItems = [
     title: "Activity & Analytics",
     icon: BarChart3,
     value: "analytics",
-    description: "Daily search usage & interactions",
+    description: "Comprehensive analytics & insights",
   },
   {
     title: "Users",
@@ -145,7 +145,7 @@ const Admin = () => {
       case "home":
         return <AdminDashboardContent />;
       case "analytics":
-        return <AnalyticsDashboardNew />;
+        return <ClarityDetailedAnalytics />;
       case "users":
         return <UsersTable />;
       case "transactions":
