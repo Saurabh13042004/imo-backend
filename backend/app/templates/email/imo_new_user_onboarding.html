@@ -14,7 +14,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
             line-height: 1.6;
             color: #333;
-            background-color: #f5f7fa;
+            background-color: #f5f5f5;
         }
         .wrapper {
             max-width: 600px;
@@ -23,28 +23,30 @@
         }
         .container {
             background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-radius: 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
             overflow: hidden;
         }
         .header {
-            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            background-color: #1a1a1a;
             color: white;
             padding: 40px 30px;
             text-align: center;
         }
-        .header-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 20px;
         }
         .header h1 {
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 24px;
+            font-weight: 600;
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         .header p {
-            font-size: 16px;
-            opacity: 0.95;
+            font-size: 15px;
+            opacity: 0.9;
         }
         .content {
             padding: 40px 30px;
@@ -62,34 +64,36 @@
             line-height: 1.7;
         }
         .section-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #0066cc;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c2c2c;
             margin: 30px 0 20px 0;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
+            font-size: 12px;
         }
         .feature-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 30px;
         }
         .feature-card {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 0;
             padding: 20px;
             text-align: center;
             transition: all 0.3s ease;
         }
         .feature-card:hover {
-            border-color: #0066cc;
-            background-color: #f0f6ff;
+            border-color: #333;
+            background-color: #fafafa;
         }
         .feature-icon {
-            font-size: 32px;
+            font-size: 18px;
             margin-bottom: 10px;
+            font-weight: 700;
         }
         .feature-title {
             font-size: 14px;
@@ -103,16 +107,16 @@
             line-height: 1.5;
         }
         .trial-banner {
-            background: linear-gradient(135deg, #e8f4ff 0%, #f0f9ff 100%);
-            border-left: 4px solid #0066cc;
-            border-radius: 8px;
+            background-color: #f5f5f5;
+            border-left: 4px solid #333;
+            border-radius: 0;
             padding: 20px;
             margin: 30px 0;
         }
         .trial-text {
             font-size: 15px;
             font-weight: 700;
-            color: #0066cc;
+            color: #2c2c2c;
             margin-bottom: 8px;
         }
         .trial-desc {
@@ -126,35 +130,34 @@
         }
         .button-primary {
             display: inline-block;
-            padding: 14px 40px;
-            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            padding: 12px 36px;
+            background-color: #003d99;
             color: white;
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: 700;
+            border-radius: 2px;
+            font-weight: 600;
             font-size: 15px;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s ease;
             margin: 10px 5px;
         }
         .button-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+            background-color: #002d7a;
         }
         .button-secondary {
             display: inline-block;
-            padding: 14px 40px;
-            background-color: #f0f4f8;
-            color: #0066cc;
+            padding: 12px 36px;
+            background-color: transparent;
+            color: #003d99;
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: 700;
+            border-radius: 2px;
+            font-weight: 600;
             font-size: 15px;
-            border: 2px solid #0066cc;
+            border: 2px solid #003d99;
             transition: all 0.3s ease;
             margin: 10px 5px;
         }
         .button-secondary:hover {
-            background-color: #0066cc;
+            background-color: #003d99;
             color: white;
         }
         .stats {
@@ -164,15 +167,15 @@
             margin: 30px 0;
         }
         .stat-box {
-            background-color: #f8fafc;
-            border-radius: 8px;
+            background-color: #f5f5f5;
+            border-radius: 0;
             padding: 15px;
             text-align: center;
         }
         .stat-number {
             font-size: 24px;
             font-weight: 700;
-            color: #0066cc;
+            color: #333;
         }
         .stat-label {
             font-size: 12px;
@@ -194,7 +197,7 @@
             margin: 15px 0;
         }
         .footer-links a {
-            color: #0066cc;
+            color: #003d99;
             text-decoration: none;
             margin: 0 10px;
             font-size: 12px;
@@ -228,14 +231,14 @@
         <div class="container">
             <!-- Header -->
             <div class="header">
-                <div class="header-icon">🎯</div>
-                <h1>Welcome to IMO!</h1>
-                <p>AI That Reads Every Review—So You Don't Have To</p>
+                <img src="https://d3tmtixqwd7vky.cloudfront.net/logo.jpg" alt="IMO Logo" class="logo">
+                <h1>Welcome to IMO</h1>
+                <p>Smart Shopping Made Simple</p>
             </div>
 
             <!-- Content -->
             <div class="content">
-                <p class="greeting">Hello {{ user_name|default('there') }}! 👋</p>
+                <p class="greeting">Hello {{ user_name|default('there') }},</p>
                 
                 <p class="intro-text">
                     We're thrilled to have you join IMO! Your account is ready to help you make smarter shopping decisions in seconds, not hours.
@@ -244,7 +247,7 @@
                 <!-- Trial Banner -->
                 {% if has_trial %}
                 <div class="trial-banner">
-                    <div class="trial-text">🎁 {{ trial_days|default('7') }}-Day Free Trial Activated!</div>
+                    <div class="trial-text">{{ trial_days|default('7') }}-Day Free Trial Activated</div>
                     <div class="trial-desc">
                         Unlock all premium features at no cost. After your trial ends, you can continue with our affordable Premium Unlimited plan at just $9.99/month.
                     </div>
@@ -273,24 +276,24 @@
                 <!-- Feature Cards -->
                 <div class="feature-grid">
                     <div class="feature-card">
-                        <div class="feature-icon">🔍</div>
+                        <div class="feature-icon">✓</div>
                         <div class="feature-title">Smart Search</div>
-                        <div class="feature-desc">Search any product and get AI-powered insights in seconds</div>
+                        <div class="feature-desc">AI-powered product insights in seconds</div>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">⭐</div>
+                        <div class="feature-icon">✓</div>
                         <div class="feature-title">IMO Score</div>
-                        <div class="feature-desc">One number that considers everything. No bias, no noise.</div>
+                        <div class="feature-desc">Unbiased rating across all reviews</div>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">📊</div>
+                        <div class="feature-icon">✓</div>
                         <div class="feature-title">Review Summaries</div>
-                        <div class="feature-desc">Instantly see what thousands of buyers are saying</div>
+                        <div class="feature-desc">Comprehensive analysis in seconds</div>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon">🎬</div>
+                        <div class="feature-icon">✓</div>
                         <div class="feature-title">Video Reviews</div>
-                        <div class="feature-desc">Watch honest reviews from real people, not sponsored content</div>
+                        <div class="feature-desc">Real user reviews from multiple sources</div>
                     </div>
                 </div>
 
