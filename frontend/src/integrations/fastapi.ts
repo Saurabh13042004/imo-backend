@@ -8,11 +8,11 @@ import { getSessionId } from '@/utils/sessionUtils';
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
- * Get auth token from sessionStorage
+ * Get auth token from localStorage (where AuthContext stores it)
  */
 function getAuthToken(): string | null {
   try {
-    const tokens = sessionStorage.getItem('auth_tokens');
+    const tokens = localStorage.getItem('auth_tokens');
     if (tokens) {
       const parsed = JSON.parse(tokens);
       return parsed.accessToken;

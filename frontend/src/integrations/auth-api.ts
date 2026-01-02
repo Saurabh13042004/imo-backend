@@ -4,6 +4,7 @@
  */
 
 import { API_BASE_URL } from '@/config/api';
+import { getSessionId } from '@/utils/sessionUtils';
 
 export interface SignUpRequest {
   email: string;
@@ -61,13 +62,22 @@ class AuthAPI {
 
   /**
    * Sign up a new user
+   * If user was a guest before, their session ID will be sent to migrate their search history
    */
   async signUp(data: SignUpRequest): Promise<AuthResponse> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add session ID header if user was previously a guest
+    const sessionId = getSessionId();
+    if (sessionId) {
+      headers['x-session-id'] = sessionId;
+    }
+    
     const response = await fetch(`${this.baseUrl}${this.authPath}/signup`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     });
 
@@ -81,13 +91,22 @@ class AuthAPI {
 
   /**
    * Sign in with email and password
+   * If user was a guest before, their session ID will be sent to migrate their search history
    */
   async signIn(data: SignInRequest): Promise<AuthResponse> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Add session ID header if user was previously a guest
+    const sessionId = getSessionId();
+    if (sessionId) {
+      headers['x-session-id'] = sessionId;
+    }
+    
     const response = await fetch(`${this.baseUrl}${this.authPath}/signin`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(data),
     });
 

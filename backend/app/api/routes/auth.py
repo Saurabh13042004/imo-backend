@@ -1,6 +1,7 @@
 """Authentication API routes for sign up, sign in, and token refresh."""
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.auth import (
@@ -9,6 +10,7 @@ from app.schemas.auth import (
 )
 from app.services.auth_service import AuthService
 from app.services.imo_mail_service import IMOMailService
+from app.services.search_limit_service import SearchLimitService
 from app.api.dependencies import get_current_user
 from app.models.user import Profile
 from app.utils.auth import get_token_expiration_time
@@ -20,21 +22,26 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 
+search_limit_service = SearchLimitService()
+
 
 @router.post("/signup", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 async def sign_up(
     request: SignUpRequest,
-    session: AsyncSession = Depends(get_db)
+    session: AsyncSession = Depends(get_db),
+    x_session_id: Optional[str] = Header(None)
 ):
     """Register a new user with email and password.
     
     - **email**: User email address (must be unique)
     - **password**: Password (min 8 chars, 1 uppercase, 1 digit)
     - **full_name**: User's full name
+    - **x_session_id**: (Header, optional) Guest session ID to migrate to new account
     
     Returns:
     - User profile with token information
     """
+    logger.info(f"[Auth] Signup request received - x_session_id: {x_session_id or 'None'}")
     try:
         profile, access_token, refresh_token = await AuthService.sign_up(
             session=session,
@@ -43,8 +50,23 @@ async def sign_up(
             full_name=request.full_name
         )
         
+        user_id = str(profile.id)
+        
+        # Migrate guest session to registered user account if provided
+        if x_session_id:
+            logger.info(f"[Auth] Signup: Migrating session {x_session_id} to user {user_id}")
+            migrate_success = await search_limit_service.migrate_guest_session_to_user(
+                db=session,
+                session_id=x_session_id,
+                user_id=user_id
+            )
+            if migrate_success:
+                logger.info(f"[Auth] Session migration successful")
+            else:
+                logger.warning(f"[Auth] Session migration failed (non-fatal)")
+        
         # Get user roles
-        roles = await AuthService.get_user_roles(session, str(profile.id))
+        roles = await AuthService.get_user_roles(session, user_id)
         
         # Send welcome email asynchronously
         try:
@@ -55,13 +77,13 @@ async def sign_up(
                 has_trial=True,
                 trial_days=7
             )
-            logger.info(f"Welcome email sent to {profile.email}")
+            logger.info(f"[Auth] Welcome email sent to {profile.email}")
         except Exception as email_error:
-            logger.error(f"Failed to send welcome email to {profile.email}: {email_error}")
+            logger.error(f"[Auth] Failed to send welcome email to {profile.email}: {email_error}")
             # Don't fail the signup if email fails
         
         user_response = UserResponse(
-            id=str(profile.id),
+            id=user_id,
             email=profile.email,
             full_name=profile.full_name,
             avatar_url=profile.avatar_url,
@@ -85,6 +107,7 @@ async def sign_up(
             detail=str(e)
         )
     except Exception as e:
+        logger.error(f"[Auth] Signup error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during sign up"
@@ -94,16 +117,19 @@ async def sign_up(
 @router.post("/signin", response_model=AuthResponse)
 async def sign_in(
     request: SignInRequest,
-    session: AsyncSession = Depends(get_db)
+    session: AsyncSession = Depends(get_db),
+    x_session_id: Optional[str] = Header(None)
 ):
     """Authenticate user with email and password.
     
     - **email**: User email address
     - **password**: User password
+    - **x_session_id**: (Header, optional) Guest session ID to migrate to existing account
     
     Returns:
     - User profile with token information
     """
+    logger.info(f"[Auth] Signin request received - x_session_id: {x_session_id or 'None'}")
     try:
         profile, access_token, refresh_token = await AuthService.sign_in(
             session=session,
@@ -111,11 +137,26 @@ async def sign_in(
             password=request.password
         )
         
+        user_id = str(profile.id)
+        
+        # Migrate guest session to registered user account if provided
+        if x_session_id:
+            logger.info(f"[Auth] Signin: Migrating session {x_session_id} to user {user_id}")
+            migrate_success = await search_limit_service.migrate_guest_session_to_user(
+                db=session,
+                session_id=x_session_id,
+                user_id=user_id
+            )
+            if migrate_success:
+                logger.info(f"[Auth] Session migration successful")
+            else:
+                logger.warning(f"[Auth] Session migration failed (non-fatal)")
+        
         # Get user roles
-        roles = await AuthService.get_user_roles(session, str(profile.id))
+        roles = await AuthService.get_user_roles(session, user_id)
         
         user_response = UserResponse(
-            id=str(profile.id),
+            id=user_id,
             email=profile.email,
             full_name=profile.full_name,
             avatar_url=profile.avatar_url,
@@ -134,11 +175,13 @@ async def sign_in(
         return AuthResponse(user=user_response, token=token_response)
         
     except ValueError as e:
+        logger.warning(f"[Auth] Signin validation error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=str(e)
         )
     except Exception as e:
+        logger.error(f"[Auth] Signin error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred during sign in"
