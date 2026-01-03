@@ -1,11 +1,10 @@
-'use client';
-
 import { motion } from 'framer-motion';
 import Search from 'lucide-react/dist/esm/icons/search';
 import Play from 'lucide-react/dist/esm/icons/play';
 import ChevronDown from 'lucide-react/dist/esm/icons/chevron-down';
 import Sparkles from 'lucide-react/dist/esm/icons/sparkles';
 import Zap from 'lucide-react/dist/esm/icons/zap';
+import Download from 'lucide-react/dist/esm/icons/download';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -398,6 +397,26 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
             </motion.div>
           )}
         </motion.form>
+
+        {/* Chrome Extension Banner - Badge */}
+        <motion.div
+          variants={itemVariants}
+          className="mt-6 mb-8 flex justify-center"
+        >
+          <a
+            href="https://chromewebstore.google.com/detail/imo-ai-shopping-assistant/fapabfddjibejafodhnafpfpelcbddea"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block group hover:scale-105 transition-transform duration-300"
+          >
+            <motion.img
+              src="https://developer.chrome.com/static/docs/webstore/branding/image/UV4C4ybeBTsZt43U4xis.png"
+              alt="Available in the Chrome Web Store"
+              className="h-18 w-auto drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+            />
+          </a>
+        </motion.div>
 
         {/* Trust Indicators - Clean Grid with Counting Animation */}
         <motion.div

@@ -38,6 +38,7 @@ const Refund = lazy(() => import('@/pages/Refund'))
 const Terms = lazy(() => import('@/pages/Terms'))
 const Faq = lazy(() => import('@/pages/Faq'))
 const HowItWorks = lazy(() => import('@/pages/HowItWorks'))
+const ExtensionGuide = lazy(() => import('@/pages/ExtensionGuide'))
 const NotFound = lazy(() => import('@/pages/NotFound'))
 const PaymentSuccess = lazy(() => import('@/pages/PaymentSuccess'))
 const PaymentCanceled = lazy(() => import('@/pages/PaymentCanceled'))
@@ -107,6 +108,7 @@ function AppRoutes() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/extension-guide" element={<ExtensionGuide />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-canceled" element={<PaymentCanceled />} />

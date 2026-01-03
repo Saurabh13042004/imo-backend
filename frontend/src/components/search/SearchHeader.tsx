@@ -3,6 +3,7 @@ import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
 import Menu from "lucide-react/dist/esm/icons/menu";
 import X from "lucide-react/dist/esm/icons/x";
 import Heart from "lucide-react/dist/esm/icons/heart";
+import Download from "lucide-react/dist/esm/icons/download";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -29,6 +30,7 @@ export const SearchHeader = () => {
     { name: 'Pricing', path: '/pricing' },
     { name: 'FAQ', path: '/faq' },
     { name: 'Contact', path: '/contact' },
+    { name: 'Extension Guide', path: '/extension-guide' },
   ];
 
   const userItems: any[] = [];

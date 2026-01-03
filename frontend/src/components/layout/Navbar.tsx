@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Menu, X, ShoppingCart, Download } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,6 +17,7 @@ export const Navbar = () => {
   const navigationItems = [
     { name: 'Home', path: '/' },
     { name: 'Search', path: '/search' },
+    { name: 'Extension Guide', path: '/extension-guide' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
   ];
