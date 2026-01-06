@@ -213,13 +213,11 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
       >
         <motion.div variants={itemVariants} className="text-center mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-foreground leading-tight">
-            AI That Reads Every Review
-            <br />
-            <span className="text-foreground text-2xl sm:text-3xl font-semibold">—So You Don't Have To</span>
+            Smart Shopping, One Click Away
           </h1>
 
           <p className="text-sm text-muted-foreground mb-6 leading-relaxed font-light">
-            IMO compares 10,000+ reviews, videos, Reddit threads, and blogs so you can shop smarter in seconds.
+            Your AI shopping assistant that reads thousands of reviews, compares prices across stores, and gives you honest product recommendations—instantly.
           </p>
         </motion.div>
 
@@ -339,9 +337,7 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
           variants={itemVariants}
           className="text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-center max-w-5xl leading-tight"
         >
-          AI That Reads Every Review
-          <br />
-          <span className="text-foreground">—So You Don't Have To</span>
+          Smart Shopping, One Click Away
         </motion.h1>
 
         {/* Subtitle - Informative and Clear */}
@@ -349,23 +345,23 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
           variants={itemVariants}
           className="text-xl text-muted-foreground mb-12 text-center max-w-3xl leading-relaxed font-light"
         >
-          IMO compares and summarizes 10,000+ reviews, videos, Reddit threads, and blogs—so you can shop smarter in seconds, not hours.
+          Your AI shopping assistant that reads thousands of reviews, compares prices across stores, and gives you honest product recommendations—instantly.
         </motion.p>
 
         {/* Search Bar - Constrained Width */}
         <motion.form
           onSubmit={handleSearch}
-          className="mb-8 w-full max-w-2xl"
+          className="mb-8 w-full max-w-3xl"
           variants={itemVariants}
           whileHover={{ scale: 1.01 }}
           transition={{ type: 'spring', stiffness: 300 }}
         >
           <div className="relative group">
-            {/* Subtle glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-blue-500/20 rounded-2xl blur-2xl opacity-30 group-hover:opacity-50 transition duration-500" />
+            {/* Enhanced glow effect */}
+            <div className="absolute -inset-1.5 bg-gradient-to-r from-primary/50 via-blue-500/40 to-purple-500/50 rounded-2xl blur-xl opacity-40 group-hover:opacity-80 transition duration-500 animate-pulse group-hover:animate-none" />
             
             {/* Search input */}
-            <div className="relative flex items-center bg-card/95 backdrop-blur-xl border border-primary/20 rounded-2xl p-5 shadow-xl">
+            <div className="relative flex items-center bg-card/95 backdrop-blur-xl border border-primary/40 rounded-2xl p-5 shadow-2xl">
               <Search className="w-6 h-6 text-primary ml-4 flex-shrink-0" />
               <Input
                 type="text"
@@ -384,24 +380,12 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
               </motion.button>
             </div>
           </div>
-          
-          {!user && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={animationsEnabled ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-              transition={{ delay: animationsEnabled ? 0.2 : 0 }}
-              className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground"
-            >
-              <Zap className="w-4 h-4 text-yellow-500" />
-              <span className="font-medium">No signup • 3 free searches • 7 days free trial</span>
-            </motion.div>
-          )}
         </motion.form>
 
-        {/* Chrome Extension Banner - Badge */}
+        {/* Chrome Extension Banner + CTA - Same Line */}
         <motion.div
           variants={itemVariants}
-          className="mt-6 mb-8 flex justify-center"
+          className="mt-6 mb-8 flex items-center justify-center gap-6 flex-wrap"
         >
           <a
             href="https://chromewebstore.google.com/detail/imo-ai-shopping-assistant/fapabfddjibejafodhnafpfpelcbddea"
@@ -412,10 +396,24 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
             <motion.img
               src="https://developer.chrome.com/static/docs/webstore/branding/image/UV4C4ybeBTsZt43U4xis.png"
               alt="Available in the Chrome Web Store"
-              className="h-18 w-auto drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300"
+              className="h-14 w-auto drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-300"
               whileHover={{ scale: 1.05 }}
             />
           </a>
+          {!user && (
+            <motion.a
+              href="/search"
+              initial={{ opacity: 0, x: 10 }}
+              animate={animationsEnabled ? { opacity: 1, x: 0 } : { opacity: 1, x: 0 }}
+              transition={{ delay: animationsEnabled ? 0.2 : 0 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="inline-flex items-center gap-2 px-6 h-14 bg-black hover:bg-gray-900 border border-white/20 rounded-lg font-semibold text-sm text-white transition-all duration-300 shadow-lg hover:shadow-black/40"
+            >
+              <Zap className="w-4 h-4" />
+              <span>Try Free Searches now or free trial</span>
+            </motion.a>
+          )}
         </motion.div>
 
         {/* Trust Indicators - Clean Grid with Counting Animation */}
@@ -451,7 +449,72 @@ export const HeroSection = ({ className = '' }: HeroSectionProps) => {
           </div>
         </motion.div>
 
-        {/* Video Demo */}
+        {/* Getting Started Section */}
+        <motion.div
+          variants={itemVariants}
+          className="w-full max-w-4xl mb-20"
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-3 text-foreground">Getting Started in 3 Steps</h2>
+            <p className="text-muted-foreground">Quick setup to start using IMO</p>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-6">
+            {/* Step 1 */}
+            <motion.div
+              variants={itemVariants}
+              className="group"
+            >
+              <div className="h-full border-2 border-foreground/10 hover:border-primary/50 bg-gradient-to-br from-card to-muted/20 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-4 text-white font-bold text-lg group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+                    1
+                  </div>
+                  <h3 className="font-semibold mb-2 text-foreground text-lg">Install Extension</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Click the button above to install IMO from the Chrome Web Store
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* Step 2 */}
+            <motion.div
+              variants={itemVariants}
+              className="group"
+            >
+              <div className="h-full border-2 border-foreground/10 hover:border-primary/50 bg-gradient-to-br from-card to-muted/20 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-4 text-white font-bold text-lg group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+                    2
+                  </div>
+                  <h3 className="font-semibold mb-2 text-foreground text-lg">Click Extension Icon</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Find the IMO icon in your Chrome extensions bar (top-right corner)
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* Step 3 */}
+            <motion.div
+              variants={itemVariants}
+              className="group"
+            >
+              <div className="h-full border-2 border-foreground/10 hover:border-primary/50 bg-gradient-to-br from-card to-muted/20 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
+                <div className="flex flex-col h-full">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mb-4 text-white font-bold text-lg group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+                    3
+                  </div>
+                  <h3 className="font-semibold mb-2 text-foreground text-lg">Choose an Option</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Select from the 3 available options to get started
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
         <motion.div
           variants={itemVariants}
           className="w-full max-w-4xl mb-12"

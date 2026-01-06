@@ -135,49 +135,53 @@ export const SharedSearchInput = ({
 
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
-      {/* Main search row */}
-      <div className={`flex gap-3`}>
-        <SearchAutosuggest
-          searchQuery={localQuery}
-          isOpen={isAutosuggestOpen}
-          onOpenChange={setIsAutosuggestOpen}
-          onSelectSuggestion={handleSelectSuggestion}
-          variant={variant}
-          loading={loading}
-        >
-          <div className="relative flex-1 h-full cursor-text" onClick={handleContainerClick}>
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
-            <Input
-              ref={inputRef}
-              placeholder={getSearchPlaceholder()}
-              value={localQuery}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyPress}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              className={`h-12 pl-11 ${className.includes('border-0') ? 'border-0 focus:ring-0 shadow-none' : ''}`}
-              disabled={loading}
-            />
-          </div>
-        </SearchAutosuggest>
+      {/* Main search row - Responsive layout */}
+      <div className={`flex flex-col sm:flex-row gap-3`}>
+        {/* Search input and location button - flex together */}
+        <div className="flex gap-3 flex-1">
+          <SearchAutosuggest
+            searchQuery={localQuery}
+            isOpen={isAutosuggestOpen}
+            onOpenChange={setIsAutosuggestOpen}
+            onSelectSuggestion={handleSelectSuggestion}
+            variant={variant}
+            loading={loading}
+          >
+            <div className="relative flex-1 h-full cursor-text" onClick={handleContainerClick}>
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+              <Input
+                ref={inputRef}
+                placeholder={getSearchPlaceholder()}
+                value={localQuery}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyPress}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                className={`h-12 pl-11 ${className.includes('border-0') ? 'border-0 focus:ring-0 shadow-none' : ''}`}
+                disabled={loading}
+              />
+            </div>
+          </SearchAutosuggest>
 
-        {/* Location Panel Toggle Button */}
-        <Button
-          variant="outline"
-          onClick={() => setShowLocationPanel(!showLocationPanel)}
-          className={`h-12 px-4 rounded-lg border-border/60 hover:bg-secondary ${
-            showLocationPanel ? 'bg-secondary' : ''
-          }`}
-          title="Toggle location settings"
-        >
-          <Globe className="h-5 w-5" />
-        </Button>
+          {/* Location Panel Toggle Button */}
+          <Button
+            variant="outline"
+            onClick={() => setShowLocationPanel(!showLocationPanel)}
+            className={`h-12 px-4 rounded-lg border-border/60 hover:bg-secondary flex-shrink-0 ${
+              showLocationPanel ? 'bg-secondary' : ''
+            }`}
+            title="Toggle location settings"
+          >
+            <Globe className="h-5 w-5" />
+          </Button>
+        </div>
 
+        {/* Search Button - Inline on desktop, full width on mobile */}
         {showButton && (
           <Button
             onClick={handleSearch}
             disabled={loading || !validateSearchQuery(localQuery)}
-            className="h-12 px-6"
+            className="h-12 px-6 sm:flex-shrink-0 sm:w-auto w-full"
           >
             {loading ? (
               <>
