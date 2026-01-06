@@ -901,3 +901,190 @@ async def get_recent_activities(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch recent activities"
         )
+
+
+# ==================== CRUD Endpoints ====================
+
+@router.post("/crud/subscriptions")
+async def create_subscription(
+    db: AsyncSession = Depends(get_db),
+    admin: Profile = Depends(admin_required),
+    user_id: str = None,
+    plan_type: str = "premium",
+    billing_cycle: str = "monthly",
+    is_active: bool = True,
+    subscription_start: str = None,
+    subscription_end: str = None,
+    trial_start: str = None,
+    trial_end: str = None,
+):
+    """Create a new subscription."""
+    try:
+        # Check if user exists
+        user_result = await db.execute(
+            select(Profile).where(Profile.id == user_id)
+        )
+        if not user_result.scalars().first():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Parse dates
+        sub_start = datetime.fromisoformat(subscription_start) if subscription_start else datetime.utcnow()
+        sub_end = datetime.fromisoformat(subscription_end) if subscription_end else None
+        trial_start_dt = datetime.fromisoformat(trial_start) if trial_start else None
+        trial_end_dt = datetime.fromisoformat(trial_end) if trial_end else None
+
+        subscription = Subscription(
+            user_id=user_id,
+            plan_type=plan_type,
+            billing_cycle=billing_cycle,
+            is_active=is_active,
+            subscription_start=sub_start,
+            subscription_end=sub_end,
+            trial_start=trial_start_dt,
+            trial_end=trial_end_dt,
+        )
+        db.add(subscription)
+        await db.commit()
+        await db.refresh(subscription)
+
+        return {
+            "id": str(subscription.id),
+            "userId": str(subscription.user_id),
+            "planType": subscription.plan_type,
+            "billingCycle": subscription.billing_cycle,
+            "isActive": subscription.is_active,
+            "subscriptionStart": subscription.subscription_start.isoformat(),
+            "subscriptionEnd": subscription.subscription_end.isoformat() if subscription.subscription_end else None,
+            "trialStart": subscription.trial_start.isoformat() if subscription.trial_start else None,
+            "trialEnd": subscription.trial_end.isoformat() if subscription.trial_end else None,
+        }
+    except Exception as e:
+        await log_error(
+            db=db,
+            function_name="create_subscription",
+            error=e,
+            error_type="subscription_create_error",
+            user_id=str(admin.id),
+        )
+        await db.rollback()
+        logger.error(f"Error creating subscription: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create subscription"
+        )
+
+
+@router.put("/crud/subscriptions/{subscription_id}")
+async def update_subscription(
+    subscription_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: Profile = Depends(admin_required),
+    plan_type: str = None,
+    billing_cycle: str = None,
+    is_active: bool = None,
+    subscription_start: str = None,
+    subscription_end: str = None,
+    trial_start: str = None,
+    trial_end: str = None,
+):
+    """Update a subscription."""
+    try:
+        # Get subscription
+        sub_result = await db.execute(
+            select(Subscription).where(Subscription.id == subscription_id)
+        )
+        subscription = sub_result.scalars().first()
+
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Subscription not found"
+            )
+
+        # Update fields if provided
+        if plan_type:
+            subscription.plan_type = plan_type
+        if billing_cycle:
+            subscription.billing_cycle = billing_cycle
+        if is_active is not None:
+            subscription.is_active = is_active
+        if subscription_start:
+            subscription.subscription_start = datetime.fromisoformat(subscription_start)
+        if subscription_end:
+            subscription.subscription_end = datetime.fromisoformat(subscription_end)
+        if trial_start:
+            subscription.trial_start = datetime.fromisoformat(trial_start)
+        if trial_end:
+            subscription.trial_end = datetime.fromisoformat(trial_end)
+
+        await db.commit()
+        await db.refresh(subscription)
+
+        return {
+            "id": str(subscription.id),
+            "userId": str(subscription.user_id),
+            "planType": subscription.plan_type,
+            "billingCycle": subscription.billing_cycle,
+            "isActive": subscription.is_active,
+            "subscriptionStart": subscription.subscription_start.isoformat(),
+            "subscriptionEnd": subscription.subscription_end.isoformat() if subscription.subscription_end else None,
+            "trialStart": subscription.trial_start.isoformat() if subscription.trial_start else None,
+            "trialEnd": subscription.trial_end.isoformat() if subscription.trial_end else None,
+        }
+    except Exception as e:
+        await log_error(
+            db=db,
+            function_name="update_subscription",
+            error=e,
+            error_type="subscription_update_error",
+            user_id=str(admin.id),
+        )
+        await db.rollback()
+        logger.error(f"Error updating subscription: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update subscription"
+        )
+
+
+@router.delete("/crud/subscriptions/{subscription_id}")
+async def delete_subscription(
+    subscription_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: Profile = Depends(admin_required),
+):
+    """Delete a subscription."""
+    try:
+        # Get subscription
+        sub_result = await db.execute(
+            select(Subscription).where(Subscription.id == subscription_id)
+        )
+        subscription = sub_result.scalars().first()
+
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Subscription not found"
+            )
+
+        await db.delete(subscription)
+        await db.commit()
+
+        return {"message": "Subscription deleted successfully"}
+    except Exception as e:
+        await log_error(
+            db=db,
+            function_name="delete_subscription",
+            error=e,
+            error_type="subscription_delete_error",
+            user_id=str(admin.id),
+        )
+        await db.rollback()
+        logger.error(f"Error deleting subscription: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete subscription"
+        )

@@ -11,8 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { TrendingUp, Calendar, Loader2, Edit2, Trash2, Plus } from "lucide-react";
+import { TrendingUp, Users, Zap, Loader2, Edit2, Trash2, Plus } from "lucide-react";
 import { useAdminSubscriptions, useAdminPaymentTransactions } from "@/hooks/useAdminApi";
 import {
   useCreateSubscription,
@@ -23,15 +22,6 @@ import {
 import { useToast } from "@/hooks/useToast";
 import { SubscriptionEditModal } from "./modals/SubscriptionEditModal";
 
-const chartData = [
-  { date: "Dec 18", active: 420, trials: 85, revenue: 3200 },
-  { date: "Dec 19", active: 425, trials: 92, revenue: 3400 },
-  { date: "Dec 20", active: 430, trials: 110, revenue: 3600 },
-  { date: "Dec 21", active: 435, trials: 115, revenue: 3800 },
-  { date: "Dec 22", active: 440, trials: 118, revenue: 4000 },
-  { date: "Dec 23", active: 445, trials: 120, revenue: 4300 },
-  { date: "Dec 24", active: 450, trials: 120, revenue: 4500 },
-];
 
 export const SubscriptionsTable = () => {
   const [filter, setFilter] = useState<"all" | "active" | "cancelled" | "expired">("all");
@@ -101,15 +91,10 @@ export const SubscriptionsTable = () => {
   const subscriptions = subData?.data || [];
   const transactions = transData?.data || [];
 
-  const activeCount = subscriptions.filter(s => s.isActive).length;
-  const totalRevenue = transactions
-    .filter(t => t.status === 'success')
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
-  const pendingTransactions = transactions.filter(t => t.status === 'pending').length;
-  const cancelledCount = subscriptions.filter(s => !s.isActive).length;
-  const cancellationRate = subscriptions.length > 0 
-    ? ((cancelledCount / subscriptions.length) * 100).toFixed(1)
-    : '0';
+  const activeSubscriptions = subscriptions.filter(s => s.isActive);
+  const activeTrail = activeSubscriptions.filter(s => s.planType === 'trial').length;
+  const activePremium = activeSubscriptions.filter(s => s.planType === 'premium').length;
+  const totalActive = activeTrail + activePremium;
 
   const getStatusBadgeStyles = (status: string) => {
     switch (status) {
@@ -123,6 +108,23 @@ export const SubscriptionsTable = () => {
         return "bg-slate-100 border-slate-300 text-slate-700";
     }
   };
+
+  const getSubscriptionPrice = (planType: string, billingCycle: string) => {
+    if (planType === 'trial') return 0;
+    if (planType === 'premium') {
+      if (billingCycle === 'yearly') return 6.99;
+      return 9.99; // monthly default
+    }
+    return 0;
+  };
+
+  const calculateTotalRevenue = () => {
+    return activeSubscriptions.reduce((total, sub) => {
+      return total + getSubscriptionPrice(sub.planType, sub.billingCycle || 'monthly');
+    }, 0);
+  };
+
+  const totalRevenue = calculateTotalRevenue();
 
   return (
     <div className="space-y-6">
@@ -142,22 +144,22 @@ export const SubscriptionsTable = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           {
-            label: "Active Subscriptions",
-            value: activeCount,
+            label: "Active Subscription Total",
+            value: totalActive,
             icon: TrendingUp,
             color: "from-green-500 to-emerald-500",
           },
           {
-            label: "Total Revenue",
-            value: `$${totalRevenue.toFixed(2)}`,
-            icon: Calendar,
+            label: "Active Trail",
+            value: activeTrail,
+            icon: Zap,
             color: "from-blue-500 to-cyan-500",
           },
           {
-            label: "Cancellation Rate",
-            value: `${cancellationRate}%`,
-            icon: TrendingUp,
-            color: "from-orange-500 to-red-500",
+            label: "Monthly Revenue",
+            value: `$${totalRevenue.toFixed(2)} USD`,
+            icon: Users,
+            color: "from-purple-500 to-pink-500",
           },
         ].map((stat, idx) => {
           const Icon = stat.icon;
@@ -181,42 +183,6 @@ export const SubscriptionsTable = () => {
           );
         })}
       </div>
-
-      {/* Chart */}
-      <Card className="bg-white border-slate-200 p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">Subscription Trends</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-            <XAxis dataKey="date" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#f8fafc",
-                border: "1px solid #e2e8f0",
-              }}
-              labelStyle={{ color: "#0f172a" }}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="active"
-              stroke="#059669"
-              strokeWidth={2}
-              name="Active Subs"
-              dot={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="trials"
-              stroke="#d97706"
-              strokeWidth={2}
-              name="Trials"
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </Card>
 
       {/* Filter Buttons */}
       <div className="flex gap-2">
@@ -282,7 +248,7 @@ export const SubscriptionsTable = () => {
                     {sub.subscriptionEnd ? new Date(sub.subscriptionEnd).toLocaleDateString() : 'N/A'}
                   </TableCell>
                   <TableCell className="font-semibold text-slate-900">
-                    ${'0.00'}
+                    ${getSubscriptionPrice(sub.planType, sub.billingCycle || 'monthly').toFixed(2)} {sub.billingCycle === 'yearly' ? '/ year' : '/ month'}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">

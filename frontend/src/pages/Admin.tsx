@@ -160,7 +160,7 @@ const Admin = () => {
       case "transactions":
         return <TransactionsTable />;
       case "subscriptions":
-        return <SubscriptionsView />;
+        return <SubscriptionsTable />;
       case "monitoring":
         return <ServerMonitoring />;
       case "logs":
