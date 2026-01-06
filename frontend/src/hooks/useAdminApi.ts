@@ -97,6 +97,16 @@ interface PaymentTransaction {
   createdAt: string;
 }
 
+export interface DailySearchUsage {
+  id: string;
+  user_id?: string;
+  session_id?: string;
+  search_date: string;
+  search_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // Admin Stats Hook
 export function useAdminStats() {
   const { accessToken } = useAuth();
@@ -606,5 +616,33 @@ export function useSendEmail() {
 
       return response.json();
     },
+  });
+}
+
+// Daily Search Usage Hook
+export function useAdminDailySearchUsage(skip: number = 0, limit: number = 100) {
+  const { accessToken } = useAuth();
+  const params = new URLSearchParams();
+  params.append('skip', skip.toString());
+  params.append('limit', limit.toString());
+
+  return useQuery({
+    queryKey: ['admin-daily-search-usage', skip, limit],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/api/v1/admin/search-usage?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch daily search usage');
+      }
+
+      return response.json() as Promise<{ data: DailySearchUsage[]; total: number; skip: number; limit: number }>;
+    },
+    staleTime: 5 * 60 * 1000,
+    enabled: !!accessToken,
   });
 }

@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AdminStats } from "./AdminStats";
-import { useAdminStats } from "@/hooks/useAdminApi";
+import { useAdminStats, useAdminDailySearchUsage } from "@/hooks/useAdminApi";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/config/api";
@@ -132,6 +132,7 @@ async function fetchRecentActivities(accessToken: string) {
 export const AdminDashboardContent = () => {
   const { accessToken } = useAuth();
   const { data: stats, isLoading, error } = useAdminStats();
+  const { data: searchUsageData } = useAdminDailySearchUsage(0, 500);
   const [hoveredMetric, setHoveredMetric] = useState<string | null>(null);
   const [monthlyRevenue, setMonthlyRevenue] = useState<number>(0);
   const [monthlyRevenueLoading, setMonthlyRevenueLoading] = useState(true);
@@ -149,6 +150,15 @@ export const AdminDashboardContent = () => {
   useEffect(() => {
     console.log('Recent activities updated:', recentActivities);
   }, [recentActivities]);
+
+  // Calculate search usage metrics
+  const searchUsage = searchUsageData?.data || [];
+  const totalSearches = searchUsage.reduce((sum, item) => sum + (item.search_count || 0), 0);
+  const totalGuestUsers = [...new Set(
+    searchUsage
+      .filter(item => !item.user_id)
+      .map(item => item.session_id)
+  )].length;
 
   // Initial fetch of activities on mount
   useEffect(() => {
@@ -202,14 +212,18 @@ export const AdminDashboardContent = () => {
   return (
     <div className="space-y-6">
       {/* Stats Grid */}
-      <AdminStats stats={stats || {
-        totalUsers: 0,
-        totalSubscriptions: 0,
-        activeTrials: 0,
-        monthlyRevenue: 0,
-        totalUrls: 0,
-        apiCalls: 0,
-      }} />
+      <AdminStats 
+        stats={stats || {
+          totalUsers: 0,
+          totalSubscriptions: 0,
+          activeTrials: 0,
+          monthlyRevenue: 0,
+          totalUrls: 0,
+          apiCalls: 0,
+        }}
+        totalGuestUsers={totalGuestUsers}
+        totalSearches={totalSearches}
+      />
 
       {/* Monthly Revenue Card */}
       <motion.div
@@ -306,39 +320,6 @@ export const AdminDashboardContent = () => {
                 <Bar dataKey="value" fill="#000000" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </Card>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-yellow-100 border border-yellow-400 px-4 py-2 rounded-lg flex items-center gap-2 text-yellow-800 font-medium">
-              <Lock className="w-4 h-4" />
-              Under Development
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Development Cards - Blurred */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Total URLs - Under Dev (Blurred) */}
-        <div className="relative">
-          <Card className="bg-white border border-slate-200 p-6 blur-sm opacity-50">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Total URLs</h3>
-            <p className="text-4xl font-bold text-slate-900">4,140</p>
-            <p className="text-slate-600 text-sm mt-2">Indexed URLs across platform</p>
-          </Card>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="bg-yellow-100 border border-yellow-400 px-4 py-2 rounded-lg flex items-center gap-2 text-yellow-800 font-medium">
-              <Lock className="w-4 h-4" />
-              Under Development
-            </div>
-          </div>
-        </div>
-
-        {/* API Calls - Under Dev (Blurred) */}
-        <div className="relative">
-          <Card className="bg-white border border-slate-200 p-6 blur-sm opacity-50">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">API Calls</h3>
-            <p className="text-4xl font-bold text-slate-900">0.0M</p>
-            <p className="text-slate-600 text-sm mt-2">Monthly API requests</p>
           </Card>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="bg-yellow-100 border border-yellow-400 px-4 py-2 rounded-lg flex items-center gap-2 text-yellow-800 font-medium">

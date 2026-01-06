@@ -9,7 +9,7 @@ from sqlalchemy import select, func, and_, desc
 from decimal import Decimal
 
 from app.models.user import Profile, UserRole
-from app.models.subscription import Subscription, PaymentTransaction
+from app.models.subscription import Subscription, PaymentTransaction, DailySearchUsage
 from app.models.product import Product
 from app.models.review import Review
 from app.models.contact import Contact
@@ -643,6 +643,62 @@ async def list_payment_transactions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch payment transactions"
+        )
+
+
+@router.get("/search-usage")
+async def list_daily_search_usage(
+    db: AsyncSession = Depends(get_db),
+    admin: Profile = Depends(admin_required),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """List daily search usage data."""
+    try:
+        query = select(DailySearchUsage)
+
+        # Get total count
+        count_result = await db.execute(
+            select(func.count(DailySearchUsage.id)).select_from(DailySearchUsage)
+        )
+        total = count_result.scalar() or 0
+
+        result = await db.execute(
+            query.order_by(desc(DailySearchUsage.search_date)).offset(skip).limit(limit)
+        )
+        search_usage = result.scalars().all()
+
+        usage_data = []
+        for usage in search_usage:
+            usage_data.append({
+                "id": str(usage.id),
+                "user_id": str(usage.user_id) if usage.user_id else None,
+                "session_id": usage.session_id,
+                "search_date": usage.search_date.isoformat() if usage.search_date else None,
+                "search_count": usage.search_count,
+                "created_at": usage.created_at.isoformat() if usage.created_at else None,
+                "updated_at": usage.updated_at.isoformat() if usage.updated_at else None,
+            })
+
+        return {
+            "data": usage_data,
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+        }
+    except Exception as e:
+        await log_error(
+            db=db,
+            function_name="list_daily_search_usage",
+            error=e,
+            error_type="search_usage_fetch_error",
+            user_id=str(admin.id),
+            query_context=f"Listing daily search usage with skip={skip}, limit={limit}"
+        )
+        logger.error(f"Error fetching daily search usage: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch daily search usage"
         )
 
 

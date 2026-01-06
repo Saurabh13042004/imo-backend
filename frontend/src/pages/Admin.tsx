@@ -14,6 +14,7 @@ import {
   Loader2,
   FileCode,
   Send,
+  TrendingUp,
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,8 +33,10 @@ import {
   useAdminErrorLogs, 
   useAdminReviews, 
   useAdminContacts,
-  useAdminBackgroundTasks 
+  useAdminBackgroundTasks,
+  useAdminDailySearchUsage
 } from "@/hooks/useAdminApi";
+import type { DailySearchUsage } from "@/hooks/useAdminApi";
 
 const menuItems = [
   {
@@ -102,6 +105,12 @@ const menuItems = [
     value: "send-email",
     description: "Send emails to users",
   },
+  {
+    title: "Daily Search Usage",
+    icon: TrendingUp,
+    value: "daily-search-usage",
+    description: "Monitor search usage patterns",
+  },
 ];
 
 const Admin = () => {
@@ -164,6 +173,8 @@ const Admin = () => {
         return <EmailTemplateManagement />;
       case "send-email":
         return <SendEmail />;
+      case "daily-search-usage":
+        return <DailySearchUsageView />;
       default:
         return <AdminDashboardContent />;
     }
@@ -655,6 +666,230 @@ const ContactsView = () => {
           {contacts.length === 0 && (
             <div className="text-center py-8 text-slate-500">No contact queries found</div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Daily Search Usage View Component
+const DailySearchUsageView = () => {
+  const { data: searchUsageData, isLoading } = useAdminDailySearchUsage(0, 100);
+  const [filterPeriod, setFilterPeriod] = useState<'week' | 'month' | 'all'>('week');
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8">
+        <Loader2 className="w-8 h-8 animate-spin mx-auto" />
+      </div>
+    );
+  }
+
+  const searchUsage = searchUsageData?.data || [];
+  
+  // Filter data based on selected period (for table only)
+  const getFilteredData = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    return searchUsage.filter(item => {
+      const itemDate = new Date(item.search_date);
+      const itemDateOnly = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate());
+      
+      if (filterPeriod === 'week') {
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return itemDateOnly >= sevenDaysAgo && itemDateOnly <= today;
+      } else if (filterPeriod === 'month') {
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return itemDateOnly >= thirtyDaysAgo && itemDateOnly <= today;
+      }
+      return true; // 'all'
+    });
+  };
+  
+  const filteredSearchUsage = getFilteredData();
+  
+  // Calculate statistics (ALWAYS from all-time data, not filtered)
+  const totalSearches = searchUsage.reduce((sum, item) => sum + (item.search_count || 0), 0);
+  
+  // Group by date and sum searches per day
+  const searchesByDay = new Map<string, number>();
+  searchUsage.forEach(item => {
+    const date = item.search_date || '';
+    const current = searchesByDay.get(date) || 0;
+    searchesByDay.set(date, current + (item.search_count || 0));
+  });
+  
+  const dailySearchCounts = Array.from(searchesByDay.values());
+  const avgSearchesPerDay = dailySearchCounts.length > 0 
+    ? (totalSearches / dailySearchCounts.length).toFixed(2) 
+    : '0';
+  
+  // Total guest searches (where user_id is null)
+  const totalGuestSearches = searchUsage
+    .filter(item => !item.user_id)
+    .reduce((sum, item) => sum + (item.search_count || 0), 0);
+  
+  // Last 24 hours total searches
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const last24HrsSearches = searchUsage
+    .filter(item => {
+      const itemDate = new Date(item.search_date);
+      return itemDate > oneDayAgo && itemDate <= now;
+    })
+    .reduce((sum, item) => sum + (item.search_count || 0), 0);
+  
+  const peakSearchDay: DailySearchUsage | undefined = searchUsage.length > 0 
+    ? searchUsage.reduce((max, item) => 
+        (item.search_count || 0) > (max.search_count || 0) ? item : max)
+    : undefined;
+
+  return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <p className="text-sm text-slate-600 font-medium">Total Searches</p>
+          <p className="text-2xl font-bold text-slate-900 mt-2">{totalSearches}</p>
+          <p className="text-xs text-slate-500 mt-2">Sum of all search_count across all records</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <p className="text-sm text-slate-600 font-medium">Avg Per Day</p>
+          <p className="text-2xl font-bold text-slate-900 mt-2">{avgSearchesPerDay}</p>
+          <p className="text-xs text-slate-500 mt-2">Total searches ÷ number of unique days</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <p className="text-sm text-slate-600 font-medium">Total Guest Searches</p>
+          <p className="text-2xl font-bold text-slate-900 mt-2">{totalGuestSearches}</p>
+          <p className="text-xs text-slate-500 mt-2">Searches from guest/non-authenticated users</p>
+        </div>
+
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <p className="text-sm text-slate-600 font-medium">Last 24 Hrs Searches</p>
+          <p className="text-2xl font-bold text-slate-900 mt-2">{last24HrsSearches}</p>
+          <p className="text-xs text-slate-500 mt-2">Total searches in the past 24 hours</p>
+        </div>
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="bg-white rounded-lg border border-slate-200 p-4">
+        <p className="text-sm font-medium text-slate-700 mb-3">View Period</p>
+        <div className="flex flex-wrap gap-2">
+          {(['week', 'month', 'all'] as const).map((period) => (
+            <button
+              key={period}
+              onClick={() => setFilterPeriod(period)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                filterPeriod === period
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+              }`}
+            >
+              {period === 'week' ? 'Last 7 Days' : period === 'month' ? 'Last 30 Days' : 'All Time'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Daily Search Usage Table */}
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200">
+          <h3 className="text-lg font-semibold text-slate-900">Daily Search Usage Details</h3>
+        </div>
+
+        <div className="overflow-x-auto">
+          {filteredSearchUsage.length > 0 ? (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">User ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">Session ID</th>
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-600">Search Count</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-600">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSearchUsage.map((item, idx) => {
+                  const searchCount = item.search_count || 0;
+                  let statusColor = 'bg-blue-50 text-blue-700';
+                  let statusLabel = 'Low Activity';
+
+                  if (searchCount > 20) {
+                    statusColor = 'bg-red-50 text-red-700';
+                    statusLabel = 'High Activity';
+                  } else if (searchCount > 10) {
+                    statusColor = 'bg-yellow-50 text-yellow-700';
+                    statusLabel = 'Medium Activity';
+                  }
+
+                  return (
+                    <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-slate-900 font-medium">
+                        {item.search_date ? new Date(item.search_date).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {item.user_id ? item.user_id.substring(0, 8) + '...' : 'Guest'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {item.session_id ? item.session_id.substring(0, 12) + '...' : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <span className="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">
+                          {searchCount}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}>
+                          {statusLabel}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-12 text-slate-500">
+              <TrendingUp className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p className="text-lg font-medium">No search usage data available</p>
+              <p className="text-sm mt-1">Search usage will appear here as users perform searches</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Insights Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Most Active Date */}
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <h4 className="text-sm font-semibold text-slate-900 mb-4">📊 Most Active Date</h4>
+          <div className="space-y-2">
+            <p className="text-2xl font-bold text-slate-900">
+              {peakSearchDay?.search_count || 0}
+            </p>
+            <p className="text-sm text-slate-600">
+              {peakSearchDay?.search_date ? new Date(peakSearchDay.search_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'No data'}
+            </p>
+          </div>
+        </div>
+
+        {/* Usage Trend */}
+        <div className="bg-white rounded-lg border border-slate-200 p-6">
+          <h4 className="text-sm font-semibold text-slate-900 mb-4">📈 Usage Trend</h4>
+          <div className="space-y-2">
+            <p className="text-2xl font-bold text-slate-900">
+              {dailySearchCounts.length > 0 ? (totalSearches / dailySearchCounts.length).toFixed(1) : 0} avg
+            </p>
+            <p className="text-sm text-slate-600">
+              searches per tracked day
+            </p>
+          </div>
         </div>
       </div>
     </div>

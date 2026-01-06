@@ -5,8 +5,8 @@ import {
   ShoppingCart, 
   TrendingUp, 
   Activity,
-  Database,
-  Zap 
+  Search,
+  Users2,
 } from "lucide-react";
 
 interface AdminStatsProps {
@@ -18,6 +18,8 @@ interface AdminStatsProps {
     totalUrls: number;
     apiCalls: number;
   };
+  totalGuestUsers?: number;
+  totalSearches?: number;
 }
 
 const statItems = [
@@ -29,6 +31,7 @@ const statItems = [
     lightColor: "text-slate-900",
     bgLight: "bg-slate-50",
     borderLight: "border-slate-200",
+    description: "Total registered users on the platform",
   },
   {
     title: "Premium Subscriptions",
@@ -38,6 +41,7 @@ const statItems = [
     lightColor: "text-slate-800",
     bgLight: "bg-slate-50",
     borderLight: "border-slate-200",
+    description: "Active premium and trial subscriptions",
   },
   {
     title: "Active Trials",
@@ -47,6 +51,7 @@ const statItems = [
     lightColor: "text-slate-700",
     bgLight: "bg-slate-50",
     borderLight: "border-slate-200",
+    description: "Users currently on active trial period",
   },
   {
     title: "Monthly Revenue",
@@ -57,29 +62,33 @@ const statItems = [
     bgLight: "bg-slate-50",
     borderLight: "border-slate-200",
     format: (val: number) => `$${val.toLocaleString()}`,
+    description: "Revenue from last 30 days",
   },
   {
-    title: "Total URLs",
-    key: "totalUrls",
-    icon: Database,
-    color: "from-slate-800 to-slate-600",
-    lightColor: "text-slate-800",
-    bgLight: "bg-slate-50",
-    borderLight: "border-slate-200",
+    title: "Total Guest Users",
+    key: "totalGuestUsers",
+    icon: Users2,
+    color: "from-blue-900 to-blue-700",
+    lightColor: "text-blue-900",
+    bgLight: "bg-blue-50",
+    borderLight: "border-blue-200",
+    isSearchUsage: true,
+    description: "Guest users that performed searches",
   },
   {
-    title: "API Calls",
-    key: "apiCalls",
-    icon: Zap,
-    color: "from-slate-700 to-slate-500",
-    lightColor: "text-slate-700",
-    bgLight: "bg-slate-50",
-    borderLight: "border-slate-200",
-    format: (val: number) => `${(val / 1000000).toFixed(1)}M`,
+    title: "Total Searches",
+    key: "totalSearches",
+    icon: Search,
+    color: "from-purple-900 to-purple-700",
+    lightColor: "text-purple-900",
+    bgLight: "bg-purple-50",
+    borderLight: "border-purple-200",
+    isSearchUsage: true,
+    description: "Total search queries performed on platform",
   },
 ];
 
-export const AdminStats = ({ stats }: AdminStatsProps) => {
+export const AdminStats = ({ stats, totalGuestUsers = 0, totalSearches = 0 }: AdminStatsProps) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -108,7 +117,12 @@ export const AdminStats = ({ stats }: AdminStatsProps) => {
     >
       {statItems.map((item) => {
         const Icon = item.icon;
-        const value = stats[item.key as keyof typeof stats];
+        let value: number;
+        if ((item as any).isSearchUsage) {
+          value = item.key === "totalGuestUsers" ? totalGuestUsers : totalSearches;
+        } else {
+          value = stats[item.key as keyof typeof stats];
+        }
         const formattedValue = item.format ? item.format(value as number) : value;
 
         return (
@@ -136,6 +150,7 @@ export const AdminStats = ({ stats }: AdminStatsProps) => {
                 <p className="text-3xl font-bold text-slate-900 tracking-tight">
                   {typeof formattedValue === 'number' ? formattedValue.toLocaleString() : formattedValue}
                 </p>
+                <p className="text-xs text-slate-600 mt-2">{(item as any).description}</p>
 
                 {/* Animated bar */}
                 <div className="mt-4 h-1 bg-slate-200 rounded-full overflow-hidden">
