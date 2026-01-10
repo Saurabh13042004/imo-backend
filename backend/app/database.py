@@ -54,6 +54,8 @@ async def init_db():
     from app.models import Base
     # Import EmailTemplate to ensure it's registered with Base.metadata
     from app.models.email_template import EmailTemplate  # noqa: F401
+    # Import BabywisePrelaunch to ensure it's registered with Base.metadata
+    from app.models.babywise_prelaunch import BabywisePrelaunch  # noqa: F401
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

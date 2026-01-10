@@ -25,12 +25,17 @@ class ProductLikeService:
         Args:
             session: Database session
             user_id: User UUID
-            product_id: Product UUID
+            product_id: Product UUID (or demo ID like 'fp1', 'fp2')
             product_data: Optional dict with product info (title, image_url, price, etc.)
             
         Returns:
             Tuple of (is_liked, total_likes)
         """
+        # Handle demo product IDs (fp1, fp2, fp3, etc.) - don't allow likes
+        if isinstance(product_id, str) and product_id.startswith('fp') and len(product_id) <= 3:
+            logger.warning(f"Cannot like demo product {product_id}")
+            raise ValueError(f"Cannot like demo product: {product_id}")
+        
         # Check if product exists
         product_result = await session.execute(
             select(Product).where(Product.id == product_id)
@@ -117,29 +122,39 @@ class ProductLikeService:
         Args:
             session: Database session
             user_id: User UUID
-            product_id: Product UUID
+            product_id: Product UUID (or demo ID like 'fp1', 'fp2')
             
         Returns:
             Tuple of (is_liked_by_user, total_likes)
         """
-        # Check if user liked this product
-        like_result = await session.execute(
-            select(ProductLike).where(
-                ProductLike.user_id == user_id,
-                ProductLike.product_id == product_id
+        # Handle demo product IDs (fp1, fp2, fp3, etc.) - return no likes
+        if isinstance(product_id, str) and product_id.startswith('fp') and len(product_id) <= 3:
+            logger.info(f"Demo product {product_id} - returning zero likes")
+            return False, 0
+        
+        try:
+            # Check if user liked this product
+            like_result = await session.execute(
+                select(ProductLike).where(
+                    ProductLike.user_id == user_id,
+                    ProductLike.product_id == product_id
+                )
             )
-        )
-        is_liked = like_result.scalars().first() is not None
+            is_liked = like_result.scalars().first() is not None
 
-        # Get total likes
-        count_result = await session.execute(
-            select(func.count(ProductLike.id)).where(
-                ProductLike.product_id == product_id
+            # Get total likes
+            count_result = await session.execute(
+                select(func.count(ProductLike.id)).where(
+                    ProductLike.product_id == product_id
+                )
             )
-        )
-        total_likes = count_result.scalar() or 0
+            total_likes = count_result.scalar() or 0
 
-        return is_liked, total_likes
+            return is_liked, total_likes
+        except Exception as e:
+            # If product_id is invalid, return no likes (not an error)
+            logger.warning(f"Could not get like status for product {product_id}: {str(e)}")
+            return False, 0
 
     @staticmethod
     async def get_user_liked_products(
