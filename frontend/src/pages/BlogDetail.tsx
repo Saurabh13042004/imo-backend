@@ -224,7 +224,9 @@ const BlogDetail = () => {
               prose-headings:font-bold prose-headings:tracking-tight
               prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-4
               prose-h3:text-lg prose-h3:mt-6 prose-h3:mb-3
-              prose-p:text-base prose-p:leading-7 prose-p:mb-4
+              prose-p:text-base prose-p:leading-7 prose-p:mb-6
+              [&_p]:min-h-[1.5em]
+              [&_p:empty]:mb-6
               prose-a:text-primary prose-a:no-underline hover:prose-a:underline
               prose-strong:font-semibold
               prose-ul:list-disc prose-ul:ml-6 prose-ul:mb-4
