@@ -29,6 +29,9 @@ from app.models.product_meta import PriceComparison, ProductLike
 # Configuration models
 from app.models.config import AppConfig
 
+# Blog models
+from app.models.blog import Blog, BlogAttachment
+
 # Background task models
 from app.models.task import BackgroundAnalysisTask
 

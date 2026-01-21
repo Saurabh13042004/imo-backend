@@ -15,6 +15,7 @@ import {
   FileCode,
   Send,
   TrendingUp,
+  BookOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,6 +29,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AdminDashboardContent, UsersTable, SubscriptionsTable, TransactionsTable, SubscriptionsView, ServerMonitoring, UrlsTable, EmailTemplateManagement, SendEmail } from "@/components/admin";
 import { ClarityDetailedAnalytics } from "@/components/analytics/ClarityDetailedAnalytics";
+import BlogManagement from "@/pages/admin/BlogManagement";
 import { 
   useAdminPaymentTransactions, 
   useAdminErrorLogs, 
@@ -111,6 +113,12 @@ const menuItems = [
     value: "daily-search-usage",
     description: "Monitor search usage patterns",
   },
+  {
+    title: "Blog Management",
+    icon: BookOpen,
+    value: "blog-management",
+    description: "Create and manage blog posts",
+  },
 ];
 
 const Admin = () => {
@@ -175,6 +183,8 @@ const Admin = () => {
         return <SendEmail />;
       case "daily-search-usage":
         return <DailySearchUsageView />;
+      case "blog-management":
+        return <BlogManagement />;
       default:
         return <AdminDashboardContent />;
     }

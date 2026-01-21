@@ -48,6 +48,9 @@ const SubscriptionManager = lazy(() => import('@/pages/SubscriptionManager'))
 const ReviewGuidelines = lazy(() => import('@/pages/ReviewGuidelines'))
 const Admin = lazy(() => import('@/pages/Admin'))
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'))
+const Blog = lazy(() => import('@/pages/Blog'))
+const BlogDetail = lazy(() => import('@/pages/BlogDetail'))
+const BlogManagement = lazy(() => import('@/pages/admin/BlogManagement'))
 
 // Routes that require react-query (async data fetching)
 const QUERY_CLIENT_ROUTES = new Set([
@@ -115,6 +118,9 @@ function AppRoutes() {
         <Route path="/subscription-manager" element={<SubscriptionManager />} />
         <Route path="/review-guidelines" element={<ReviewGuidelines />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/blog" element={<BlogManagement />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogDetail />} />
         {/* Dashboard redirect for backward compatibility */}
         <Route path="/dashboard" element={<Navigate to="/payment-success" replace />} />
         <Route path="*" element={<NotFound />} />

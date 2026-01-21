@@ -26,6 +26,7 @@ export const SearchHeader = () => {
   const navigationItems = [
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
+    { name: 'Blog', path: '/blog' },
     { name: 'How It Works', path: '/how-it-works' },
     { name: 'Pricing', path: '/pricing' },
     { name: 'FAQ', path: '/faq' },

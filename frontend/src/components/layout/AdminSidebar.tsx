@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { BarChart3, Home, Search, Heart, User, LogOut } from 'lucide-react';
+import { BarChart3, Home, Search, Heart, User, LogOut, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -16,6 +16,7 @@ import {
 
 const navigationItems = [
   { title: 'Dashboard', path: '/admin', icon: BarChart3 },
+  { title: 'Blog Management', path: '/admin/blog', icon: BookOpen },
   { title: 'Home', path: '/', icon: Home },
   { title: 'Search', path: '/search', icon: Search },
   { title: 'Likes', path: '/likes', icon: Heart },

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.routes import search, products, reviews, utils, auth, profile, payments, price_alerts, chatbot, contact, admin, health, admin_crud, admin_email, babywise_prelaunch
+from app.api.routes import search, products, reviews, utils, auth, profile, payments, price_alerts, chatbot, contact, admin, health, admin_crud, admin_email, babywise_prelaunch, blog
 
 api_router = APIRouter()
 
@@ -22,5 +22,6 @@ api_router.include_router(health.router)
 api_router.include_router(admin_crud.router)
 api_router.include_router(admin_email.router)
 api_router.include_router(babywise_prelaunch.router)
+api_router.include_router(blog.router)
 
 __all__ = ["api_router"]

@@ -17,6 +17,7 @@ export const Navbar = () => {
   const navigationItems = [
     { name: 'Home', path: '/' },
     { name: 'Search', path: '/search' },
+    { name: 'Blog', path: '/blog' },
     { name: 'Extension Guide', path: '/extension-guide' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
