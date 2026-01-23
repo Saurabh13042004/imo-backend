@@ -12,10 +12,10 @@ from app.utils.error_logger import log_error
 logger = logging.getLogger(__name__)
 
 # Search limits configuration
-GUEST_USER_SEARCH_LIMIT = 1           # Guest (no account): 1 search total
-FREE_REGISTERED_USER_DAILY_LIMIT = 3  # Registered free user: 3 searches per day
-GUEST_USER_RESULT_LIMIT = 5           # Results shown to guest users
-FREE_REGISTERED_USER_RESULT_LIMIT = 10  # Results shown to free registered users
+GUEST_USER_SEARCH_LIMIT = 3           # Guest (no account): 3 searches total
+FREE_REGISTERED_USER_DAILY_LIMIT = 5  # Registered free user: 5 searches per day
+GUEST_USER_RESULT_LIMIT = 15          # Results shown to guest users
+FREE_REGISTERED_USER_RESULT_LIMIT = 20  # Results shown to free registered users
 PREMIUM_USER_RESULT_LIMIT = -1        # Unlimited results for premium users
 
 
@@ -24,8 +24,8 @@ class SearchLimitService:
     Service for managing search limits based on user type and subscription status.
     
     Limits:
-    - Guest users (session_id only, no user_id): 1 search total (not per day)
-    - Free registered users (user_id): 3 searches per day
+    - Guest users (session_id only, no user_id): 3 searches total (not per day)
+    - Free registered users (user_id): 5 searches per day
     - Premium/Trial users: Unlimited searches
     """
 

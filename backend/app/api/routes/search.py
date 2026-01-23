@@ -45,8 +45,8 @@ async def search_products(
     - **x_session_id**: (Header) Session ID for guest tracking
     
     **Search Limits:**
-    - Guest users (no account): 1 free search total
-    - Free registered users: 3 searches per day
+    - Guest users (no account): 3 free searches total
+    - Free registered users: 5 searches per day
     - Premium/Trial users: Unlimited searches
     
     **Error Codes:**

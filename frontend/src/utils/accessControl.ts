@@ -3,19 +3,19 @@
 /**
  * Configuration keys (loaded from environment or defaults)
  * Environment variables:
- * - VITE_GUEST_FREE_SEARCHES: Number of free searches for guests per session (default: 1)
- * - VITE_GUEST_PRODUCT_DISPLAY_LIMIT: Products shown per search for guests (default: 5)
- * - VITE_FREE_TIER_PRODUCT_DISPLAY_LIMIT: Products shown for free-tier users (default: 10)
+ * - VITE_GUEST_FREE_SEARCHES: Number of free searches for guests per session (default: 3)
+ * - VITE_GUEST_PRODUCT_DISPLAY_LIMIT: Products shown per search for guests (default: 15)
+ * - VITE_FREE_TIER_PRODUCT_DISPLAY_LIMIT: Products shown for free-tier users (default: 20)
  * - VITE_PAID_TIER_PRODUCT_DISPLAY_LIMIT: Products shown for paid users (default: 50)
  */
 const GUEST_FREE_SEARCHES = parseInt(
-  import.meta.env.VITE_GUEST_FREE_SEARCHES || '1'
+  import.meta.env.VITE_GUEST_FREE_SEARCHES || '3'
 );
 const GUEST_PRODUCT_DISPLAY_LIMIT = parseInt(
-  import.meta.env.VITE_GUEST_PRODUCT_DISPLAY_LIMIT || '5'
+  import.meta.env.VITE_GUEST_PRODUCT_DISPLAY_LIMIT || '15'
 );
 const FREE_TIER_PRODUCT_DISPLAY_LIMIT = parseInt(
-  import.meta.env.VITE_FREE_TIER_PRODUCT_DISPLAY_LIMIT || '10'
+  import.meta.env.VITE_FREE_TIER_PRODUCT_DISPLAY_LIMIT || '20'
 );
 const PAID_TIER_PRODUCT_DISPLAY_LIMIT = parseInt(
   import.meta.env.VITE_PAID_TIER_PRODUCT_DISPLAY_LIMIT || '50'
