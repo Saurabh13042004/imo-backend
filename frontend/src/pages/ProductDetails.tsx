@@ -879,6 +879,35 @@ interface StoreCarouselProps {
   enableAnimations: boolean;
 }
 
+// Helper function to add affiliate parameters to Amazon links
+const getAmazonAffiliateLink = (link: string): string => {
+  console.log("🔗 Original Amazon Link:", link);
+  const amazonAffiliateParams = {
+    linkCode: "ll2",
+    tag: "imoapp01-20",
+    linkId: "708c207bd38dd36f41c4f0b78338782e",
+    language: "en_US",
+    ref_: "as_li_ss_tl"
+  };
+
+  try {
+    const url = new URL(link);
+    // Add affiliate parameters
+    url.searchParams.set("linkCode", amazonAffiliateParams.linkCode);
+    url.searchParams.set("tag", amazonAffiliateParams.tag);
+    url.searchParams.set("linkId", amazonAffiliateParams.linkId);
+    url.searchParams.set("language", amazonAffiliateParams.language);
+    url.searchParams.set("ref_", amazonAffiliateParams.ref_);
+    const finalUrl = url.toString();
+    console.log("✅ Affiliate Link Generated:", finalUrl);
+    return finalUrl;
+  } catch (error) {
+    // If URL parsing fails, return original link
+    console.error("❌ Error parsing Amazon link:", error);
+    return link;
+  }
+};
+
 const StoreCarousel = ({ stores, country, enableAnimations }: StoreCarouselProps) => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     align: 'start',
@@ -1011,7 +1040,7 @@ const StoreCarousel = ({ stores, country, enableAnimations }: StoreCarouselProps
                     className="w-full rounded-lg bg-primary hover:bg-primary/90 text-xs h-8 mt-auto"
                   >
                     <a
-                      href={store.link}
+                      href={(store.name?.toLowerCase().includes('amazon') ? (console.log("🛒 Amazon Store Found:", store.name, "Link:", store.link), getAmazonAffiliateLink(store.link)) : (console.log("🛍️ Non-Amazon Store:", store.name), store.link))}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
