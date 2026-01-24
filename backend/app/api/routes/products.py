@@ -26,7 +26,7 @@ from app.schemas import (
 from app.services import SearchService, ReviewService, VideoService, AIService, ProductService
 from app.services.short_video_service import short_video_service
 from app.services.s3_service import S3Service
-from app.api.dependencies import get_db, get_current_user
+from app.api.dependencies import get_db, get_current_user, get_optional_user
 from app.config import Settings
 from app.models import UserReview, Product
 from app.models.user import Profile
@@ -646,6 +646,136 @@ async def get_immersive_product_details(
         )
 
 
+async def fetch_stores_with_pagination(
+    client: httpx.AsyncClient,
+    base_api_link: str,
+    api_key: str,
+    max_stores: int,
+    product_id: str
+) -> list:
+    """
+    Fetch stores from SerpAPI with pagination until reaching max_stores limit.
+    
+    Args:
+        client: httpx AsyncClient
+        base_api_link: Initial SerpAPI endpoint URL
+        api_key: SerpAPI API key
+        max_stores: Maximum number of stores to fetch
+        product_id: Product ID for logging
+    
+    Returns:
+        List of store dictionaries
+    """
+    from app.config import settings
+    
+    all_stores = []
+    current_page_token = None
+    page_count = 0
+    
+    while len(all_stores) < max_stores:
+        try:
+            page_count += 1
+            
+            # Build the API URL
+            if page_count == 1:
+                # First request uses the base_api_link
+                api_url = base_api_link
+            else:
+                # Subsequent requests need to add next_page_token
+                api_url = base_api_link
+                separator = "&" if "?" in api_url else "?"
+                api_url = f"{api_url}{separator}next_page_token={current_page_token}"
+            
+            # Add API key if not already present
+            if "api_key=" not in api_url:
+                separator = "&" if "?" in api_url else "?"
+                api_url = f"{api_url}{separator}api_key={api_key}"
+            
+            logger.info(f"[Pagination] Fetching page {page_count} for product {product_id} (have {len(all_stores)} stores, need {max_stores})")
+            
+            response = await client.get(api_url, timeout=30.0)
+            response.raise_for_status()
+            page_data = response.json()
+            
+            # Extract stores from this page
+            product_results = page_data.get("product_results", {})
+            stores = product_results.get("stores", [])
+            
+            if not stores:
+                logger.info(f"[Pagination] No more stores available after page {page_count}")
+                break
+            
+            # Add stores up to the max limit
+            for store in stores:
+                if len(all_stores) < max_stores:
+                    all_stores.append(store)
+            
+            logger.info(f"[Pagination] Page {page_count}: Got {len(stores)} stores, total now: {len(all_stores)}")
+            
+            # Check if there's a next page
+            next_token = product_results.get("stores_next_page_token")
+            if not next_token or len(all_stores) >= max_stores:
+                logger.info(f"[Pagination] Reached limit or no more pages. Total stores: {len(all_stores)}")
+                break
+            
+            current_page_token = next_token
+        
+        except Exception as e:
+            logger.warning(f"[Pagination] Error fetching page {page_count}: {str(e)}")
+            # If error on subsequent pages, just return what we have
+            if page_count > 1:
+                logger.info(f"[Pagination] Returning {len(all_stores)} stores collected so far")
+                break
+            else:
+                raise
+    
+    return all_stores
+
+
+async def get_store_limit(
+    db: AsyncSession,
+    current_user: Optional[Profile] = None
+) -> int:
+    """
+    Determine the maximum number of stores to show based on user type.
+    
+    - Guest users (no account): 10 stores
+    - Free registered users: 25 stores
+    - Premium/Trial users: 100 stores (or as many as available)
+    
+    Args:
+        db: Database session
+        current_user: Current authenticated user
+    
+    Returns:
+        Maximum number of stores to fetch
+    """
+    # Guest user - no authentication
+    if not current_user:
+        logger.info("[Store Limit] Guest user - limiting to 10 stores")
+        return 10
+    
+    # Check for active premium/trial subscription
+    from app.models.subscription import Subscription
+    
+    result = await db.execute(
+        select(Subscription).where(
+            Subscription.user_id == current_user.user_id,
+            Subscription.is_active == True,
+            Subscription.plan_type.in_(['premium', 'trial'])
+        )
+    )
+    subscription = result.scalar_one_or_none()
+    
+    if subscription:
+        logger.info(f"[Store Limit] {subscription.plan_type.title()} user - limiting to 100 stores")
+        return 100
+    
+    # Free registered user
+    logger.info("[Store Limit] Free registered user - limiting to 25 stores")
+    return 25
+
+
 @router.post(
     "/product/enriched/{product_id}",
     responses={404: {"model": ErrorResponse}, 500: {"model": ErrorResponse}}
@@ -653,16 +783,23 @@ async def get_immersive_product_details(
 async def get_enriched_product_details(
     product_id: str,
     request: EnrichedProductRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[Profile] = Depends(get_optional_user)
 ):
     """
     Get enriched product details for non-Amazon products.
     Uses the immersive_api_link from search results to fetch detailed data.
+    
+    Fetches stores with pagination based on user type:
+    - Guest users: 10 stores
+    - Free registered users: 25 stores
+    - Premium/Trial users: 100 stores
 
     - **product_id**: UUID of the product from our database
     - **request**: Request body containing immersive_api_link from SerpAPI
     """
     try:
-        logger.info(f"Fetching enriched details for product: {product_id}")
+        logger.info(f"[Enriched] Fetching enriched details for product: {product_id}")
         
         immersive_api_link = request.immersive_api_link
         
@@ -672,11 +809,14 @@ async def get_enriched_product_details(
                 detail="immersive_api_link is required"
             )
 
-        # Fetch from SerpAPI using the provided link
+        from app.config import settings
+        
+        # Determine store limit based on user type
+        max_stores = await get_store_limit(db, current_user)
+        logger.info(f"[Enriched] Store limit for this request: {max_stores}")
+
+        # Fetch from SerpAPI using the provided link with pagination
         async with httpx.AsyncClient(timeout=30.0) as client:
-            # Add API key to the immersive_api_link if it's a SerpAPI endpoint
-            from app.config import settings
-            
             api_link = immersive_api_link
             
             # Check if API key is already in the URL
@@ -685,17 +825,39 @@ async def get_enriched_product_details(
                 separator = "&" if "?" in api_link else "?"
                 api_link = f"{api_link}{separator}api_key={settings.SERPAPI_KEY}"
             
-            logger.info(f"Calling SerpAPI immersive product endpoint: {api_link[:100]}...")
+            logger.info(f"[Enriched] Calling SerpAPI immersive product endpoint (pagination enabled): {api_link[:100]}...")
             
+            # Fetch initial data
             response = await client.get(api_link)
             response.raise_for_status()
             immersive_data = response.json()
+            
+            # Get stores with pagination
+            product_results = immersive_data.get("product_results", {})
+            initial_stores = product_results.get("stores", [])
+            
+            logger.info(f"[Enriched] Initial response has {len(initial_stores)} stores")
+            
+            # If we need more stores, fetch them with pagination
+            if len(initial_stores) < max_stores and product_results.get("stores_next_page_token"):
+                logger.info(f"[Enriched] Fetching additional stores with pagination...")
+                paginated_stores = await fetch_stores_with_pagination(
+                    client=client,
+                    base_api_link=api_link,
+                    api_key=settings.SERPAPI_KEY or "",
+                    max_stores=max_stores,
+                    product_id=product_id
+                )
+                
+                # Replace stores with paginated version
+                immersive_data["product_results"]["stores"] = paginated_stores
+                logger.info(f"[Enriched] After pagination: {len(paginated_stores)} stores")
             
             # Normalize all review dates to ISO format
             logger.info("[Enriched] Normalizing review dates...")
             immersive_data = normalize_review_dates(immersive_data)
             
-            logger.info(f"Successfully fetched immersive data for product: {product_id}")
+            logger.info(f"[Enriched] Successfully fetched enriched data for product: {product_id}")
             return {
                 "product_id": product_id,
                 "immersive_data": immersive_data
@@ -703,28 +865,28 @@ async def get_enriched_product_details(
 
     except httpx.HTTPError as e:
         await log_error(
-            db=None,
+            db=db,
             function_name="get_enriched_product_details",
             error=e,
             error_type="external_api_error",
-            user_id=None,
+            user_id=current_user.user_id if current_user else None,
             query_context=f"Calling SerpAPI immersive product endpoint for product {product_id}"
         )
-        logger.error(f"HTTP error fetching immersive product details: {e}")
+        logger.error(f"[Enriched] HTTP error fetching immersive product details: {e}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Failed to fetch data from external API"
         )
     except Exception as e:
         await log_error(
-            db=None,
+            db=db,
             function_name="get_enriched_product_details",
             error=e,
             error_type="product_enrichment_error",
-            user_id=None,
+            user_id=current_user.user_id if current_user else None,
             query_context=f"Fetching enriched product details for product {product_id}"
         )
-        logger.error(f"Error fetching enriched product details: {e}", exc_info=True)
+        logger.error(f"[Enriched] Error fetching enriched product details: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch enriched product details: {str(e)}"

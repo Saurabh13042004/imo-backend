@@ -1,12 +1,16 @@
 import { useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ArrowLeft from 'lucide-react/dist/esm/icons/arrow-left';
+import ChevronLeft from 'lucide-react/dist/esm/icons/chevron-left';
+import ChevronRight from 'lucide-react/dist/esm/icons/chevron-right';
 import ShoppingBag from 'lucide-react/dist/esm/icons/shopping-bag';
 import Loader2 from 'lucide-react/dist/esm/icons/loader-2';
 import { motion } from "framer-motion";
+import useEmblaCarousel from 'embla-carousel-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import toast from "react-hot-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { useParallax } from "@/hooks/useParallax";
 import { useSearchUrl } from "@/hooks/useSearchUrl";
@@ -53,6 +57,7 @@ const ProductDetails = () => {
   const [isPriceAlertModalOpen, setIsPriceAlertModalOpen] = useState(false);
   const [finalAIVerdict, setFinalAIVerdict] = useState<any>(null);
   const { trackProductView } = useAnalytics();
+  const { isAuthenticated, user } = useAuth();
 
   // Check if this is a demo product
   const { isDemoProduct, demoProduct } = useDemoProduct(productId);
@@ -595,104 +600,48 @@ const ProductDetails = () => {
                       {/* Price Comparison - SerpAPI stores */}
                       {enrichedData.immersive_data.product_results?.stores && enrichedData.immersive_data.product_results.stores.filter((store: any) => store.extracted_price > 0 || store.price > 0).length > 0 && (
                         <div className="bg-card rounded-lg border border-border/50 p-6 space-y-4" id="whereToBuy">
-                          <h3 className="font-semibold text-lg">Where to Buy</h3>
-                          
-                          {/* SerpAPI stores - Enhanced with badges, logos, buttons */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {enrichedData.immersive_data.product_results.stores.filter((store: any) => store.extracted_price > 0 || store.price > 0).map((store: any, idx: number) => (
-                              <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="border border-border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all"
-                              >
-                                <div className="flex items-start justify-between gap-3 mb-3">
-                                  <div className="flex items-center gap-3 flex-1">
-                                    {store.logo && (
-                                      <img
-                                        src={store.logo}
-                                        alt={store.name}
-                                        className="h-10 w-10 rounded-lg object-cover"
-                                      />
-                                    )}
-                                    <div>
-                                      <h4 className="font-semibold text-foreground text-sm">{store.name}</h4>
-                                      {store.rating && (
-                                        <p className="text-xs text-muted-foreground">
-                                          ⭐ {store.rating} ({store.reviews} reviews)
-                                        </p>
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  {store.tag && (
-                                    <Badge 
-                                      variant={store.tag.toLowerCase().includes("price") ? "destructive" : "default"}
-                                      className="whitespace-nowrap text-xs"
-                                    >
-                                      {store.tag}
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                {/* Price Info */}
-                                <div className="mb-3 space-y-1">
-                                  <div className="flex items-baseline gap-2">
-                                    <span className="text-xl font-bold text-primary">
-                                      {store.price || formatPriceWithCurrency(store.extracted_price, country)}
-                                    </span>
-                                    {store.original_price && (
-                                      <span className="text-xs text-muted-foreground line-through">
-                                        {store.original_price || formatPriceWithCurrency(store.extracted_original_price, country)}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {store.shipping && (
-                                    <p className="text-xs">
-                                      {store.shipping === "Free" ? (
-                                        <span className="text-green-600 dark:text-green-400 font-semibold">✓ {store.shipping} Shipping</span>
-                                      ) : (
-                                        <span className="text-muted-foreground">Shipping: {store.shipping}</span>
-                                      )}
-                                    </p>
-                                  )}
-                                </div>
-
-                                {/* Details and Offers */}
-                                {store.details_and_offers && store.details_and_offers.length > 0 && (
-                                  <div className="mb-4 space-y-1">
-                                    {store.details_and_offers.slice(0, 2).map((detail: string, i: number) => (
-                                      <p key={i} className="text-xs text-muted-foreground flex items-center">
-                                        <span className="text-green-600 dark:text-green-400 mr-2">✓</span>
-                                        {detail}
-                                      </p>
-                                    ))}
-                                    {store.details_and_offers.length > 2 && (
-                                      <p className="text-xs text-muted-foreground italic">
-                                        +{store.details_and_offers.length - 2} more benefits
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-
-                                {/* View Button */}
-                                <Button
-                                  asChild
-                                  size="sm"
-                                  className="w-full rounded-lg bg-primary hover:bg-primary/90 text-xs h-8"
-                                >
-                                  <a
-                                    href={store.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    View on {store.name}
-                                  </a>
-                                </Button>
-                              </motion.div>
-                            ))}
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-lg">Where to Buy</h3>
+                            <div className="text-xs px-2.5 py-1.5 bg-primary/10 text-primary rounded-full">
+                              {!isAuthenticated && "10 stores visible"}
+                              {isAuthenticated && !user?.is_premium && "25 stores visible"}
+                              {isAuthenticated && user?.is_premium && "100+ stores"}
+                            </div>
                           </div>
+                          
+                          {/* Store Limit Messages */}
+                          {!isAuthenticated && (
+                            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 flex items-start gap-3">
+                              <div className="text-blue-600 dark:text-blue-400 mt-0.5">💡</div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-2">See 25 stores instead of 10</p>
+                                <p className="text-xs text-blue-800 dark:text-blue-300 mb-3">Sign up to get access to 25+ retailers and find the best deals</p>
+                                <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                                  <Link to="/auth/signup">Create Account</Link>
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {isAuthenticated && !user?.is_premium && (
+                            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex items-start gap-3">
+                              <div className="text-amber-600 dark:text-amber-400 mt-0.5">✨</div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-amber-900 dark:text-amber-200 mb-2">Get 100+ stores with Premium</p>
+                                <p className="text-xs text-amber-800 dark:text-amber-300 mb-3">Unlock unlimited store listings and find deals from 100+ retailers worldwide</p>
+                                <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+                                  <Link to="/subscribe">Upgrade to Premium</Link>
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* SerpAPI stores - Carousel with 2x2 grid */}
+                          <StoreCarousel 
+                            stores={enrichedData.immersive_data.product_results.stores.filter((store: any) => store.extracted_price > 0 || store.price > 0)}
+                            country={country}
+                            enableAnimations={enableAnimations}
+                          />
                         </div>
                       )}
 
@@ -919,6 +868,190 @@ const ProductDetails = () => {
           aiVerdict={aiVerdict || undefined}
         />
       )}
+    </div>
+  );
+};
+
+// Store Carousel Component - Shows 2x2 grid with navigation
+interface StoreCarouselProps {
+  stores: any[];
+  country: string;
+  enableAnimations: boolean;
+}
+
+const StoreCarousel = ({ stores, country, enableAnimations }: StoreCarouselProps) => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    align: 'start',
+    slidesToScroll: 1,
+    containScroll: 'trimSnaps'
+  });
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setCanScrollPrev(emblaApi.canScrollPrev());
+    setCanScrollNext(emblaApi.canScrollNext());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on('select', onSelect);
+    emblaApi.on('reInit', onSelect);
+    return () => {
+      emblaApi.off('select', onSelect);
+      emblaApi.off('reInit', onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  const handleScrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const handleScrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  // Sort stores: "Best price" first, then others
+  const sortedStores = [...stores].sort((a, b) => {
+    const aIsBestPrice = a.tag?.toLowerCase().includes('price');
+    const bIsBestPrice = b.tag?.toLowerCase().includes('price');
+    if (aIsBestPrice && !bIsBestPrice) return -1;
+    if (!aIsBestPrice && bIsBestPrice) return 1;
+    return 0;
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Carousel Container - 2x1 Grid (1 row, 2 cards) */}
+      <div className="relative">
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex">
+            {sortedStores.map((store, idx) => (
+              <div 
+                key={idx} 
+                className="flex-[0_0_50%] h-[300px] p-2"
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={enableAnimations ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="border border-border rounded-lg p-4 hover:border-primary/50 hover:bg-primary/5 transition-all h-full flex flex-col"
+                >
+                  {/* Store Header */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      {store.logo && (
+                        <img
+                          src={store.logo}
+                          alt={store.name}
+                          className="h-10 w-10 rounded-lg object-cover"
+                        />
+                      )}
+                      <div>
+                        <h4 className="font-semibold text-foreground text-sm">{store.name}</h4>
+                        {store.rating && (
+                          <p className="text-xs text-muted-foreground">
+                            ⭐ {store.rating} ({store.reviews} reviews)
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {store.tag && (
+                      <Badge 
+                        variant={store.tag.toLowerCase().includes("price") ? "destructive" : "default"}
+                        className="whitespace-nowrap text-xs"
+                      >
+                        {store.tag}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Price Info */}
+                  <div className="mb-3 space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-bold text-primary">
+                        {store.price || formatPriceWithCurrency(store.extracted_price, country)}
+                      </span>
+                      {store.original_price && (
+                        <span className="text-xs text-muted-foreground line-through">
+                          {store.original_price || formatPriceWithCurrency(store.extracted_original_price, country)}
+                        </span>
+                      )}
+                    </div>
+                    {store.shipping && (
+                      <p className="text-xs">
+                        {store.shipping === "Free" ? (
+                          <span className="text-green-600 dark:text-green-400 font-semibold">✓ {store.shipping} Shipping</span>
+                        ) : (
+                          <span className="text-muted-foreground">Shipping: {store.shipping}</span>
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Details and Offers - Show ALL benefits */}
+                  {store.details_and_offers && store.details_and_offers.length > 0 && (
+                    <div className="mb-4 space-y-1 flex-1 overflow-y-auto max-h-[120px]">
+                      {store.details_and_offers.map((detail: string, i: number) => (
+                        <p key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                          <span className="text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5">✓</span>
+                          <span>{detail}</span>
+                        </p>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* View Button */}
+                  <Button
+                    asChild
+                    size="sm"
+                    className="w-full rounded-lg bg-primary hover:bg-primary/90 text-xs h-8 mt-auto"
+                  >
+                    <a
+                      href={store.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View on {store.name}
+                    </a>
+                  </Button>
+                </motion.div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation Buttons */}
+        {sortedStores.length > 2 && (
+          <>
+            <button
+              onClick={handleScrollPrev}
+              disabled={!canScrollPrev}
+              className="absolute -left-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-slate-900 border border-border rounded-full p-2 hover:bg-primary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg"
+              aria-label="Previous stores"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleScrollNext}
+              disabled={!canScrollNext}
+              className="absolute -right-4 top-1/2 -translate-y-1/2 z-20 bg-white dark:bg-slate-900 border border-border rounded-full p-2 hover:bg-primary hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg"
+              aria-label="Next stores"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Store Count Info */}
+      <div className="text-center text-xs text-muted-foreground">
+        Showing {Math.min(2, sortedStores.length)} of {sortedStores.length} available stores
+        {sortedStores.length > 2 && " • Use arrows to see more"}
+      </div>
     </div>
   );
 };
