@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@/types/search";
 import { Link } from "react-router-dom";
-import React from "react";
+import React, { useState } from "react";
 import { useSearchUrl } from "@/hooks/useSearchUrl";
 import { formatPriceWithCurrency } from "@/utils/currencyUtils";
 import { generateSlug } from "@/utils/slugUtils";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 
 interface ProductGridProps {
   products: Product[];
@@ -21,12 +22,26 @@ interface ProductGridProps {
 
 export const ProductGrid = ({ products }: ProductGridProps) => {
   const { country } = useSearchUrl();
+  const [sortBy, setSortBy] = useState<'reviews' | 'rating'>('rating');
   
   // Filter out products with invalid IDs before rendering
   const validProducts = products.filter(product => {
     const hasValidId = product.id && typeof product.id === 'string' && product.id !== 'undefined' && product.id !== 'null';
     return hasValidId;
   });
+
+  // Sort products based on selected criteria
+  const sortedProducts = React.useMemo(() => {
+    const productsCopy = [...validProducts];
+    
+    if (sortBy === 'reviews') {
+      productsCopy.sort((a, b) => (b.reviews_count || 0) - (a.reviews_count || 0));
+    } else if (sortBy === 'rating') {
+      productsCopy.sort((a, b) => (b.site_rating || 0) - (a.site_rating || 0));
+    }
+    
+    return productsCopy;
+  }, [validProducts, sortBy]);
 
   // Save search results to localStorage for product details page fallback
   React.useEffect(() => {
@@ -53,8 +68,29 @@ export const ProductGrid = ({ products }: ProductGridProps) => {
 
   return (
     <div>
+      {/* Sort Controls */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        <span className="text-sm font-medium text-muted-foreground py-2">Sort by:</span>
+        <Button
+          variant={sortBy === 'rating' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortBy('rating')}
+          className="rounded-full"
+        >
+          ⭐ Highest Rating
+        </Button>
+        <Button
+          variant={sortBy === 'reviews' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortBy('reviews')}
+          className="rounded-full"
+        >
+          📊 Most Reviews
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {validProducts.map((product) => (
+        {sortedProducts.map((product) => (
           <Card key={product.id} className="group hover-lift glass-card relative overflow-hidden">
             <CardContent className="p-6">
               {/* Product Image Container */}
