@@ -22,6 +22,7 @@ import { useDemoProduct } from "@/hooks/useDemoProduct";
 import { formatPriceWithCurrency } from "@/utils/currencyUtils";
 import { API_BASE_URL } from "@/config/api";
 import { extractIdFromSlug } from "@/utils/slugUtils";
+import { productApiService } from "@/services/productApi";
 // import { useProductBasic, useProductReviews, useProductVideos } from "@/hooks/useProductDetails";
 
 import { ProductLikeButton } from "@/components/product/ProductLikeButton";
@@ -158,7 +159,19 @@ const ProductDetails = () => {
     }
   }, [isDemoProduct, demoProduct]);
 
-  // Load product from localStorage (only for non-demo products)
+  /**
+   * PRIMARY PRODUCT LOADING STRATEGY: API-First with Fallback
+   * 
+   * Priority order:
+   * 1. Fetch from API using productId (supports SSR, search engines, direct links)
+   * 2. Fall back to localStorage (cached from search page, faster UX for navigation)
+   * 3. Show error if neither source has the product
+   * 
+   * This solves the hydration issue:
+   * - Search engines that crawl /product/sony-ps5-123 will get data from API
+   * - Users navigating from search get instant load from localStorage
+   * - Direct URL access works for all users
+   */
   useEffect(() => {
     if (!isValidProductId || isDemoProduct) {
       if (!isDemoProduct) {
@@ -167,42 +180,86 @@ const ProductDetails = () => {
       return;
     }
 
-    try {
-      setLoading(true);
-      
-      // Try currentProduct first
-      let foundProduct = null;
-      const currentProductStr = localStorage.getItem("currentProduct");
-      
-      if (currentProductStr) {
-        const parsedProduct = JSON.parse(currentProductStr);
-        if (parsedProduct.id === productId) {
-          foundProduct = parsedProduct;
+    const loadProduct = async () => {
+      try {
+        setLoading(true);
+        let loadedProduct: Product | null = null;
+
+        // STEP 1: Try fetching from API (primary strategy for SSR/SEO)
+        console.log(`[ProductDetails] STEP 1: Attempting API fetch for productId: ${productId}`);
+        try {
+          loadedProduct = await productApiService.fetchProductById(productId);
+          console.log('[ProductDetails] ✅ Successfully loaded product from API');
+        } catch (apiError) {
+          const errorMsg = apiError instanceof Error ? apiError.message : String(apiError);
+          console.warn(`[ProductDetails] ⚠️ API fetch failed (${errorMsg}), attempting localStorage fallback`);
+
+          // STEP 2: Fall back to localStorage (UX improvement for returning users)
+          try {
+            console.log('[ProductDetails] STEP 2: Attempting localStorage fallback');
+            
+            // Try currentProduct first (most likely to match)
+            const currentProductStr = localStorage.getItem("currentProduct");
+            if (currentProductStr) {
+              const parsedProduct = JSON.parse(currentProductStr);
+              if (parsedProduct.id === productId) {
+                loadedProduct = parsedProduct;
+                console.log('[ProductDetails] ✅ Found product in localStorage (currentProduct)');
+              }
+            }
+
+            // If not found, search in lastSearchResults
+            if (!loadedProduct) {
+              const searchResults = localStorage.getItem("lastSearchResults");
+              if (searchResults) {
+                const results = JSON.parse(searchResults);
+                loadedProduct = results.find((p: any) => p.id === productId);
+                if (loadedProduct) {
+                  console.log('[ProductDetails] ✅ Found product in localStorage (lastSearchResults)');
+                }
+              }
+            }
+
+            // If still not found in localStorage, re-throw API error
+            if (!loadedProduct) {
+              throw apiError; // Re-throw API error since both strategies failed
+            }
+          } catch (storageError) {
+            console.error('[ProductDetails] ❌ Both API and localStorage strategies failed');
+            throw apiError; // Throw the original API error
+          }
         }
-      }
-      
-      // If not found, search in lastSearchResults
-      if (!foundProduct) {
-        const searchResults = localStorage.getItem("lastSearchResults");
-        if (searchResults) {
-          const results = JSON.parse(searchResults);
-          foundProduct = results.find((p: any) => p.id === productId);
+
+        // Product successfully loaded from either API or localStorage
+        if (loadedProduct) {
+          setProduct(loadedProduct);
+          
+          // Track product view (only for authenticated users or analytics)
+          if (trackProductView && productId) {
+            trackProductView(productId, loadedProduct.query || 'direct');
+          }
+
+          console.log('[ProductDetails] Product loaded successfully');
+        } else {
+          throw new Error('Product not found in any data source');
         }
-      }
-      
-      if (foundProduct) {
-        setProduct(foundProduct);
-        // Track product view
-        if (trackProductView && productId) {
-          trackProductView(productId, foundProduct.query);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        console.error("[ProductDetails] Error loading product:", errorMsg);
+        
+        // Only show error toast for non-demo products that truly fail
+        if (!isDemoProduct) {
+          toast.error("Could not load product data");
         }
+        
+        // Set product to null so the UI shows "not found" message
+        setProduct(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading product from localStorage:", error);
-      toast.error("Could not load product data");
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    loadProduct();
   }, [isValidProductId, productId, trackProductView, isDemoProduct]);
 
   // Fetch enriched data for all products (product-agnostic)
