@@ -1,7 +1,19 @@
 /**
  * SEO Meta Tags Component
- * Updates document head with SEO metadata
+ * Updates document head with SEO metadata and JSON-LD structured data
  */
+
+interface ProductJsonLdData {
+  id: string;
+  title: string;
+  description?: string;
+  image?: string;
+  brand?: string;
+  price?: number | string;
+  currency?: string;
+  url?: string;
+  availability?: string;
+}
 
 interface MetaTagsProps {
   title?: string;
@@ -12,6 +24,10 @@ interface MetaTagsProps {
   type?: string;
   author?: string;
   canonicalUrl?: string;
+  // JSON-LD structured data for rich results
+  productData?: ProductJsonLdData;
+  aiVerdictScore?: number;
+  totalReviews?: number;
 }
 
 export const MetaTags = ({
@@ -23,6 +39,9 @@ export const MetaTags = ({
   type = 'website',
   author = 'Informed Market Opinions',
   canonicalUrl,
+  productData,
+  aiVerdictScore,
+  totalReviews = 0,
 }: MetaTagsProps) => {
   // Update document title
   if (typeof document !== 'undefined') {
@@ -79,6 +98,58 @@ export const MetaTags = ({
       }
 
       canonical.href = canonicalUrl;
+    }
+
+    // JSON-LD Structured Data for Rich Results
+    // Generates Product schema with AggregateRating for Google Rich Snippets
+    if (productData) {
+      try {
+        // Generate Product + AggregateRating schema
+        const productSchema = {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": productData.title,
+          "description": productData.description || productData.title,
+          "brand": {
+            "@type": "Brand",
+            "name": productData.brand || "Unknown Brand"
+          },
+          "image": productData.image ? [productData.image] : [],
+          "url": productData.url || url,
+          "offers": {
+            "@type": "Offer",
+            "url": productData.url || url,
+            "priceCurrency": productData.currency || "USD",
+            "price": productData.price?.toString() || "0",
+            "availability": `https://schema.org/${productData.availability || "InStock"}`
+          }
+        };
+
+        // Add AI Verdict as AggregateRating if available
+        if (aiVerdictScore !== undefined) {
+          (productSchema as any).aggregateRating = {
+            "@type": "AggregateRating",
+            "ratingValue": Math.round(aiVerdictScore * 10) / 10,
+            "reviewCount": totalReviews,
+            "bestRating": 5,
+            "worstRating": 1
+          };
+        }
+
+        // Inject into document head
+        let scriptElement = document.getElementById("jsonld-product-main") as HTMLScriptElement;
+        if (!scriptElement) {
+          scriptElement = document.createElement("script");
+          scriptElement.type = "application/ld+json";
+          scriptElement.id = "jsonld-product-main";
+          document.head.appendChild(scriptElement);
+        }
+        scriptElement.innerHTML = JSON.stringify(productSchema);
+
+        console.log("[SEO] ✅ Product JSON-LD schema injected");
+      } catch (error) {
+        console.error("[SEO] ❌ Error injecting JSON-LD schema:", error);
+      }
     }
   }
 

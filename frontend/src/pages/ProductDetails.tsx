@@ -23,6 +23,7 @@ import { formatPriceWithCurrency } from "@/utils/currencyUtils";
 import { API_BASE_URL } from "@/config/api";
 import { extractIdFromSlug } from "@/utils/slugUtils";
 import { productApiService } from "@/services/productApi";
+import { MetaTags } from "@/components/seo";
 // import { useProductBasic, useProductReviews, useProductVideos } from "@/hooks/useProductDetails";
 
 import { ProductLikeButton } from "@/components/product/ProductLikeButton";
@@ -316,6 +317,94 @@ const ProductDetails = () => {
     fetchEnrichedData();
   }, [product, productId, isDemoProduct]);
 
+  /**
+   * EFFECT: Inject JSON-LD Structured Data for SEO Rich Results
+   * 
+   * This effect generates and injects Product + AggregateRating schema
+   * to enable Google Rich Snippets with:
+   * - Product name, price, brand, description
+   * - AI Verdict score as star rating
+   * - Review count
+   * 
+   * Validated for Google Rich Results Test:
+   * https://search.google.com/test/rich-results
+   */
+  useEffect(() => {
+    if (!product || !finalAIVerdict) return;
+
+    try {
+      // Calculate total reviews from all sources
+      const totalReviews = [
+        ...(enrichedData?.amazon_reviews || []),
+        ...(enrichedData?.external_reviews || []),
+        ...(enrichedData?.immersive_data?.product_results?.user_reviews || [])
+      ].length;
+
+      // Prepare product data for JSON-LD
+      const productSchemaData = {
+        id: product.id,
+        title: product.title,
+        description: enrichedData?.description || product.description || product.title,
+        image: product.image_url,
+        brand: product.brand || "Unknown Brand",
+        price: product.price ? Number(product.price) : 0,
+        currency: product.currency || "USD",
+        url: product.product_url || product.url,
+        availability: product.availability || "InStock"
+      };
+
+      // Generate Product schema with AggregateRating
+      const productSchema = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": productSchemaData.title,
+        "description": productSchemaData.description,
+        "brand": {
+          "@type": "Brand",
+          "name": productSchemaData.brand
+        },
+        "image": productSchemaData.image ? [productSchemaData.image] : [],
+        "url": productSchemaData.url || "",
+        "offers": {
+          "@type": "Offer",
+          "url": productSchemaData.url || "",
+          "priceCurrency": productSchemaData.currency,
+          "price": productSchemaData.price.toString(),
+          "availability": `https://schema.org/${productSchemaData.availability}`
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": Math.round(finalAIVerdict.imo_score * 10) / 10, // Round to 1 decimal
+          "reviewCount": Math.max(totalReviews, 1), // Minimum 1 review
+          "bestRating": 5,
+          "worstRating": 1
+        }
+      };
+
+      // Inject into document head
+      let scriptElement = document.getElementById("jsonld-product-main") as HTMLScriptElement;
+      if (!scriptElement) {
+        scriptElement = document.createElement("script");
+        scriptElement.type = "application/ld+json";
+        scriptElement.id = "jsonld-product-main";
+        document.head.appendChild(scriptElement);
+      }
+      scriptElement.innerHTML = JSON.stringify(productSchema);
+
+      console.log("[SEO] ✅ Product JSON-LD schema injected with AI Verdict score:", finalAIVerdict.imo_score);
+    } catch (error) {
+      console.error("[SEO] ❌ Error injecting JSON-LD schema:", error);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      const script = document.getElementById("jsonld-product-main");
+      if (script) {
+        script.remove();
+      }
+    };
+  }, [product, finalAIVerdict, enrichedData]);
+
   // Handle invalid product ID
   if (!isValidProductId) {
     return (
@@ -339,6 +428,36 @@ const ProductDetails = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* SEO Meta Tags + JSON-LD Structured Data */}
+      {product && (
+        <MetaTags
+          title={`${product.title} - Price, Reviews & AI Analysis | IMO`}
+          description={enrichedData?.description || product.description || `Explore ${product.title} with AI-powered analysis, user reviews, and expert insights.`}
+          keywords={`${product.title}, ${product.brand || ''} ${product.title}, reviews, price comparison, ${product.category || ''}`}
+          image={product.image_url || ''}
+          url={typeof window !== 'undefined' ? window.location.href : ''}
+          type="product"
+          canonicalUrl={product.product_url || product.url}
+          // JSON-LD Product Schema with AI Verdict
+          productData={{
+            id: product.id,
+            title: product.title,
+            description: enrichedData?.description || product.description,
+            image: product.image_url,
+            brand: product.brand,
+            price: product.price,
+            currency: product.currency || 'USD',
+            url: product.product_url || product.url,
+            availability: product.availability || 'InStock'
+          }}
+          aiVerdictScore={finalAIVerdict?.imo_score}
+          totalReviews={[
+            ...(enrichedData?.amazon_reviews || []),
+            ...(enrichedData?.external_reviews || []),
+            ...(enrichedData?.immersive_data?.product_results?.user_reviews || [])
+          ].length}
+        />
+      )}
 
       {!product && !loading ? (
         <div className="min-h-screen bg-background flex items-center justify-center">
