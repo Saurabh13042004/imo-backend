@@ -75,7 +75,8 @@ async def search_products(
             f"  Session ID: {session_id or 'None'}\n"
             f"  Keyword: {request.keyword}\n"
             f"  Country: {request.country}\n"
-            f"  City: {request.city}"
+            f"  City: {request.city}\n"
+            f"  Store: {request.store or 'All Stores'}"
         )
 
         # Step 2: Check search access BEFORE performing the search
@@ -142,6 +143,7 @@ async def search_products(
             country=request.country,
             city=request.city,
             language=request.language,
+            store=request.store,
             total_results=total_count,
             results=results,
             remaining_searches=new_remaining if new_remaining >= 0 else None,

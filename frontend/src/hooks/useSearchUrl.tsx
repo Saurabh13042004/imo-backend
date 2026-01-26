@@ -15,6 +15,7 @@ export const useSearchUrl = () => {
   const country = searchParams.get('country') || contextCountry;
   const city = searchParams.get('city') || contextCity || '';
   const language = searchParams.get('language') || 'en';
+  const store = searchParams.get('store') || null;
   const zipcode = searchParams.get('zipcode') || contextZipcode;
   
   const updateSearchUrl = (
@@ -22,12 +23,14 @@ export const useSearchUrl = () => {
     newZipcode?: string,
     newCountry?: string,
     newCity?: string,
-    newLanguage?: string
+    newLanguage?: string,
+    newStore?: string | null
   ) => {
     const finalZipcode = newZipcode || zipcode;
     const finalCountry = newCountry || country;
     const finalCity = newCity || city;
     const finalLanguage = newLanguage || language;
+    const finalStore = newStore !== undefined ? newStore : store;
     
     if (searchQuery.trim()) {
       const trimmedQuery = searchQuery.trim();
@@ -36,6 +39,7 @@ export const useSearchUrl = () => {
       storeCountry(finalCountry);  // Use utility function
       localStorage.setItem('userCity', finalCity);
       localStorage.setItem('userLanguage', finalLanguage);
+      if (finalStore) localStorage.setItem('userStore', finalStore);
       
       const params = new URLSearchParams();
       params.set('q', trimmedQuery);
@@ -44,6 +48,7 @@ export const useSearchUrl = () => {
       // Only include city if it's explicitly provided in this search
       if (newCity) params.set('city', newCity);
       if (finalLanguage !== 'en') params.set('language', finalLanguage);
+      if (finalStore) params.set('store', finalStore);
       
       navigate(`/search?${params.toString()}`);
     } else {
@@ -92,6 +97,17 @@ export const useSearchUrl = () => {
       updateSearchUrl(query, zipcode, country, city, newLanguage);
     }
   };
+
+  const updateStore = (newStore: string | null) => {
+    if (newStore) {
+      localStorage.setItem('userStore', newStore);
+    } else {
+      localStorage.removeItem('userStore');
+    }
+    if (query) {
+      updateSearchUrl(query, zipcode, country, city, language, newStore);
+    }
+  };
   
   return {
     query,
@@ -99,6 +115,7 @@ export const useSearchUrl = () => {
     country,
     city,
     language,
+    store,
     updateSearchUrl,
     clearSearch,
     setQuery,
@@ -106,6 +123,7 @@ export const useSearchUrl = () => {
     updateCountry,
     updateCity,
     updateLanguage,
+    updateStore,
     isDetectingLocation
   };
 };

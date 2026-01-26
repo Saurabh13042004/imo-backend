@@ -18,7 +18,7 @@ import { MetaTags } from "@/components/seo";
 
 const Search = () => {
 	useParallax();
-	const { query, zipcode, country, city, language, isDetectingLocation } = useSearchUrl();
+	const { query, zipcode, country, city, language, store, isDetectingLocation } = useSearchUrl();
 	const { user } = useAuth();
 	const navigate = useNavigate();
 	
@@ -49,6 +49,7 @@ const Search = () => {
 		country: country,
 		city: city,
 		language: language,
+		store: store,
 		enabled: hasSubmitted && !!query?.trim(),
 		page: page,
 		isDetectingLocation: isDetectingLocation,

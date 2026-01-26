@@ -15,6 +15,7 @@ interface SearchProductsParams {
 	country?: string;
 	city?: string;
 	language?: string;
+	store?: string | null;
 	isDetectingLocation?: boolean;
 }
 
@@ -44,6 +45,7 @@ export function useProductSearch({
 	country = "United States",
 	city = "",
 	language = "en",
+	store = null,
 	isDetectingLocation = false,
 }: SearchProductsParams) {
 	const [products, setProducts] = useState<Product[]>([]);
@@ -84,6 +86,7 @@ export function useProductSearch({
 					country: country,
 					city: city,
 					language: language,
+					store: store,
 				});
 
 				if (!data.success || !data.results) {

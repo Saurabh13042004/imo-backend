@@ -88,12 +88,17 @@ export interface SearchRequest {
   country?: string;
   city?: string;
   language?: string;
+  store?: string | null;
 }
 
 export interface SearchResponse {
   success: boolean;
   keyword: string;
   zipcode: string;
+  country?: string;
+  city?: string;
+  language?: string;
+  store?: string | null;
   total_results: number;
   results: Array<{
     id?: string;
@@ -113,6 +118,8 @@ export interface SearchResponse {
     created_at?: string;
     updated_at?: string;
   }>;
+  remaining_searches?: number | null;
+  search_limit_message?: string | null;
 }
 
 export async function searchProducts(
@@ -126,6 +133,7 @@ export async function searchProducts(
       country: request.country || "United States",
       city: request.city || "",
       language: request.language || "en",
+      store: request.store || null,
     }),
   });
 }

@@ -30,6 +30,7 @@ class GoogleShoppingClient:
         location: Optional[str] = None,
         country: Optional[str] = None,
         language: str = "en",
+        store: Optional[str] = None,
         timeout: int = 5
     ) -> List[Dict[str, Any]]:
         """Search Google Shopping and return results.
@@ -40,6 +41,7 @@ class GoogleShoppingClient:
             location: Location string (e.g., "Bengaluru,India" or "India")
             country: Country name for geo-targeting (used if location not provided)
             language: Language code (default "en")
+            store: Preferred store filter (e.g., 'amazon', 'walmart', 'google_shopping', 'home_depot')
             timeout: Request timeout in seconds
             
         Returns:
@@ -66,6 +68,26 @@ class GoogleShoppingClient:
                 "hl": language,
                 "google_domain": geo_config["google_domain"],
             }
+            
+            # Add store filter if provided
+            if store:
+                # Map friendly store names to display names
+                store_mapping = {
+                    "amazon": "Amazon",
+                    "walmart": "Walmart",
+                    "google_shopping": "Google Shopping",
+                    "home_depot": "Home Depot",
+                    "ebay": "eBay",
+                    "best_buy": "Best Buy",
+                    "lowes": "Lowe's",
+                    "target": "Target",
+                    "costco": "Costco",
+                }
+                seller_name = store_mapping.get(store.lower(), store)
+                logger.info(f"[GoogleShoppingClient] Applying store filter: {seller_name}")
+                # Append store name to query for SerpAPI to prioritize that store's results
+                # Much more reliable than site: syntax with google_shopping engine
+                params["q"] = f"{query} {seller_name}"
 
             # Log the exact SerpAPI request being made
             log_serpapi_params(
@@ -319,3 +341,24 @@ class GoogleShoppingClient:
         """Legacy method for compatibility."""
         shopping_results = data.get("shopping_results", [])
         return [self.transform_result(r) for r in shopping_results if r]
+
+def _get_store_domain(store: str) -> Optional[str]:
+    """Map store names to their domain names for filtering.
+    
+    Args:
+        store: Store name (lowercase, e.g., 'amazon', 'walmart')
+        
+    Returns:
+        Domain name or None if not a recognized store
+    """
+    store_domains = {
+        "amazon": "amazon.com",
+        "walmart": "walmart.com",
+        "ebay": "ebay.com",
+        "best_buy": "bestbuy.com",
+        "home_depot": "homedepot.com",
+        "lowes": "lowes.com",
+        "target": "target.com",
+        "costco": "costco.com",
+    }
+    return store_domains.get(store.lower())

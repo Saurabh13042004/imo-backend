@@ -13,7 +13,7 @@ import { SearchAutosuggest } from "./SearchAutosuggest";
 interface SharedSearchInputProps {
   variant?: 'default' | 'compact' | 'hero';
   loading?: boolean;
-  onSearch?: (query: string, zipcode?: string, country?: string, city?: string, language?: string) => void;
+  onSearch?: (query: string, zipcode?: string, country?: string, city?: string, language?: string, store?: string | null) => void;
   className?: string;
   showButton?: boolean;
   autoFocus?: boolean;
@@ -42,6 +42,18 @@ const LANGUAGES = [
   { value: 'ja', label: '日本語' },
 ];
 
+const STORES = [
+  { value: null, label: '🏪 All Stores' },
+  { value: 'amazon', label: '🛍️ Amazon' },
+  { value: 'walmart', label: '🛒 Walmart' },
+  { value: 'ebay', label: '📦 eBay' },
+  { value: 'best_buy', label: '📱 Best Buy' },
+  { value: 'home_depot', label: '🏗️ Home Depot' },
+  { value: 'lowes', label: '🔨 Lowe\'s' },
+  { value: 'target', label: '🎯 Target' },
+  { value: 'costco', label: '📊 Costco' },
+];
+
 export const SharedSearchInput = ({ 
   variant = 'default', 
   loading = false, 
@@ -57,6 +69,7 @@ export const SharedSearchInput = ({
   const [localCountry, setLocalCountry] = useState(urlCountry || 'India');  // DEFAULT: India
   const [localCity, setLocalCity] = useState(urlCity || '');
   const [localLanguage, setLocalLanguage] = useState(urlLanguage || 'en');
+  const [localStore, setLocalStore] = useState<string | null>(null);  // DEFAULT: All stores
   const [isAutosuggestOpen, setIsAutosuggestOpen] = useState(false);
   const [showLocationPanel, setShowLocationPanel] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -85,8 +98,8 @@ export const SharedSearchInput = ({
   const handleSearch = () => {
     const normalizedQuery = normalizeSearchQuery(localQuery);
     if (validateSearchQuery(normalizedQuery)) {
-      updateSearchUrl(normalizedQuery, localZipcode, localCountry, localCity, localLanguage);
-      onSearch?.(normalizedQuery, localZipcode, localCountry, localCity, localLanguage);
+      updateSearchUrl(normalizedQuery, localZipcode, localCountry, localCity, localLanguage, localStore);
+      onSearch?.(normalizedQuery, localZipcode, localCountry, localCity, localLanguage, localStore);
     }
   };
 
@@ -102,8 +115,8 @@ export const SharedSearchInput = ({
 
   const handleSelectSuggestion = (suggestion: string) => {
     setLocalQuery(suggestion);
-    updateSearchUrl(suggestion, localZipcode, localCountry, localCity, localLanguage);
-    onSearch?.(suggestion, localZipcode, localCountry, localCity, localLanguage);
+    updateSearchUrl(suggestion, localZipcode, localCountry, localCity, localLanguage, localStore);
+    onSearch?.(suggestion, localZipcode, localCountry, localCity, localLanguage, localStore);
     setIsAutosuggestOpen(false);
   };
 
@@ -131,6 +144,11 @@ export const SharedSearchInput = ({
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLocalLanguage(e.target.value);
+  };
+
+  const handleStoreChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setLocalStore(value === '' ? null : value);
   };
 
   return (
@@ -201,7 +219,7 @@ export const SharedSearchInput = ({
       {/* Location Settings Panel */}
       {showLocationPanel && (
         <div className="bg-secondary/50 p-4 rounded-lg space-y-3 border border-border/50">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             {/* Country Selector */}
             <div className="space-y-1">
               <label className="text-sm font-medium text-foreground/70">Country</label>
@@ -244,6 +262,22 @@ export const SharedSearchInput = ({
                 ))}
               </select>
             </div>
+
+            {/* Store Selector */}
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-foreground/70">Store</label>
+              <select
+                value={localStore || ''}
+                onChange={handleStoreChange}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {STORES.map((opt) => (
+                  <option key={opt.value || 'all'} value={opt.value || ''}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Summary */}
@@ -251,6 +285,7 @@ export const SharedSearchInput = ({
             Searching in <span className="font-semibold text-foreground">{localCountry}</span>
             {localCity && <span> • <span className="font-semibold">{localCity}</span></span>}
             {localLanguage !== 'en' && <span> • <span className="font-semibold">{LANGUAGES.find(l => l.value === localLanguage)?.label}</span></span>}
+            {localStore && <span> • <span className="font-semibold">{STORES.find(s => s.value === localStore)?.label}</span></span>}
           </div>
         </div>
       )}

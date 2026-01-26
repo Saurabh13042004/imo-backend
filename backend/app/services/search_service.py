@@ -52,7 +52,7 @@ class SearchService:
         
         Args:
             db: Database session
-            search_request: Search request with keyword, country, city, language
+            search_request: Search request with keyword, country, city, language, store
             use_cache: Whether to use cache
             
         Returns:
@@ -64,6 +64,7 @@ class SearchService:
             country = search_request.country or "United States"
             city = search_request.city
             language = search_request.language or "en"
+            store = search_request.store  # Get store preference
             
             # Build location string for SerpAPI
             if city:
@@ -77,6 +78,7 @@ class SearchService:
                 f"  Country: {country}\\n"
                 f"  City: {city}\\n"
                 f"  Language: {language}\\n"
+                f"  Store Filter: {store or 'All Stores'}\\n"
                 f"  Location for SerpAPI: {location}"
             )
             
@@ -84,8 +86,8 @@ class SearchService:
                 logger.error("Google Shopping client not initialized")
                 return [], 0
             
-            # Search Google Shopping with proper geo parameters
-            results = self._search_google_shopping(keyword, location, country, language)
+            # Search Google Shopping with proper geo parameters and store filter
+            results = self._search_google_shopping(keyword, location, country, language, store)
             
             # Convert to ProductResponse objects
             product_responses = self._convert_to_product_responses(results)
@@ -115,15 +117,17 @@ class SearchService:
         keyword: str,
         location: str,
         country: Optional[str] = None,
-        language: str = "en"
+        language: str = "en",
+        store: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        """Search Google Shopping with proper geo parameters.
+        """Search Google Shopping with proper geo parameters and store filtering.
         
         Args:
             keyword: Search keyword
             location: Location string (e.g., "India" or "Bengaluru,India")
             country: Country name for geo-targeting
             language: Language code
+            store: Preferred store filter (e.g., 'amazon', 'walmart')
             
         Returns:
             List of product results from Google Shopping
@@ -134,14 +138,16 @@ class SearchService:
                 f"  Keyword: {keyword}\\n"
                 f"  Location: {location}\\n"
                 f"  Country: {country}\\n"
-                f"  Language: {language}"
+                f"  Language: {language}\\n"
+                f"  Store: {store or 'All Stores'}"
             )
             results = self.google_client.search(
                 query=keyword,
                 limit=100,
                 location=location,
                 country=country,
-                language=language
+                language=language,
+                store=store
             )
             logger.info(f"[SearchService._search] Retrieved {len(results)} results")
             return results

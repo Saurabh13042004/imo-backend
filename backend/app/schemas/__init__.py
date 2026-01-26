@@ -177,6 +177,9 @@ class SearchRequest(BaseModel):
     
     # Language
     language: Optional[str] = Field(default="en", description="Language code for search interface (e.g., 'en', 'hi')")
+    
+    # Store filtering for SerpAPI
+    store: Optional[str] = Field(default=None, description="Preferred store filter (e.g., 'amazon', 'walmart', 'google_shopping', 'home_depot'). If None, returns results from all stores.")
 
 
 class SearchResponse(BaseModel):
@@ -188,6 +191,7 @@ class SearchResponse(BaseModel):
     country: Optional[str]
     city: Optional[str]
     language: Optional[str]
+    store: Optional[str] = None  # Store filter that was applied
     total_results: int
     results: List[ProductResponse] = Field(default_factory=list)
     remaining_searches: Optional[int] = None  # Number of searches remaining (None for unlimited)
