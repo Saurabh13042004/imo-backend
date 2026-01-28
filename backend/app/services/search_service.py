@@ -110,6 +110,9 @@ class SearchService:
             # De-duplicate results by title and source ID
             results = self._deduplicate_results(results)
             
+            # Rank and filter results by relevance
+            results = self._rank_by_relevance(results, keyword)
+            
             # Convert to ProductResponse objects
             product_responses = self._convert_to_product_responses(results)
             
@@ -297,6 +300,228 @@ class SearchService:
         filtered = [w for w in words if w not in common_words]
         # Return hash of key words (first 3-5 words usually unique)
         return hashlib.md5(" ".join(filtered[:5]).encode()).hexdigest()
+
+    def _rank_by_relevance(
+        self,
+        results: List[Dict[str, Any]],
+        keyword: str
+    ) -> List[Dict[str, Any]]:
+        """Rank and filter results by relevance to the search keyword.
+        
+        Strategy:
+        1. Extract primary keywords (usually first 2-3 words, e.g., "iPhone 17" from long query)
+        2. Filter out irrelevant categories (e.g., show iPhones, hide cases/chargers)
+        3. Score results based on:
+           - Primary keyword match (exact > partial > not present)
+           - Title length (shorter = more specific, usually better match)
+           - Rating (higher = more trusted)
+           - Review count (more reviews = more validated)
+        4. Sort by score descending (best results first)
+        
+        Args:
+            results: List of deduplicated results
+            keyword: Original search keyword
+            
+        Returns:
+            Results sorted by relevance score (best first)
+        """
+        if not results:
+            return []
+        
+        # Extract primary keywords (first 2-3 words)
+        primary_keywords = self._extract_primary_keywords(keyword)
+        
+        # Score each result
+        scored_results = []
+        for result in results:
+            title = result.get("title", "").lower()
+            
+            # Skip obvious low-quality/accessory results if primary keyword is product-specific
+            if self._should_filter_result(result, primary_keywords):
+                logger.debug(f"[SearchService] Filtering low-quality result: {result.get('title', '')[:60]}")
+                continue
+            
+            # Calculate relevance score
+            score = self._calculate_relevance_score(
+                result,
+                title,
+                primary_keywords,
+                keyword
+            )
+            
+            scored_results.append((score, result))
+        
+        # Sort by score (descending - highest score first)
+        scored_results.sort(key=lambda x: x[0], reverse=True)
+        
+        # Extract just the results
+        ranked_results = [item[1] for item in scored_results]
+        
+        top_score = scored_results[0][0] if scored_results else 0
+        logger.info(
+            f"[SearchService._rank_by_relevance] Ranked {len(results)} results\n"
+            f"  Primary keywords: {primary_keywords}\n"
+            f"  After filtering: {len(ranked_results)} results\n"
+            f"  Top result: {ranked_results[0].get('title', '')[:60] if ranked_results else 'NONE'}\n"
+            f"  Score: {top_score:.2f}\n"
+        )
+        
+        return ranked_results
+
+    @staticmethod
+    def _extract_primary_keywords(keyword: str) -> List[str]:
+        """Extract primary search keywords from full query.
+        
+        For long queries like:
+        "Spigen EZ Fit Tempered Glass Screen Protector Guard For iPhone 17/17 Pro / 16 Pro"
+        
+        Extracts: ["iPhone", "17", "protector"] (main product indicators)
+        
+        Args:
+            keyword: Full search query
+            
+        Returns:
+            List of primary keywords
+        """
+        import re
+        
+        # Keywords that indicate main product vs modifiers
+        stop_words = {
+            'for', 'the', 'a', 'an', 'and', 'or', 'with', 'by', 'in', 'on', 'to',
+            'screen', 'guard', 'protector', 'glass', 'tempered', 'ez', 'fit',
+            'pack', 'set', '2023', '2024', '2025', '2026'
+        }
+        
+        # Extract words and filter
+        words = re.findall(r'\\b\\w+\\b', keyword.lower())
+        primary = [w for w in words[:5] if w not in stop_words and len(w) > 2]
+        
+        return primary[:3]  # Return top 3 primary keywords
+
+    @staticmethod
+    def _should_filter_result(result: Dict[str, Any], primary_keywords: List[str]) -> bool:
+        """Determine if a result should be filtered (excluded) based on category.
+        
+        Filters out:
+        - Accessories when searching for main product (case/charger when searching iPhone)
+        - Unrelated categories
+        - Very low-priced items (likely knockoffs)
+        
+        Args:
+            result: Product result
+            primary_keywords: List of primary search keywords
+            
+        Returns:
+            True if result should be filtered, False otherwise
+        """
+        title = result.get("title", "").lower()
+        price = result.get("price", 0)
+        
+        # If no primary keywords, don't filter
+        if not primary_keywords:
+            return False
+        
+        # If result title contains primary keyword, keep it
+        for keyword in primary_keywords:
+            if keyword in title:
+                return False  # Keep it - matches primary keyword
+        
+        # If title contains accessory indicators and NO primary keyword, filter
+        accessory_indicators = [
+            'case', 'cover', 'charger', 'cable', 'adapter', 'screen protector',
+            'tempered glass', 'sim ejector', 'tool', 'holder', 'stand', 'mount',
+            'skin', 'film', 'sleeve', 'pouch', 'bag'
+        ]
+        
+        is_accessory = any(indicator in title for indicator in accessory_indicators)
+        
+        if is_accessory and len(primary_keywords) > 0:
+            # This is clearly an accessory and we're searching for main product
+            return True
+        
+        return False
+
+    @staticmethod
+    def _calculate_relevance_score(
+        result: Dict[str, Any],
+        title_lower: str,
+        primary_keywords: List[str],
+        full_keyword: str
+    ) -> float:
+        """Calculate relevance score for a result.
+        
+        Scoring factors:
+        - Primary keyword exact match: +10
+        - Primary keyword partial match: +5
+        - Title specificity (shorter is better): +5 to +1
+        - Rating: +0 to +3
+        - Review count: +0 to +2
+        - Source (Amazon preferred): +0 or +1
+        
+        Args:
+            result: Product result
+            title_lower: Title in lowercase
+            primary_keywords: List of primary keywords
+            full_keyword: Full search query
+            
+        Returns:
+            Relevance score (higher = more relevant)
+        """
+        score = 0.0
+        
+        # 1. Primary keyword matching (heavy weight)
+        for keyword in primary_keywords:
+            if keyword in title_lower:
+                if title_lower.startswith(keyword) or f" {keyword} " in f" {title_lower} ":
+                    score += 10.0  # Exact match or word boundary match
+                else:
+                    score += 5.0  # Contains keyword but not prominent
+        
+        # 2. Title length bonus (shorter = more specific)
+        title_length = len(result.get("title", ""))
+        if title_length < 50:
+            score += 5.0  # Short & specific
+        elif title_length < 100:
+            score += 3.0  # Medium
+        elif title_length < 150:
+            score += 1.0  # Long but acceptable
+        # Very long titles (>150) get no bonus
+        
+        # 3. Rating bonus (validated by users)
+        rating = result.get("rating")
+        if rating:
+            try:
+                rating_float = float(rating) if isinstance(rating, str) else rating
+                if rating_float >= 4.5:
+                    score += 3.0
+                elif rating_float >= 4.0:
+                    score += 2.0
+                elif rating_float >= 3.5:
+                    score += 1.0
+            except (ValueError, TypeError):
+                pass
+        
+        # 4. Review count bonus (more validated = more trustworthy)
+        review_count = result.get("review_count") or result.get("reviews")
+        if review_count:
+            try:
+                reviews_int = int(review_count) if isinstance(review_count, str) else review_count
+                if reviews_int >= 1000:
+                    score += 2.0
+                elif reviews_int >= 100:
+                    score += 1.0
+            except (ValueError, TypeError):
+                pass
+        
+        # 5. Source bonus (Amazon often has better data)
+        if result.get("origin") == "amazon_api":
+            score += 1.0
+        
+        # 6. In-stock/availability bonus
+        if result.get("in_stock") or result.get("stock") == "In Stock":
+            score += 0.5
+        
+        return score
 
     def _convert_to_product_responses(
         self,
