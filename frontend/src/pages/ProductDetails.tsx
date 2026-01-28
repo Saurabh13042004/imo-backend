@@ -27,6 +27,7 @@ import { MetaTags } from "@/components/seo";
 // import { useProductBasic, useProductReviews, useProductVideos } from "@/hooks/useProductDetails";
 
 import { ProductLikeButton } from "@/components/product/ProductLikeButton";
+import { ProductShareButton } from "@/components/product/ProductShareButton";
 import { ProductImages } from "@/components/product/ProductImages";
 import { ProductInfo } from "@/components/product/ProductInfo";
 import { ProductInfoSkeleton } from "@/components/product/ProductInfoSkeleton";
@@ -520,7 +521,7 @@ const ProductDetails = () => {
                         priceRange={enrichedData?.immersive_data?.product_results?.price_range}
                         enrichedProductDescription={enrichedData?.immersive_data?.product_results?.about_the_product?.description}
                       />
-                      <div className="flex justify-start gap-3">
+                      <div className="flex justify-start gap-3 flex-wrap">
                         <ProductLikeButton 
                           productId={product.id}
                           productData={{
@@ -535,6 +536,10 @@ const ProductDetails = () => {
                             url: product.url,
                             category: product.category,
                           }}
+                        />
+                        <ProductShareButton 
+                          productTitle={product.title}
+                          productPrice={product.price}
                         />
                         <button
                           onClick={() => setIsPriceAlertModalOpen(true)}
