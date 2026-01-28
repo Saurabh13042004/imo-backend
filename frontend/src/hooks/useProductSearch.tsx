@@ -182,7 +182,7 @@ export function useProductSearch({
 		};
 
 		fetchProducts();
-	}, [query, enabled, page, pageSize, sortBy, priceRange, minRating, zipcode, country, city, language, isDetectingLocation]);
+	}, [query, enabled, page, pageSize, sortBy, priceRange, minRating, zipcode, country, city, language, store, isDetectingLocation]);
 
 	return {
 		products,

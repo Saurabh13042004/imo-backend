@@ -22,7 +22,7 @@ interface ProductGridProps {
 
 export const ProductGrid = ({ products }: ProductGridProps) => {
   const { country } = useSearchUrl();
-  const [sortBy, setSortBy] = useState<'reviews' | 'rating'>('rating');
+  const [sortBy, setSortBy] = useState<'relevance' | 'reviews' | 'rating'>('relevance');
   
   // Filter out products with invalid IDs before rendering
   const validProducts = products.filter(product => {
@@ -38,6 +38,8 @@ export const ProductGrid = ({ products }: ProductGridProps) => {
       productsCopy.sort((a, b) => (b.reviews_count || 0) - (a.reviews_count || 0));
     } else if (sortBy === 'rating') {
       productsCopy.sort((a, b) => (b.site_rating || 0) - (a.site_rating || 0));
+    } else if (sortBy === 'relevance') {
+      // Keep original order from API (already sorted by relevance)
     }
     
     return productsCopy;
@@ -71,6 +73,14 @@ export const ProductGrid = ({ products }: ProductGridProps) => {
       {/* Sort Controls */}
       <div className="flex gap-2 mb-6 flex-wrap">
         <span className="text-sm font-medium text-muted-foreground py-2">Sort by:</span>
+        <Button
+          variant={sortBy === 'relevance' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSortBy('relevance')}
+          className="rounded-full"
+        >
+          🎯 Relevance
+        </Button>
         <Button
           variant={sortBy === 'rating' ? 'default' : 'outline'}
           size="sm"
