@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Search from "lucide-react/dist/esm/icons/search";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 
 interface SearchLoadingProps {
 	isVisible: boolean;
@@ -7,11 +12,11 @@ interface SearchLoadingProps {
 }
 
 const LOADING_MESSAGES = [
-	"🔍 Searching across thousands of products...",
-	"✨ Analyzing reviews and ratings...",
-	"🎁 Finding the best deals for you...",
-	"🤖 IMO AI is comparing prices...",
-	"📊 Gathering product insights...",
+	{ text: "Searching across thousands of products...", icon: Search },
+	{ text: "Analyzing reviews and ratings...", icon: Sparkles },
+	{ text: "Finding the best deals for you...", icon: Gift },
+	{ text: "IMO AI is comparing prices...", icon: Zap },
+	{ text: "Gathering product insights...", icon: BarChart3 },
 ];
 
 export const SearchLoading = ({
@@ -32,7 +37,8 @@ export const SearchLoading = ({
 
 	if (!isVisible) return null;
 
-	const currentMessage = LOADING_MESSAGES[messageIndex];
+	const currentMessageObj = LOADING_MESSAGES[messageIndex];
+	const IconComponent = currentMessageObj.icon;
 
 	return (
 		<motion.div
@@ -67,8 +73,9 @@ export const SearchLoading = ({
 				transition={{ duration: 0.3 }}
 				className="text-center space-y-2"
 			>
-				<div className="text-sm md:text-base font-medium text-foreground">
-					{currentMessage}
+				<div className="text-sm md:text-base font-medium text-foreground flex items-center justify-center gap-2">
+					<IconComponent className="h-5 w-5 text-primary" />
+					{currentMessageObj.text}
 				</div>
 
 				{/* Progress indicator dots */}

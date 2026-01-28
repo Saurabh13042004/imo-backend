@@ -4,6 +4,14 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Globe from "lucide-react/dist/esm/icons/globe";
+import Store from "lucide-react/dist/esm/icons/store";
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
+import Package from "lucide-react/dist/esm/icons/package";
+import Smartphone from "lucide-react/dist/esm/icons/smartphone";
+import Hammer from "lucide-react/dist/esm/icons/hammer";
+import Target from "lucide-react/dist/esm/icons/target";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import Globe2 from "lucide-react/dist/esm/icons/globe-2";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearchUrl } from "@/hooks/useSearchUrl";
@@ -21,15 +29,15 @@ interface SharedSearchInputProps {
 }
 
 const COUNTRIES = [
-  { value: 'India', label: '🇮🇳 India' },
-  { value: 'United States', label: '🇺🇸 United States' },
-  { value: 'Canada', label: '🇨🇦 Canada' },
-  { value: 'United Kingdom', label: '🇬🇧 United Kingdom' },
-  { value: 'Brazil', label: '🇧🇷 Brazil' },
-  { value: 'Germany', label: '🇩🇪 Germany' },
-  { value: 'France', label: '🇫🇷 France' },
-  { value: 'Japan', label: '🇯🇵 Japan' },
-  { value: 'Australia', label: '🇦🇺 Australia' },
+  { value: 'India', label: 'India', icon: null },
+  { value: 'United States', label: 'United States', icon: null },
+  { value: 'Canada', label: 'Canada', icon: null },
+  { value: 'United Kingdom', label: 'United Kingdom', icon: null },
+  { value: 'Brazil', label: 'Brazil', icon: null },
+  { value: 'Germany', label: 'Germany', icon: null },
+  { value: 'France', label: 'France', icon: null },
+  { value: 'Japan', label: 'Japan', icon: null },
+  { value: 'Australia', label: 'Australia', icon: null },
 ];
 
 const LANGUAGES = [
@@ -43,15 +51,15 @@ const LANGUAGES = [
 ];
 
 const STORES = [
-  { value: null, label: '🏪 All Stores' },
-  { value: 'amazon', label: '🛍️ Amazon' },
-  { value: 'walmart', label: '🛒 Walmart' },
-  { value: 'ebay', label: '📦 eBay' },
-  { value: 'best_buy', label: '📱 Best Buy' },
-  { value: 'home_depot', label: '🏗️ Home Depot' },
-  { value: 'lowes', label: '🔨 Lowe\'s' },
-  { value: 'target', label: '🎯 Target' },
-  { value: 'costco', label: '📊 Costco' },
+  { value: null, label: 'All Stores', icon: Store },
+  { value: 'amazon', label: 'Amazon', icon: ShoppingCart },
+  { value: 'walmart', label: 'Walmart', icon: ShoppingCart },
+  { value: 'ebay', label: 'eBay', icon: Package },
+  { value: 'best_buy', label: 'Best Buy', icon: Smartphone },
+  { value: 'home_depot', label: 'Home Depot', icon: Hammer },
+  { value: 'lowes', label: 'Lowe\'s', icon: Hammer },
+  { value: 'target', label: 'Target', icon: Target },
+  { value: 'costco', label: 'Costco', icon: BarChart3 },
 ];
 
 export const SharedSearchInput = ({ 
@@ -281,11 +289,23 @@ export const SharedSearchInput = ({
           </div>
 
           {/* Summary */}
-          <div className="text-xs text-foreground/60 pt-2">
+          <div className="text-xs text-foreground/60 pt-2 flex items-center flex-wrap gap-2">
             Searching in <span className="font-semibold text-foreground">{localCountry}</span>
-            {localCity && <span> • <span className="font-semibold">{localCity}</span></span>}
-            {localLanguage !== 'en' && <span> • <span className="font-semibold">{LANGUAGES.find(l => l.value === localLanguage)?.label}</span></span>}
-            {localStore && <span> • <span className="font-semibold">{STORES.find(s => s.value === localStore)?.label}</span></span>}
+            {localCity && <span>•</span>}
+            {localCity && <span className="font-semibold">{localCity}</span>}
+            {localLanguage !== 'en' && <span>•</span>}
+            {localLanguage !== 'en' && <span className="font-semibold">{LANGUAGES.find(l => l.value === localLanguage)?.label}</span>}
+            {localStore && <span>•</span>}
+            {localStore && (() => {
+              const selectedStore = STORES.find(s => s.value === localStore);
+              const IconComponent = selectedStore?.icon;
+              return (
+                <span className="font-semibold flex items-center gap-1">
+                  {IconComponent && <IconComponent className="h-3 w-3" />}
+                  {selectedStore?.label}
+                </span>
+              );
+            })()}
           </div>
         </div>
       )}

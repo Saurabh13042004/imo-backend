@@ -2,6 +2,9 @@ import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
 import Search from "lucide-react/dist/esm/icons/search";
+import Target from "lucide-react/dist/esm/icons/target";
+import Star from "lucide-react/dist/esm/icons/star";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -77,25 +80,28 @@ export const ProductGrid = ({ products }: ProductGridProps) => {
           variant={sortBy === 'relevance' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSortBy('relevance')}
-          className="rounded-full"
+          className="rounded-full flex items-center gap-2"
         >
-          🎯 Relevance
+          <Target className="h-4 w-4" />
+          Relevance
         </Button>
         <Button
           variant={sortBy === 'rating' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSortBy('rating')}
-          className="rounded-full"
+          className="rounded-full flex items-center gap-2"
         >
-          ⭐ Highest Rating
+          <Star className="h-4 w-4" />
+          Highest Rating
         </Button>
         <Button
           variant={sortBy === 'reviews' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSortBy('reviews')}
-          className="rounded-full"
+          className="rounded-full flex items-center gap-2"
         >
-          📊 Most Reviews
+          <BarChart3 className="h-4 w-4" />
+          Most Reviews
         </Button>
       </div>
 
@@ -155,8 +161,9 @@ export const ProductGrid = ({ products }: ProductGridProps) => {
                 {/* Rating Badge */}
                 {product.site_rating && (
                   <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="font-semibold glass-card text-primary border-primary/20">
-                      ⭐ {product.site_rating.toFixed(1)}/5
+                    <Badge variant="secondary" className="font-semibold glass-card text-primary border-primary/20 flex items-center gap-1">
+                      <Star className="h-3 w-3" />
+                      {product.site_rating.toFixed(1)}/5
                     </Badge>
                     {product.reviews_count && (
                       <span className="text-xs text-muted-foreground">
