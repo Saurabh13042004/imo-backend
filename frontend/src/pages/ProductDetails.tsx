@@ -520,6 +520,8 @@ const ProductDetails = () => {
                         source={product.source as any}
                         priceRange={enrichedData?.immersive_data?.product_results?.price_range}
                         enrichedProductDescription={enrichedData?.immersive_data?.product_results?.about_the_product?.description}
+                        rating={enrichedData?.immersive_data?.product_results?.rating || product.rating}
+                        reviewCount={enrichedData?.immersive_data?.product_results?.reviews || product.review_count}
                       />
                       <div className="flex justify-start gap-3 flex-wrap">
                         <ProductLikeButton 

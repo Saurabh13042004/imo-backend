@@ -14,6 +14,7 @@ import time
 from app.schemas import SearchRequest, ProductResponse
 from app.config import settings
 from app.integrations.google_shopping import GoogleShoppingClient
+from app.integrations.amazon_shopping import AmazonShoppingClient
 from app.utils.error_logger import log_error
 
 logger = logging.getLogger(__name__)
@@ -41,6 +42,13 @@ class SearchService:
             self.google_client = GoogleShoppingClient(self.serpapi_key)
         else:
             logger.warning("SerpAPI key not configured - Google Shopping search will not work")
+        
+        # Initialize Amazon Shopping client (optional)
+        self.amazon_client = None
+        if self.serpapi_key:
+            self.amazon_client = AmazonShoppingClient(self.serpapi_key)
+        else:
+            logger.warning("SerpAPI key not configured - Amazon search will not work")
 
     async def search_all_sources(
         self,
@@ -88,6 +96,19 @@ class SearchService:
             
             # Search Google Shopping with proper geo parameters and store filter
             results = self._search_google_shopping(keyword, location, country, language, store)
+            
+            # If store is "amazon" or None (all stores), also search Amazon directly
+            if self.amazon_client and (store is None or store.lower() == "amazon"):
+                logger.info("[SearchService] Searching Amazon Shopping API for broader coverage")
+                try:
+                    amazon_results = await self._search_amazon(keyword, country, language)
+                    results.extend(amazon_results)
+                    logger.info(f"[SearchService] Added {len(amazon_results)} results from Amazon API")
+                except Exception as e:
+                    logger.warning(f"[SearchService] Amazon search failed (continuing with Google only): {e}")
+            
+            # De-duplicate results by title and source ID
+            results = self._deduplicate_results(results)
             
             # Convert to ProductResponse objects
             product_responses = self._convert_to_product_responses(results)
@@ -155,14 +176,136 @@ class SearchService:
             logger.error(f"[SearchService._search] Error: {e}", exc_info=True)
             return []
 
+    async def _search_amazon(
+        self,
+        keyword: str,
+        country: str = "United States",
+        language: str = "en_US"
+    ) -> List[Dict[str, Any]]:
+        """Search Amazon using SerpAPI.
+        
+        Args:
+            keyword: Search keyword
+            country: Country name
+            language: Language/locale code
+            
+        Returns:
+            List of normalized Amazon product results
+        """
+        try:
+            if not self.amazon_client:
+                logger.warning("[SearchService._search_amazon] Amazon client not initialized")
+                return []
+            
+            logger.info(f"[SearchService._search_amazon] Searching Amazon for: {keyword}")
+            
+            # Map country to Amazon domain and language
+            domain_map = {
+                "United States": ("amazon.com", "en_US"),
+                "United Kingdom": ("amazon.co.uk", "en_GB"),
+                "India": ("amazon.in", "en_IN"),
+                "Canada": ("amazon.ca", "en_CA"),
+                "Germany": ("amazon.de", "de_DE"),
+                "France": ("amazon.fr", "fr_FR"),
+                "Japan": ("amazon.co.jp", "ja_JP"),
+            }
+            
+            amazon_domain, amazon_lang = domain_map.get(country, ("amazon.com", language))
+            
+            # Search Amazon
+            response = await self.amazon_client.search(
+                keyword=keyword,
+                amazon_domain=amazon_domain,
+                language=amazon_lang
+            )
+            
+            # Normalize results
+            organic_results = response.get("organic_results", [])
+            normalized = [
+                AmazonShoppingClient.normalize_search_result(result)
+                for result in organic_results
+            ]
+            
+            logger.info(f"[SearchService._search_amazon] Found {len(normalized)} Amazon results")
+            return normalized
+        
+        except Exception as e:
+            logger.error(f"[SearchService._search_amazon] Error searching Amazon: {e}")
+            return []  # Fallback gracefully
+
+    def _deduplicate_results(
+        self,
+        results: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Remove duplicate products from merged sources.
+        
+        Deduplication logic:
+        1. Group by title (with fuzzy matching)
+        2. Keep Amazon API results over Google Shopping (more accurate pricing)
+        3. Keep highest-rated version if available
+        
+        Args:
+            results: Combined results from all sources
+            
+        Returns:
+            Deduplicated list of results
+        """
+        if not results:
+            return []
+        
+        # Simple deduplication: group by title hash
+        seen = {}
+        
+        for result in results:
+            title = result.get("title", "").lower().strip()
+            asin = result.get("source_id", "")
+            
+            # Create composite key: title + asin (if available)
+            if asin:
+                key = f"{asin}"
+            else:
+                # Fuzzy title match by removing common words
+                key = self._normalize_title_for_dedup(title)
+            
+            if key not in seen:
+                seen[key] = result
+            else:
+                # Keep Amazon results over Google Shopping
+                if result.get("origin") == "amazon_api":
+                    seen[key] = result
+                # Otherwise keep the one with higher rating
+                elif result.get("rating", 0) > seen[key].get("rating", 0):
+                    seen[key] = result
+        
+        logger.info(f"[SearchService._deduplicate_results] Reduced {len(results)} results to {len(seen)}")
+        return list(seen.values())
+
+    @staticmethod
+    def _normalize_title_for_dedup(title: str) -> str:
+        """Normalize title for deduplication matching.
+        
+        Args:
+            title: Product title
+            
+        Returns:
+            Normalized key for comparison
+        """
+        import re
+        # Remove common words and normalize
+        common_words = {'for', 'the', 'a', 'an', 'and', 'or', 'with', 'by', 'in'}
+        words = re.findall(r'\\w+', title.lower())
+        filtered = [w for w in words if w not in common_words]
+        # Return hash of key words (first 3-5 words usually unique)
+        return hashlib.md5(" ".join(filtered[:5]).encode()).hexdigest()
+
     def _convert_to_product_responses(
         self,
         results: List[Dict[str, Any]]
     ) -> List[ProductResponse]:
-        """Convert Google Shopping results to ProductResponse objects.
+        """Convert search results from all sources to ProductResponse objects.
         
         Args:
-            results: List of results from Google Shopping
+            results: List of results from Google Shopping and/or Amazon
             
         Returns:
             List of ProductResponse objects
@@ -171,54 +314,74 @@ class SearchService:
         
         for result in results:
             try:
-                # Source is retailer name from Google Shopping (Walmart, Best Buy, Amazon, etc.)
-                source = result.get("source", "Google Shopping")
+                # Detect origin
+                origin = result.get("origin", "google_shopping")
                 
-                # Extract image URL
-                image_url = result.get("image_url") or result.get("url_image", "")
+                if origin == "amazon_api":
+                    # Handle Amazon result
+                    product_response = ProductResponse(
+                        id=str(uuid4()),
+                        title=result.get("title", "")[:200],
+                        source="Amazon",
+                        source_id=result.get("source_id", ""),  # ASIN
+                        asin=result.get("source_id", ""),
+                        url=result.get("url", ""),
+                        image_url=result.get("image_url", ""),
+                        price=self._parse_price(result.get("price")),
+                        currency=result.get("currency", "USD"),
+                        rating=self._parse_rating(result.get("rating")),
+                        review_count=int(result.get("review_count", 0)) if result.get("review_count") else 0,
+                        description=result.get("title", "")[:500],
+                        brand="",
+                        category="",
+                        availability=result.get("availability", "In Stock"),
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
+                else:
+                    # Handle Google Shopping result (existing logic)
+                    source = result.get("source", "Google Shopping")
+                    image_url = result.get("image_url") or result.get("url_image", "")
+                    review_count = result.get("review_count") or result.get("reviews_count", 0)
+                    rating = result.get("rating") or result.get("rating", None)
+                    immersive_api_link = result.get("immersive_product_api_link", "")
+                    immersive_page_token = result.get("immersive_product_page_token", "")
+                    
+                    # Try to fetch immersive link if not present
+                    if not immersive_api_link and self.google_client:
+                        try:
+                            fetched_link = self.google_client.get_immersive_product_data(
+                                result.get("title", ""),
+                                source
+                            )
+                            if fetched_link:
+                                immersive_api_link = fetched_link
+                                logger.debug(f"Fetched immersive link for {source} product")
+                        except Exception as e:
+                            logger.debug(f"Could not fetch immersive link: {e}")
+                    
+                    product_response = ProductResponse(
+                        id=str(uuid4()),
+                        title=result.get("title", "")[:200],
+                        source=source,
+                        source_id=result.get("source_id", result.get("product_id", "")),
+                        asin="",
+                        url=result.get("url", ""),
+                        image_url=image_url,
+                        price=self._parse_price(result.get("price")),
+                        currency=result.get("currency", "USD"),
+                        rating=self._parse_rating(rating),
+                        review_count=int(review_count) if review_count else 0,
+                        description=result.get("description", result.get("title", ""))[:500],
+                        brand=result.get("brand", result.get("manufacturer", "")),
+                        category=result.get("category", ""),
+                        availability=result.get("availability", "In Stock"),
+                        immersive_product_page_token=immersive_page_token,
+                        immersive_product_api_link=immersive_api_link,
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow()
+                    )
                 
-                # Extract review count and rating
-                review_count = result.get("review_count") or result.get("reviews_count", 0)
-                rating = result.get("rating") or result.get("rating", None)
-                
-                # Get immersive product data for enrichment
-                immersive_api_link = result.get("immersive_product_api_link", "")
-                immersive_page_token = result.get("immersive_product_page_token", "")
-                
-                # Try to fetch immersive link if not present
-                if not immersive_api_link and self.google_client:
-                    try:
-                        fetched_link = self.google_client.get_immersive_product_data(
-                            result.get("title", ""),
-                            source
-                        )
-                        if fetched_link:
-                            immersive_api_link = fetched_link
-                            logger.debug(f"Fetched immersive link for {source} product")
-                    except Exception as e:
-                        logger.debug(f"Could not fetch immersive link: {e}")
-                
-                product_response = ProductResponse(
-                    id=str(uuid4()),
-                    title=result.get("title", "")[:200],
-                    source=source,
-                    source_id=result.get("source_id", result.get("product_id", "")),
-                    asin="",  # No ASIN for non-Amazon sources
-                    url=result.get("url", ""),
-                    image_url=image_url,
-                    price=self._parse_price(result.get("price")),
-                    currency=result.get("currency", "USD"),
-                    rating=self._parse_rating(rating),
-                    review_count=int(review_count) if review_count else 0,
-                    description=result.get("description", result.get("title", ""))[:500],
-                    brand=result.get("brand", result.get("manufacturer", "")),
-                    category=result.get("category", ""),
-                    availability=result.get("availability", "In Stock"),
-                    immersive_product_page_token=immersive_page_token,
-                    immersive_product_api_link=immersive_api_link,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
-                )
                 product_responses.append(product_response)
             except Exception as e:
                 logger.error(f"Error converting result to ProductResponse: {e}")

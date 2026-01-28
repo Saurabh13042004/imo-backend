@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas import ProductResponse
 from app.config import settings
 from app.integrations.google_shopping import GoogleShoppingClient
+from app.integrations.amazon_shopping import AmazonShoppingClient
 from app.services.search_service import PRODUCT_CACHE, PRODUCT_BY_SOURCE
 from app.utils.error_logger import log_error
 
@@ -20,8 +21,11 @@ class ProductService:
     def __init__(self):
         self.serpapi_key = settings.SERPAPI_KEY
         self.google_client = None
+        self.amazon_client = None
+        
         if self.serpapi_key:
             self.google_client = GoogleShoppingClient(self.serpapi_key)
+            self.amazon_client = AmazonShoppingClient(self.serpapi_key)
 
     async def get_product_by_id(self, db: AsyncSession, product_id: str) -> Optional[ProductResponse]:
         """Get product by UUID from search cache.
@@ -260,6 +264,48 @@ class ProductService:
         
         if product:
             return product
+    
+    async def _fetch_amazon_enrichment(
+        self,
+        asin: str,
+        zipcode: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Fetch enrichment data from Amazon API by ASIN.
+        
+        Args:
+            asin: Amazon Standard Identification Number
+            zipcode: Optional ZIP code for delivery/pricing
+            
+        Returns:
+            Dict with enriched product data or None
+        """
+        if not self.amazon_client:
+            logger.error("[ProductService] Amazon client not initialized")
+            return None
+        
+        try:
+            logger.info(f"[ProductService] Fetching Amazon product details for ASIN: {asin}")
+            
+            # Fetch product details from Amazon API
+            response = await self.amazon_client.get_product(
+                asin=asin,
+                delivery_zip=zipcode
+            )
+            
+            if not response:
+                logger.warning(f"[ProductService] No Amazon data for ASIN: {asin}")
+                return None
+            
+            # Normalize the response
+            normalized = AmazonShoppingClient.normalize_product_details(response)
+            
+            logger.info(f"[ProductService] Successfully enriched Amazon product: {asin}")
+            return normalized
+            
+        except Exception as e:
+            logger.error(f"[ProductService] Error fetching Amazon enrichment for {asin}: {e}")
+            return None
         
         logger.warning(f"Product not found for ASIN: {asin} - must use cached search results")
         return None

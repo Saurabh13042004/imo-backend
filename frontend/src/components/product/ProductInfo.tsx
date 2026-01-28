@@ -19,9 +19,11 @@ interface ProductInfoProps {
   source: 'Amazon' | 'Walmart' | 'Home Depot' | 'Google';
   priceRange?: string;
   enrichedProductDescription?: string;
+  rating?: number;  // Product rating (e.g., 4.3 from Amazon API)
+  reviewCount?: number;  // Number of reviews (e.g., 20626)
 }
 
-export const ProductInfo = ({ title, price, imoScore, aiVerdictScore, verdictStatus, description, productUrl, source, priceRange, enrichedProductDescription }: ProductInfoProps) => {
+export const ProductInfo = ({ title, price, imoScore, aiVerdictScore, verdictStatus, description, productUrl, source, priceRange, enrichedProductDescription, rating, reviewCount }: ProductInfoProps) => {
   const { productId } = useParams<{ productId: string }>();
   const { trackAffiliateClick } = useAnalytics();
   const { country } = useSearchUrl();
@@ -95,6 +97,23 @@ export const ProductInfo = ({ title, price, imoScore, aiVerdictScore, verdictSta
               <Star className="h-4 w-4 mr-2" />
               Rating: {imoScore}/10
             </Badge>
+          </div>
+        ) : null}
+
+        {/* Product Ratings & Reviews from Source (Amazon/Google) */}
+        {(rating !== undefined && rating !== null) || (reviewCount !== undefined && reviewCount !== null) ? (
+          <div className="flex flex-wrap items-center gap-3 mb-6">
+            {(rating !== undefined && rating !== null) && (
+              <Badge variant="outline" className="glass-card bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900 px-3 py-2">
+                <Star className="h-4 w-4 mr-1.5 fill-current" />
+                {rating.toFixed(1)} ⭐
+              </Badge>
+            )}
+            {(reviewCount !== undefined && reviewCount !== null && reviewCount > 0) && (
+              <Badge variant="outline" className="glass-card text-foreground/70 border-foreground/20 px-3 py-2">
+                {reviewCount.toLocaleString()} reviews
+              </Badge>
+            )}
           </div>
         ) : null}
 
